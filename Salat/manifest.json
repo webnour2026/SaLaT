@@ -1,0 +1,85 @@
+{
+  "id": "app.netlify.webnour2026.twa",
+  "name": "SaLaTi — Prayer Times & Qibla",
+  "short_name": "SaLaTi",
+  "description": "SaLaTi is a free, elegant Islamic app for Muslims worldwide. Features include accurate prayer times for any city, Qibla compass direction, Hijri calendar with moon sighting correction, beautiful Moroccan and Makkah Adhan, Dhikr counter, weekly prayer schedule, and Arabic/English interface. No ads. Works offline.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#0b0f0e",
+  "theme_color": "#0b0f0e",
+  "categories": ["lifestyle", "utilities", "religion"],
+  "iarc_rating_id": "e58c174a-81d2-5c3c-32cc-34b8de4a52e9",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Prayer Times Screen"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Prayer Times",
+      "short_name": "Prayers",
+      "description": "View today's prayer times for your city",
+      "url": "./index.html#prayers",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Qibla Direction",
+      "short_name": "Qibla",
+      "description": "Find the direction of Makkah Al-Mukarramah",
+      "url": "./index.html#qibla",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Dhikr Counter",
+      "short_name": "Dhikr",
+      "description": "Count your daily dhikr and tasbih",
+      "url": "./index.html#dhikr",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "share_target": {
+    "action": "./index.html",
+    "method": "GET",
+    "params": { "title": "title", "text": "text", "url": "url" }
+  }
+}

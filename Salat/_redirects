@@ -1,0 +1,2 @@
+# Ensure root serves index.html
+/   /index.html   200

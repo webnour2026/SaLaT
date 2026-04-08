@@ -1,0 +1,43 @@
+# manifest.json — correct MIME type required by PWABuilder
+/manifest.json
+  Content-Type: application/manifest+json
+  Access-Control-Allow-Origin: *
+
+# Service worker — must be served from root
+/sw.js
+  Content-Type: application/javascript
+  Cache-Control: no-cache, no-store, must-revalidate
+  Service-Worker-Allowed: /
+
+# Audio files
+/adhan-moroccan.mp3
+  Content-Type: audio/mpeg
+  Cache-Control: public, max-age=31536000
+
+/adhan-moroccan2.mp3
+  Content-Type: audio/mpeg
+  Cache-Control: public, max-age=31536000
+
+# Icons
+/icon-192.png
+  Cache-Control: public, max-age=31536000
+
+/icon-512.png
+  Cache-Control: public, max-age=31536000
+
+/icon-192-maskable.png
+  Cache-Control: public, max-age=31536000
+
+/icon-512-maskable.png
+  Cache-Control: public, max-age=31536000
+
+# assetlinks
+/.well-known/assetlinks.json
+  Content-Type: application/json
+  Access-Control-Allow-Origin: *
+
+# HTML
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
