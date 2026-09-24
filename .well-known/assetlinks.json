@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.webnour2026.salat",
+      "sha256_cert_fingerprints": [
+        "95:20:77:FE:48:06:5F:2E:30:81:64:9D:2C:FC:56:C7:88:FE:D3:1E:FA:8D:04:42:8A:89:ED:E8:2A:4D:EF:02"
+      ]
+    }
+  }
+]
