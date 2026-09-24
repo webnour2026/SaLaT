@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="fr" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Prière — horaires et Qibla</title>
+  <meta name="description" content="Horaires de prière précis par GPS, compte à rebours, direction de la Qibla et Adhan.">
+  <meta name="theme-color" content="#0E6B58">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&family=Reem+Kufi:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Aller au contenu</a>
+
+  <header class="topbar">
+    <button class="place" id="placeBtn" type="button" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>
+      <span id="placeName" data-i18n="locating">Localisation en cours…</span>
+    </button>
+    <time class="clock" id="clock" aria-live="off">--:--:--</time>
+  </header>
+
+  <main id="main">
+    <!-- ============ HORAIRES ============ -->
+    <section class="view" id="view-home" aria-labelledby="nextLabel">
+      <div class="dates">
+        <p id="gregDate">&nbsp;</p>
+        <p id="hijriDate" class="hijri">&nbsp;</p>
+      </div>
+
+      <div class="arch" id="arch" data-sky="day">
+        <p class="arch-label" id="nextLabel" data-i18n="nextPrayer">Prochaine prière</p>
+        <h1 class="arch-name" id="nextName">—</h1>
+        <p class="arch-time" id="nextTime">--:--</p>
+        <p class="arch-in" data-i18n="in">Dans</p>
+        <p class="countdown" id="countdown" role="timer" aria-live="off">--:--:--</p>
+        <p class="arch-at"><span data-i18n="nextAt">Heure de la prochaine prière :</span> <strong id="nextAt">--:--</strong></p>
+      </div>
+
+      <ol class="prayers" id="prayerList" aria-label="Horaires du jour"></ol>
+
+      <div class="extras">
+        <h2 data-i18n="otherTimes">Autres repères</h2>
+        <dl id="extraTimes"></dl>
+      </div>
+
+      <p class="status" id="status"></p>
+
+      <button class="btn btn-primary wide" type="button" data-goto="qibla">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 22l8-5 8 5L12 2Z"/></svg>
+        <span data-i18n="openQibla">Direction Qibla</span>
+      </button>
+    </section>
+
+    <!-- ============ QIBLA ============ -->
+    <section class="view" id="view-qibla" hidden aria-labelledby="qiblaTitle">
+      <h1 class="view-title" id="qiblaTitle" data-i18n="qiblaDir">Direction de la Qibla</h1>
+
+      <div class="qibla-read">
+        <p class="qibla-deg"><span id="qiblaDeg">--</span>°</p>
+        <p class="qibla-card" id="qiblaCardinal">&nbsp;</p>
+        <p class="qibla-dist"><span data-i18n="distance">Distance jusqu’à La Mecque</span> : <strong id="qiblaDist">--</strong></p>
+      </div>
+
+      <div class="dial-wrap">
+        <svg class="dial" id="dial" viewBox="-160 -160 320 320" role="img" aria-labelledby="qiblaTitle">
+          <polygon class="dial-pointer" points="0,-156 -9,-138 9,-138"/>
+          <g id="rose">
+            <circle class="dial-ring" r="130"/>
+            <g id="ticks"></g>
+            <text class="dial-n" x="0" y="-100">N</text>
+            <text class="dial-c" x="100" y="6">E</text>
+            <text class="dial-c" x="0" y="112">S</text>
+            <text class="dial-c" x="-100" y="6">O</text>
+            <g id="kaabaMark">
+              <line class="kaaba-line" x1="0" y1="0" x2="0" y2="-118"/>
+              <rect class="kaaba" x="-11" y="-146" width="22" height="22" rx="2"/>
+              <rect class="kaaba-band" x="-11" y="-140" width="22" height="4"/>
+            </g>
+          </g>
+          <circle class="dial-hub" r="6"/>
+        </svg>
+      </div>
+
+      <p class="compass-msg" id="compassMsg" role="status" data-i18n="holdFlat">Tenez le téléphone à plat, loin des objets métalliques et aimants.</p>
+
+      <div class="row-btns">
+        <button class="btn btn-primary" id="compassStart" type="button" data-i18n="enableCompass">Activer la boussole</button>
+        <button class="btn" id="calibrateBtn" type="button" data-i18n="calibrate">Calibrer la boussole</button>
+      </div>
+      <p class="note" data-i18n="trueNorthNote"></p>
+    </section>
+
+    <!-- ============ RÉGLAGES ============ -->
+    <section class="view" id="view-settings" hidden aria-labelledby="settingsTitle">
+      <h1 class="view-title" id="settingsTitle" data-i18n="settings">Réglages</h1>
+
+      <fieldset class="group">
+        <legend data-i18n="sLocation">Localisation</legend>
+        <div class="line">
+          <span id="locSummary"></span>
+          <button class="btn small" type="button" id="changeLoc" data-i18n="change">Modifier</button>
+        </div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend data-i18n="sCalc">Calcul des horaires</legend>
+        <label class="field"><span data-i18n="method">Méthode de calcul</span><select id="sMethod"></select></label>
+        <label class="field"><span data-i18n="madhab">Madhab (Asr)</span>
+          <select id="sSchool"><option value="0" data-i18n="shafi"></option><option value="1" data-i18n="hanafi"></option></select>
+        </label>
+        <p class="sub" data-i18n="adjustments">Ajustements manuels (minutes)</p>
+        <div class="adjust" id="adjustGrid"></div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend data-i18n="sAdhan">Appel à la prière</legend>
+        <label class="switch"><input type="checkbox" id="sAdhanOn"><span data-i18n="adhanEnabled"></span></label>
+        <div class="seg" role="radiogroup" id="sAdhanMode">
+          <label><input type="radio" name="adhanMode" value="global"><span data-i18n="oneForAll"></span></label>
+          <label><input type="radio" name="adhanMode" value="perPrayer"><span data-i18n="perPrayer"></span></label>
+        </div>
+        <div id="adhanPickers"></div>
+        <label class="field"><span data-i18n="volume">Volume</span><input type="range" id="sVolume" min="0" max="1" step="0.05"></label>
+        <label class="switch"><input type="checkbox" id="sVibrate"><span data-i18n="vibration"></span></label>
+        <label class="switch"><input type="checkbox" id="sNotifyAt"><span data-i18n="notifyAt"></span></label>
+        <label class="field"><span data-i18n="notifyBefore">Notification avant la prière</span>
+          <select id="sNotifyBefore"></select>
+        </label>
+        <button class="btn small" type="button" id="testNotif" data-i18n="testNotif"></button>
+        <p class="warn" id="notifWarn" hidden></p>
+        <details class="limits"><summary data-i18n="limitsTitle"></summary><p data-i18n="limits"></p></details>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend data-i18n="sInterface">Langue</legend>
+        <div class="seg" role="radiogroup" id="sLang">
+          <label><input type="radio" name="lang" value="fr"><span>Français</span></label>
+          <label><input type="radio" name="lang" value="ar"><span lang="ar">العربية</span></label>
+          <label><input type="radio" name="lang" value="en"><span>English</span></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend data-i18n="sAppearance">Apparence</legend>
+        <div class="seg" role="radiogroup" id="sTheme">
+          <label><input type="radio" name="theme" value="light"><span data-i18n="light"></span></label>
+          <label><input type="radio" name="theme" value="dark"><span data-i18n="dark"></span></label>
+          <label><input type="radio" name="theme" value="auto"><span data-i18n="auto"></span></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend data-i18n="sHijri">Date hégirienne</legend>
+        <label class="field"><span data-i18n="hijriCorrection">Correction (jours)</span>
+          <select id="sHijri"><option>-2</option><option>-1</option><option>0</option><option>+1</option><option>+2</option></select>
+        </label>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend data-i18n="sCompass">Boussole</legend>
+        <label class="field"><span data-i18n="declination"></span><input type="number" id="sDecl" step="0.1" min="-30" max="30" inputmode="decimal"></label>
+        <p class="note" data-i18n="declinationHelp"></p>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend data-i18n="sClock">Horloge</legend>
+        <div class="line"><span><span data-i18n="clockSynced"></span> : <strong id="clockOffset">0 s</strong></span>
+          <button class="btn small" type="button" id="syncBtn" data-i18n="syncNow"></button></div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend data-i18n="sData">Données</legend>
+        <button class="btn small" type="button" id="clearBtn" data-i18n="clearCache"></button>
+        <p class="note" data-i18n="about"></p>
+      </fieldset>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Navigation">
+    <button type="button" data-goto="home" aria-current="page">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm1 9.4 3.3 2-1 1.7L11 13V7h2v5.4Z"/></svg>
+      <span data-i18n="home">Horaires</span>
+    </button>
+    <button type="button" data-goto="qibla">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5 5-2Z"/></svg>
+      <span data-i18n="qibla">Qibla</span>
+    </button>
+    <button type="button" data-goto="settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h9v2H4V6Zm13 0h3v2h-3V6Zm-4-2h2v6h-2V4ZM4 16h3v2H4v-2Zm7 0h9v2h-9v-2Zm-4-2h2v6H7v-6Z"/></svg>
+      <span data-i18n="settings">Réglages</span>
+    </button>
+  </nav>
+
+  <!-- Choix de la position -->
+  <dialog id="locDialog" class="sheet" aria-labelledby="locTitle">
+    <form method="dialog" class="sheet-head">
+      <h2 id="locTitle" data-i18n="locationTitle">Votre position</h2>
+      <button class="icon-btn" value="close" aria-label="Fermer">✕</button>
+    </form>
+    <button class="btn btn-primary wide" type="button" id="gpsBtn">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm9 3h-2.1A7 7 0 0 0 13 5.1V3h-2v2.1A7 7 0 0 0 5.1 11H3v2h2.1a7 7 0 0 0 5.9 5.9V21h2v-2.1a7 7 0 0 0 5.9-5.9H21v-2Z"/></svg>
+      <span data-i18n="useGps">Utiliser ma position GPS</span>
+    </button>
+    <p class="warn" id="gpsError" hidden></p>
+    <input type="search" id="citySearch" class="search" data-i18n-ph="searchCity" autocomplete="off" enterkeyhint="search">
+    <ul class="results" id="cityResults"></ul>
+    <h3 class="sub" data-i18n="presetCities">Villes</h3>
+    <ul class="results" id="presetList"></ul>
+  </dialog>
+
+  <!-- Calibration -->
+  <dialog id="calDialog" class="sheet center" aria-labelledby="calTitle">
+    <h2 id="calTitle" data-i18n="calibrate">Calibrer la boussole</h2>
+    <svg class="eight" viewBox="0 0 200 110" aria-hidden="true">
+      <path id="eightPath" d="M100 55 C 140 5, 190 20, 190 55 S 140 105, 100 55 S 10 5, 10 55 S 60 105, 100 55Z"/>
+      <circle r="7" class="eight-dot"><animateMotion dur="3s" repeatCount="indefinite"><mpath href="#eightPath"/></animateMotion></circle>
+    </svg>
+    <p data-i18n="calibrateHelp"></p>
+    <form method="dialog"><button class="btn btn-primary wide" data-i18n="done">Terminé</button></form>
+  </dialog>
+
+  <!-- Adhan en cours -->
+  <div class="alert" id="adhanAlert" role="alert" hidden>
+    <p id="adhanAlertText"></p>
+    <button class="btn small" type="button" id="adhanStop" data-i18n="stop">Arrêter</button>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
