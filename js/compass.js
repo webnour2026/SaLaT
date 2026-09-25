@@ -37,6 +37,7 @@ export class Compass {
     this.lastAbs = 0;
     this.gotHeading = false;
     this.sawRelative = false;
+    this.blocked = false;
     // on écoute les deux : selon l'appareil, le nord absolu arrive par l'un ou l'autre
     window.addEventListener('deviceorientationabsolute', this.onAbs, true);
     window.addEventListener('deviceorientation', this.onRel, true);
@@ -47,7 +48,7 @@ export class Compass {
     this.fallbackTimer = setTimeout(() => {
       if (this.gotHeading) return;
       if (!this.startSensor()) this.onStatus(this.sawRelative ? 'relative' : 'nodata');
-      else setTimeout(() => { if (!this.gotHeading) this.onStatus(this.sawRelative ? 'relative' : 'nodata'); }, 2500);
+      else setTimeout(() => { if (!this.gotHeading) this.onStatus(this.blocked ? 'blocked' : this.sawRelative ? 'relative' : 'nodata'); }, 2500);
     }, 1500);
     return true;
   }
@@ -64,7 +65,7 @@ export class Compass {
         const roll = deg(Math.atan2(2 * (w * y + z * x), 1 - 2 * (x * x + y * y)));
         this.emit((360 - yaw) % 360, { beta: pitch, gamma: roll, accuracy: null, source: 'sensor', screenCorrected: true });
       });
-      s.addEventListener('error', () => { this.sensor = null; });
+      s.addEventListener('error', ev => { this.sensor = null; if (ev.error && ev.error.name === 'NotAllowedError') this.blocked = true; });
       s.start();
       this.sensor = s;
       return true;

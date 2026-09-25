@@ -5,6 +5,7 @@ import { ensureMonths, getDay, findNext, dateKeyInTz, addDays, deviceTz } from '
 import { Countdown, formatHMS } from './countdown.js';
 import { qiblaBearing, distanceToKaaba, cardinalIndex } from './qibla.js';
 import { Compass } from './compass.js';
+import { formatHijri } from './hijri.js';
 import { declination as wmmDeclination } from './wmm.js';
 import { sunPosition, timesAtAzimuth } from './sun.js';
 import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNotifPermission, notifPermission } from './adhan.js';
@@ -48,10 +49,7 @@ function fmtDates(ts) {
   const greg = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: tz() }).format(ts);
   const shifted = ts + S().hijriOffset * 864e5;
   let hijri = '';
-  try {
-    hijri = new Intl.DateTimeFormat(`${locale().split('-u-')[0]}-u-ca-islamic-umalqura-nu-latn`,
-      { day: 'numeric', month: 'long', year: 'numeric', timeZone: tz() }).format(shifted);
-  } catch { /* calendrier islamique non pris en charge */ }
+  try { hijri = formatHijri(shifted, tz(), getLang()); } catch { /* sans date hégirienne */ }
   return { greg, hijri };
 }
 
@@ -82,7 +80,11 @@ function go(view) {
     if (b.dataset.goto === view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
   if (view !== 'qibla') compass.stop();
-  if (view === 'qibla') { renderQibla(); if (!Compass.needsPermission()) compass.start(); }
+  if (view === 'qibla') {
+    renderQibla();
+    if (Compass.needsPermission()) { $('#compassStart').hidden = false; }
+    else { setCompassMsg(t('compassSearching'), ''); compass.start(); }
+  }
   if (view === 'settings') renderSettings();
   window.scrollTo({ top: 0 });
   history.replaceState(null, '', `#${view}`);
@@ -255,13 +257,16 @@ function renderHome() {
     return div;
   }));
 
+  // « Dernière mise à jour » n'apparaît que si c'est utile : hors ligne, calcul local ou données anciennes
   const st = $('#status');
-  st.classList.toggle('warn-s', state.today.source === 'local' || state.fetchFailed);
+  const offline = state.fetchFailed || !navigator.onLine;
+  const stale = state.today.fetchedAt && Date.now() - state.today.fetchedAt > 3 * 864e5;
+  st.classList.add('warn-s');
   if (state.today.source === 'local') st.textContent = t('localCalc');
-  else {
+  else if (offline || stale) {
     const when = new Intl.DateTimeFormat(locale(), { dateStyle: 'medium', timeStyle: 'short' }).format(state.today.fetchedAt);
-    st.textContent = `${state.fetchFailed || !navigator.onLine ? t('offline') + ' · ' : ''}${t('lastUpdate')} ${when}`;
-  }
+    st.textContent = `${offline ? t('offline') + ' · ' : ''}${t('lastUpdate')} ${when}`;
+  } else st.textContent = '';
 }
 
 // ================= Compte à rebours + événements =================
@@ -364,7 +369,7 @@ const compass = new Compass({
   },
   onStatus(s) {
     compass.lastStatus = s;
-    const map = { unsupported: 'compassUnsupported', denied: 'compassDenied', nodata: 'compassNoData', relative: 'compassRelative' };
+    const map = { unsupported: 'compassUnsupported', denied: 'compassDenied', nodata: 'compassBlocked', relative: 'compassRelative', blocked: 'compassBlocked' };
     if (map[s]) {
       $('#compassMsg').textContent = t(map[s]); $('#compassMsg').className = 'compass-msg alert-s';
       $('#rose').style.transform = ''; state.roseAngle = null; $('#headingBig').textContent = '--';
@@ -374,6 +379,11 @@ const compass = new Compass({
     $('#compassStart').hidden = s === 'ok' || s === 'calibrate';
   },
 });
+
+function setCompassMsg(text, cls) {
+  const m = $('#compassMsg'); if (!m) return;
+  m.textContent = text; m.className = `compass-msg ${cls || ''}`;
+}
 
 function setSensor(q) {
   if (state.sensorQ === q) return;

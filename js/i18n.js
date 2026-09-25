@@ -1,6 +1,7 @@
 // Traductions FR / AR / EN — ajouter une langue = ajouter un objet ici.
 const DICT = {
   fr: {
+    compassSearching: 'Recherche du capteur de la boussole…', compassBlocked: 'Capteurs bloqués : dans Chrome, touchez l’icône à gauche de l’adresse → Autorisations → Capteurs de mouvement → Autoriser, puis « Activer la boussole ».',
     noLocText: 'Pour afficher les horaires, indiquez votre ville (le GPS n’est pas obligatoire).',
     qiblaIn: 'Direction de la Qibla à', calibrateShort: 'Calibrer', moreDetails: 'Plus de détails',
     sensorGood: 'Capteur précis', sensorFair: 'Précision moyenne, calibration conseillée',
@@ -68,6 +69,7 @@ const DICT = {
     cardinals: ['Nord','Nord-Nord-Est','Nord-Est','Est-Nord-Est','Est','Est-Sud-Est','Sud-Est','Sud-Sud-Est','Sud','Sud-Sud-Ouest','Sud-Ouest','Ouest-Sud-Ouest','Ouest','Ouest-Nord-Ouest','Nord-Ouest','Nord-Nord-Ouest'],
   },
   ar: {
+    compassSearching: 'جارٍ البحث عن مستشعر البوصلة…', compassBlocked: 'المستشعرات محظورة: في Chrome اضغط على الأيقونة بجانب العنوان ← الأذونات ← مستشعرات الحركة ← السماح، ثم «تشغيل البوصلة».',
     noLocText: 'لعرض المواقيت، اختر مدينتك (GPS غير ضروري).',
     qiblaIn: 'اتجاه القبلة في', calibrateShort: 'معايرة', moreDetails: 'تفاصيل أكثر',
     sensorGood: 'المستشعر دقيق', sensorFair: 'دقة متوسطة، يُنصح بالمعايرة',
@@ -134,6 +136,7 @@ const DICT = {
     cardinals: ['شمال','شمال شمال شرق','شمال شرق','شرق شمال شرق','شرق','شرق جنوب شرق','جنوب شرق','جنوب جنوب شرق','جنوب','جنوب جنوب غرب','جنوب غرب','غرب جنوب غرب','غرب','غرب شمال غرب','شمال غرب','شمال شمال غرب'],
   },
   en: {
+    compassSearching: 'Looking for the compass sensor…', compassBlocked: 'Sensors blocked: in Chrome tap the icon left of the address → Permissions → Motion sensors → Allow, then “Start compass”.',
     noLocText: 'To show prayer times, choose your city (GPS is not required).',
     qiblaIn: 'Qibla direction in', calibrateShort: 'Calibrate', moreDetails: 'More details',
     sensorGood: 'Sensor accurate', sensorFair: 'Medium accuracy, calibration advised',

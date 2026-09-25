@@ -1,5 +1,5 @@
 // Service worker — changer VERSION à chaque déploiement pour forcer la mise à jour.
-const VERSION = 'priere-v1.3.0';
+const VERSION = 'priere-v1.3.1';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
@@ -7,7 +7,7 @@ const APP_SHELL = [
   './', 'index.html', 'manifest.json', 'css/style.css',
   'js/app.js', 'js/i18n.js', 'js/storage.js', 'js/clock.js', 'js/api.js',
   'js/prayer-calc.js', 'js/prayer-times.js', 'js/countdown.js',
-  'js/qibla.js', 'js/compass.js', 'js/wmm.js', 'js/sun.js', 'js/adhan.js', 'js/location.js',
+  'js/qibla.js', 'js/compass.js', 'js/wmm.js', 'js/sun.js', 'js/hijri.js', 'js/adhan.js', 'js/location.js',
   'icons/icon.svg', 'icons/icon-96.png', 'icons/icon-192.png', 'icons/apple-touch-icon.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png',
 ];
 
