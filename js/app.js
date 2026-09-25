@@ -8,7 +8,8 @@ import { Compass } from './compass.js';
 import { formatHijri } from './hijri.js';
 import { declination as wmmDeclination } from './wmm.js';
 import { sunPosition, timesAtAzimuth } from './sun.js';
-import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNotifPermission, notifPermission } from './adhan.js';
+import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans } from './adhan.js';
+import { hijriMonth, upcomingWhiteDays, civilNoon, hijriOf } from './calendar.js';
 import { PRESET_CITIES, METHOD_BY_COUNTRY, getGpsPosition, reverseGeocode, searchCity } from './location.js';
 
 const $ = sel => document.querySelector(sel);
@@ -86,6 +87,7 @@ function go(view) {
     else { setCompassMsg(t('compassSearching'), ''); compass.start(); }
   }
   if (view === 'settings') renderSettings();
+  if (view === 'calendar') { state.calAnchor = null; renderCalendar(); }
   window.scrollTo({ top: 0 });
   history.replaceState(null, '', `#${view}`);
 }
@@ -203,7 +205,7 @@ function skyFor(t) {
   return 'maghrib';
 }
 
-function renderAll() { renderHeader(); renderHome(); }
+function renderAll() { renderHeader(); renderHome(); renderWhite(); renderSilent(); }
 
 function renderNoLoc() {
   const none = !S().location;
@@ -269,6 +271,99 @@ function renderHome() {
   } else st.textContent = '';
 }
 
+// ================= Mode silencieux =================
+const isSilent = () => { const u = S().silentUntil; return u === -1 || (u > 0 && now() < u); };
+function renderSilent() {
+  const btn = $('#silentBtn'); if (!btn) return;
+  const on = isSilent();
+  btn.classList.toggle('on', on);
+  const u = S().silentUntil;
+  const st = $('#silentState');
+  if (st) st.textContent = !on ? '' : u === -1 ? t('silentOn') : t('silentUntil', { t: fmtTime(u) });
+  const off = $('#silentOff'); if (off) off.hidden = !on;
+}
+function setSilent(mode) {
+  if (mode === 'off') S().silentUntil = 0;
+  else if (mode === 'forever') S().silentUntil = -1;
+  else if (mode === 'nextFajr') {
+    const f = state.today && now() < state.today.times.Fajr ? state.today.times.Fajr : state.tomorrow?.times.Fajr;
+    S().silentUntil = (f || now() + 8 * 36e5) + 60000;
+  } else S().silentUntil = now() + Number(mode) * 60000;
+  save(); renderSilent();
+  if (mode !== 'off') { stopAdhan(); hideAdhanAlert(); }
+  toast(mode === 'off' ? t('silentOffMsg') : t('silentOn'));
+}
+function hideAdhanAlert() { const al = $('#adhanAlert'); if (al) al.hidden = true; }
+
+// ================= Jours blancs =================
+function hijriLabel(h) { return `${h.d} ${t('hijriMonths')[h.m - 1]}`; }
+function renderWhite() {
+  const card = $('#whiteCard'); if (!card) return;
+  if (!S().whiteDays) { card.hidden = true; return; }
+  const today = civilNoon(now(), tz());
+  const h = hijriOf(today, S().hijriOffset);
+  const list = upcomingWhiteDays(today, S().hijriOffset, 4);
+  if (!list.length) { card.hidden = true; return; }
+  card.hidden = false;
+  if (list[0].noon === today) { $('#whiteText').textContent = t('whiteToday', { d: h.d, m: t('hijriMonths')[h.m - 1] }); return; }
+  const fmt = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+  $('#whiteText').textContent = t('whiteSoon', { list: list.map(x => `${fmt.format(x.noon)} (${hijriLabel(x.h)})`).join(' · ') });
+}
+
+// ================= Calendrier hégirien =================
+function renderCalendar() {
+  const grid = $('#calGrid'); if (!grid) return;
+  const off = S().hijriOffset;
+  const todayNoon = civilNoon(now(), tz());
+  state.calAnchor = state.calAnchor || todayNoon;
+  const mon = hijriMonth(state.calAnchor, off);
+  state.calMonth = mon;
+  $('#calTitle2').textContent = `${t('hijriMonths')[mon.m - 1]} ${mon.y} ${t('hijriEra')}`;
+  const gf = new Intl.DateTimeFormat(locale(), { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const a = gf.format(mon.days[0].noon), b = gf.format(mon.days.at(-1).noon);
+  $('#calSub').textContent = a === b ? a : `${a} – ${b}`;
+  // en-têtes : semaine du samedi au vendredi en arabe, du lundi au dimanche sinon
+  const first = getLang() === 'ar' ? 6 : 1;
+  const wd = new Intl.DateTimeFormat(locale(), { weekday: getLang() === 'ar' ? 'long' : 'short', timeZone: 'UTC' });
+  const heads = Array.from({ length: 7 }, (_, i) => {
+    const el = document.createElement('div'); el.className = 'cal-dow';
+    const dayIdx = (first + i) % 7; // 0 = dimanche ; 4 janv. 1970 était un dimanche
+    el.textContent = wd.format(Date.UTC(1970, 0, 4 + dayIdx, 12)).replace(/^ال/, '');
+    return el;
+  });
+  const lead = (mon.days[0].dow - first + 7) % 7;
+  const blanks = Array.from({ length: lead }, () => document.createElement('div'));
+  const gd = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'short', timeZone: 'UTC' });
+  const cells = mon.days.map(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-day' + (d.white ? ' white' : '') + (d.occasion ? ' occ' : '') + (d.noon === todayNoon ? ' today' : '');
+    el.setAttribute('role', 'gridcell');
+    el.innerHTML = '<span class="hd"></span><span class="gd"></span>';
+    el.firstChild.textContent = d.h.d;
+    el.lastChild.textContent = gd.format(d.noon);
+    if (d.occasion) el.title = t(d.occasion.key);
+    return el;
+  });
+  grid.replaceChildren(...heads, ...blanks, ...cells);
+  const df = new Intl.DateTimeFormat(locale(), { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+  const events = mon.days.filter(d => d.occasion).map(d => [t(d.occasion.key), d]);
+  const whites = mon.days.filter(d => d.white);
+  if (whites.length) events.push([t('whiteDays'), whites[0], whites.at(-1)]);
+  events.sort((x, y) => x[1].noon - y[1].noon);
+  $('#calEvents').replaceChildren(...events.map(([name, d1, d2]) => {
+    const li = document.createElement('li');
+    li.innerHTML = '<span></span><span></span>';
+    li.firstChild.textContent = `${name} — ${d2 ? `${d1.h.d}–${d2.h.d}` : d1.h.d} ${t('hijriMonths')[mon.m - 1]}`;
+    li.lastChild.textContent = d2 ? `${df.format(d1.noon)} → ${df.format(d2.noon)}` : df.format(d1.noon);
+    return li;
+  }));
+}
+function calShift(dir) {
+  const mon = state.calMonth; if (!mon) return;
+  state.calAnchor = dir > 0 ? mon.days.at(-1).noon + 864e5 : mon.days[0].noon - 864e5;
+  renderCalendar();
+}
+
 // ================= Compte à rebours + événements =================
 const countdown = new Countdown({
   onTick(remaining, tNow) {
@@ -280,7 +375,7 @@ const countdown = new Countdown({
     // changement de jour dans le fuseau du lieu
     if (state.dayKey && dateKeyInTz(tNow, tz()) !== state.dayKey) { loadDays(); renderAll(); refresh(); }
     checkEvents(tNow);
-    if (tNow % 60000 < 1000) { renderHome(); if (!$('#view-qibla').hidden) renderSun(); } // chaque minute
+    if (tNow % 60000 < 1000) { renderHome(); renderSilent(); if (!$('#view-qibla').hidden) renderSun(); } // chaque minute
   },
   onReach() {
     // la prière est arrivée : on passe à la suivante
@@ -305,6 +400,14 @@ function checkEvents(tNow) {
       if (a.notifyBefore > 0) events.push({ id: `${day.date}-${p}-b${a.notifyBefore}`, ts: ts - a.notifyBefore * 60000, p, type: 'before' });
     }
   }
+  // rappel des jours blancs : 30 min après Isha, la veille d'un jour blanc
+  if (S().whiteDays && state.today.times.Isha) {
+    const tomorrowNoon = civilNoon(now(), tz()) + 864e5;
+    const h = hijriOf(tomorrowNoon, S().hijriOffset);
+    if ([13, 14, 15].includes(h.d) && !(h.m === 12 && h.d === 13)) {
+      events.push({ id: `${state.today.date}-white`, ts: state.today.times.Isha + 30 * 60000, type: 'white', h });
+    }
+  }
   for (const ev of events) {
     // fenêtre de 90 s : si l'appli s'est réveillée bien après, on ne rejoue pas un Adhan périmé
     if (tNow < ev.ts || tNow - ev.ts > 90000 || state.fired.has(ev.id)) continue;
@@ -316,20 +419,26 @@ function checkEvents(tNow) {
 
 async function fireEvent(ev) {
   const a = S().adhan;
+  if (ev.type === 'white') {
+    notify(t('whiteNotifTitle'), t('whiteNotifBody', { d: ev.h.d, m: t('hijriMonths')[ev.h.m - 1] }), { tag: 'white', vibrateOn: !isSilent() && a.vibrate });
+    toast(t('whiteNotifTitle'), 6000);
+    return;
+  }
+  const silent = isSilent();
   const name = t(ev.p);
   if (ev.type === 'before') {
     notify(name, t('beforeMsg', { n: a.notifyBefore }), { tag: `before-${ev.p}`, vibrateOn: a.vibrate });
     return;
   }
   const msg = `${t('itsTime')} ${name}`;
-  if (a.notifyAt) notify(msg, fmtTime(ev.ts), { tag: `at-${ev.p}`, vibrateOn: a.vibrate });
+  if (a.notifyAt || silent) notify(msg, fmtTime(ev.ts), { tag: `at-${ev.p}`, vibrateOn: !silent && a.vibrate });
+  if (silent) { toast(msg, 6000); return; }   // mode silencieux : ni son ni vibration
   if (a.vibrate) vibrate();
   if (a.enabled && adhanFor(ev.p) !== 'none') {
     $('#adhanAlertText').textContent = msg;
     $('#adhanAlert').hidden = false;
-    const r = await playAdhan(adhanFor(ev.p), a.volume);
-    if (r === 'fallback') toast(t('adhanMissing'), 5000);
-    if (r !== 'played') setTimeout(() => { $('#adhanAlert').hidden = true; }, 8000);
+    const r = await playAdhan(adhanFor(ev.p), a.volume, { title: msg, ended: hideAdhanAlert });
+    if (r === 'fallback' || r === 'beep') toast(t('adhanMissing'), 5000);
   }
 }
 
@@ -350,6 +459,7 @@ const compass = new Compass({
     state.roseAngle = state.roseAngle ?? target;
     state.roseAngle += ((target - state.roseAngle + 540) % 360) - 180;
     $('#rose').style.transform = `rotate(${state.roseAngle}deg)`;
+    uprightLabels(state.roseAngle);
     $('#headingBig').textContent = Math.round(heading) % 360;
     setSensor(quality);
     $('#compassDebug').textContent = `${t('heading')} : ${fmtDeg(heading)}°`
@@ -372,7 +482,7 @@ const compass = new Compass({
     const map = { unsupported: 'compassUnsupported', denied: 'compassDenied', nodata: 'compassBlocked', relative: 'compassRelative', blocked: 'compassBlocked' };
     if (map[s]) {
       $('#compassMsg').textContent = t(map[s]); $('#compassMsg').className = 'compass-msg alert-s';
-      $('#rose').style.transform = ''; state.roseAngle = null; $('#headingBig').textContent = '--';
+      $('#rose').style.transform = ''; state.roseAngle = null; uprightLabels(0); $('#headingBig').textContent = '--';
       setSensor('off');
     }
     if (s === 'calibrate') setSensor('poor');
@@ -412,11 +522,18 @@ function renderDialLabels() {
     const x = Math.sin(a * Math.PI / 180) * r, y = -Math.cos(a * Math.PI / 180) * r;
     const tx = document.createElementNS(ns, 'text');
     tx.setAttribute('x', x.toFixed(1)); tx.setAttribute('y', y.toFixed(1));
-    tx.setAttribute('transform', `rotate(${a} ${x.toFixed(1)} ${y.toFixed(1)})`);
+    tx.dataset.x = x.toFixed(1); tx.dataset.y = y.toFixed(1);
     tx.setAttribute('class', i === 0 ? 'rlabel n' : 'rlabel');
     tx.textContent = n;
     return tx;
   })()).filter(Boolean));
+  uprightLabels(state.roseAngle || 0);
+}
+// Les lettres restent droites à l'écran (lisibles, surtout en arabe) pendant que la rose tourne
+function uprightLabels(roseAngle) {
+  document.querySelectorAll('#roseLabels text').forEach(tx => {
+    tx.setAttribute('transform', `rotate(${-roseAngle} ${tx.dataset.x} ${tx.dataset.y})`);
+  });
 }
 
 function renderQibla() {
@@ -491,6 +608,9 @@ function renderSettings() {
   renderAdhanPickers();
   $('#sVolume').value = a.volume;
   $('#sVibrate').checked = a.vibrate;
+  $('#sWhiteDays').checked = s.whiteDays;
+  $('#audioCredits').replaceChildren(...ADHANS.filter(x => x.credit).map(x => Object.assign(document.createElement('li'), { textContent: `${t(x.labelKey)} : ${x.credit}` })));
+  if (!state.adhanAvail) availableAdhans().then(av => { state.adhanAvail = av; renderAdhanPickers(); });
   $('#sNotifyAt').checked = a.notifyAt;
   $('#sNotifyBefore').replaceChildren(...[0, 5, 10, 15].map(n => new Option(n ? `${n} ${t('minBefore')}` : t('none'), n, false, n === a.notifyBefore)));
   updateNotifWarn();
@@ -505,7 +625,8 @@ function renderSettings() {
 }
 
 function adhanOptions(selected) {
-  return ADHANS.map(x => new Option(x.labelKey ? t(x.labelKey) : x.label, x.id, false, x.id === selected));
+  const av = state.adhanAvail || {};
+  return ADHANS.map(x => new Option((x.labelKey ? t(x.labelKey) : x.label) + (x.file && av[x.id] === false ? ` (${t('adhanUnavailable')})` : ''), x.id, false, x.id === selected));
 }
 function renderAdhanPickers() {
   const a = S().adhan;
@@ -523,9 +644,10 @@ function renderAdhanPickers() {
     btn.addEventListener('click', async () => {
       if (btn.dataset.playing) { stopAdhan(); delete btn.dataset.playing; btn.textContent = t('preview'); return; }
       unlockAudio();
-      const r = await playAdhan(sel.value, a.volume);
-      if (r === 'fallback') toast(t('adhanMissing'), 5000);
-      if (r === 'played') { btn.dataset.playing = '1'; btn.textContent = t('stop'); setTimeout(() => { delete btn.dataset.playing; btn.textContent = t('preview'); }, 15000); }
+      const reset = () => { delete btn.dataset.playing; btn.textContent = t('preview'); };
+      const r = await playAdhan(sel.value, a.volume, { title: t('adhanSound'), ended: reset });
+      if (r === 'fallback' || r === 'beep') toast(t('adhanMissing'), 5000);
+      if (r !== 'none') { btn.dataset.playing = '1'; btn.textContent = t('stop'); }
     });
     wrap.append(label, btn);
     return wrap;
@@ -553,6 +675,7 @@ function bindSettings() {
   on('#sAdhanOn', 'change', e => { S().adhan.enabled = e.target.checked; save(); if (e.target.checked) unlockAudio(); });
   on('#sAdhanMode', 'change', e => { S().adhan.mode = e.target.value; save(); renderAdhanPickers(); });
   on('#sVolume', 'input', e => { S().adhan.volume = Number(e.target.value); save(); });
+  on('#sWhiteDays', 'change', async e => { S().whiteDays = e.target.checked; save(); renderWhite(); if (e.target.checked) await ensureNotifPermission(); });
   on('#sVibrate', 'change', e => { S().adhan.vibrate = e.target.checked; save(); if (e.target.checked) vibrate(80); });
   on('#sNotifyAt', 'change', async e => {
     S().adhan.notifyAt = e.target.checked; save();
@@ -601,7 +724,13 @@ function bind() {
   on('#citySearch', 'input', onSearch);
   on('#compassStart', 'click', async () => { unlockAudio(); await compass.start(); });
   on('#calibrateBtn', 'click', () => $('#calDialog').showModal());
-  on('#adhanStop', 'click', () => { stopAdhan(); $('#adhanAlert').hidden = true; });
+  on('#adhanStop', 'click', () => { stopAdhan(); hideAdhanAlert(); });
+  on('#adhanSilent', 'click', () => { stopAdhan(); hideAdhanAlert(); renderSilent(); $('#silentDialog').showModal(); });
+  on('#silentBtn', 'click', () => { renderSilent(); $('#silentDialog').showModal(); });
+  document.querySelectorAll('[data-silent]').forEach(b => b.addEventListener('click', () => { setSilent(b.dataset.silent); $('#silentDialog').close(); }));
+  on('#calPrev', 'click', () => calShift(-1));
+  on('#calNext', 'click', () => calShift(1));
+  on('#calToday', 'click', () => { state.calAnchor = null; renderCalendar(); });
   // l'audio ne peut démarrer qu'après un premier geste de l'utilisateur
   document.addEventListener('pointerdown', unlockAudio, { once: true });
   window.addEventListener('online', () => { state.online = true; refresh(); syncClock(); });
@@ -618,6 +747,11 @@ function init() {
     S().lang = ['ar', 'fr', 'en'].includes(dev) ? dev : 'fr';
     save();
   }
+  // Adhans retirés de la liste (anciennes versions) → Adhan marocain
+  const ids = ADHANS.map(x => x.id), fix = v => (ids.includes(v) ? v : 'morocco');
+  S().adhan.global = fix(S().adhan.global);
+  for (const k of Object.keys(S().adhan.perPrayer)) S().adhan.perPrayer[k] = fix(S().adhan.perPrayer[k]);
+  save();
   applyTheme();
   applyLang();
   buildDial();
@@ -626,7 +760,7 @@ function init() {
   countdown.start();
 
   const view = (location.hash || '#home').slice(1);
-  go(['home', 'qibla', 'settings'].includes(view) ? view : 'home');
+  go(['home', 'qibla', 'calendar', 'settings'].includes(view) ? view : 'home');
   renderNoLoc();
 
   if (!S().location) {

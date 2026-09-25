@@ -26,6 +26,9 @@
     </button>
     <div class="top-right">
       <time class="clock" id="clock" aria-live="off">--:--:--</time>
+      <button class="lang-btn silent-btn" id="silentBtn" type="button" aria-haspopup="dialog" data-i18n-title="silentMode">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path id="bellPath" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3a1.5 1.5 0 0 0-3 0v1.16A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/><path class="slash" d="M3.3 2.3 21.7 20.7l-1.4 1.4L1.9 3.7Z"/></svg>
+      </button>
       <button class="lang-btn" id="langBtn" type="button" aria-label="Langue / اللغة / Language">ع</button>
     </div>
   </header>
@@ -51,6 +54,11 @@
         <p class="arch-in" data-i18n="in">Dans</p>
         <p class="countdown" id="countdown" role="timer" aria-live="off">--:--:--</p>
         <p class="arch-at"><span data-i18n="nextAt">Heure de la prochaine prière :</span> <strong id="nextAt">--:--</strong></p>
+      </div>
+
+      <div class="white-card" id="whiteCard" hidden>
+        <p class="white-title"><span aria-hidden="true">🌕</span> <span data-i18n="whiteDays">Jours blancs</span></p>
+        <p id="whiteText"></p>
       </div>
 
       <ol class="prayers" id="prayerList" aria-label="Horaires du jour"></ol>
@@ -87,7 +95,7 @@
             <circle class="ring" r="112"/>
             <g id="roseTicks"></g>
             <g id="roseLabels"></g>
-            <g id="qiblaMark"><polygon class="qmark" points="0,-132 -12,-156 12,-156"/></g>
+            <g id="qiblaMark"><line class="qneedle" x1="0" y1="0" x2="0" y2="-100"/><circle class="qhub" r="5"/><polygon class="qmark" points="0,-166 -13,-138 0,-145 13,-138"/></g>
           </g>
         </svg>
       </div>
@@ -117,6 +125,25 @@
         </div>
         <p class="note" data-i18n="trueNorthNote"></p>
       </details>
+    </section>
+
+    <!-- ============ CALENDRIER HÉGIRIEN ============ -->
+    <section class="view" id="view-calendar" hidden aria-labelledby="calTitle2">
+      <div class="cal-head">
+        <button class="icon-btn cal-nav" id="calPrev" type="button" aria-label="‹">‹</button>
+        <div>
+          <h1 class="view-title cal-title" id="calTitle2">—</h1>
+          <p class="cal-sub" id="calSub"></p>
+        </div>
+        <button class="icon-btn cal-nav" id="calNext" type="button" aria-label="›">›</button>
+      </div>
+      <div class="cal-grid" id="calGrid" role="grid"></div>
+      <p class="cal-legend"><span class="lg today"></span><span data-i18n="today">Aujourd’hui</span>
+        <span class="lg white"></span><span data-i18n="whiteDays">Jours blancs</span>
+        <span class="lg occ"></span><span data-i18n="occasions">Occasions</span></p>
+      <ul class="cal-events" id="calEvents"></ul>
+      <button class="btn small" id="calToday" type="button" data-i18n="backToday">Revenir à aujourd’hui</button>
+      <p class="note" data-i18n="calNote"></p>
     </section>
 
     <!-- ============ RÉGLAGES ============ -->
@@ -155,6 +182,7 @@
         <label class="field"><span data-i18n="notifyBefore">Notification avant la prière</span>
           <select id="sNotifyBefore"></select>
         </label>
+        <label class="switch"><input type="checkbox" id="sWhiteDays"><span data-i18n="whiteReminder">Rappel des jours blancs</span></label>
         <button class="btn small" type="button" id="testNotif" data-i18n="testNotif"></button>
         <p class="warn" id="notifWarn" hidden></p>
         <details class="limits"><summary data-i18n="limitsTitle"></summary><p data-i18n="limits"></p></details>
@@ -202,7 +230,8 @@
         <legend data-i18n="sData">Données</legend>
         <button class="btn small" type="button" id="clearBtn" data-i18n="clearCache"></button>
         <p class="note" data-i18n="about"></p>
-        <p class="note" data-i18n="audioCredits"></p>
+        <p class="note" data-i18n="audioCreditsTitle"></p>
+        <ul class="note credits" id="audioCredits"></ul>
       </fieldset>
     </section>
   </main>
@@ -215,6 +244,10 @@
     <button type="button" data-goto="qibla">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5 5-2Z"/></svg>
       <span data-i18n="qibla">Qibla</span>
+    </button>
+    <button type="button" data-goto="calendar">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h2v2h6V2h2v2h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3V2Zm12 8H5v9h14v-9ZM15.5 11a3.5 3.5 0 1 0 2.1 6.3A3 3 0 1 1 17.6 12a3.5 3.5 0 0 0-2.1-1Z"/></svg>
+      <span data-i18n="calendar">Calendrier</span>
     </button>
     <button type="button" data-goto="settings">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h9v2H4V6Zm13 0h3v2h-3V6Zm-4-2h2v6h-2V4ZM4 16h3v2H4v-2Zm7 0h9v2h-9v-2Zm-4-2h2v6H7v-6Z"/></svg>
@@ -251,10 +284,30 @@
   </dialog>
 
   <!-- Adhan en cours -->
-  <div class="alert" id="adhanAlert" role="alert" hidden>
+  <div class="alert adhan-alert" id="adhanAlert" role="alert" hidden>
     <p id="adhanAlertText"></p>
-    <button class="btn small" type="button" id="adhanStop" data-i18n="stop">Arrêter</button>
+    <div class="alert-btns">
+      <button class="btn" type="button" id="adhanStop" data-i18n="stopAdhan">Arrêter l’Adhan</button>
+      <button class="btn ghost" type="button" id="adhanSilent" data-i18n="silentMode">Mode silencieux</button>
+    </div>
   </div>
+
+  <!-- Mode silencieux -->
+  <dialog id="silentDialog" class="sheet" aria-labelledby="silentTitle">
+    <form method="dialog" class="sheet-head">
+      <h2 id="silentTitle" data-i18n="silentMode">Mode silencieux</h2>
+      <button class="icon-btn" value="close" aria-label="✕">✕</button>
+    </form>
+    <p class="note" data-i18n="silentHelp"></p>
+    <p class="silent-state" id="silentState"></p>
+    <div class="silent-opts">
+      <button class="btn wide" type="button" data-silent="60" data-i18n="silent1h">1 heure</button>
+      <button class="btn wide" type="button" data-silent="120" data-i18n="silent2h">2 heures</button>
+      <button class="btn wide" type="button" data-silent="nextFajr" data-i18n="silentFajr">Jusqu’au prochain Fajr</button>
+      <button class="btn wide" type="button" data-silent="forever" data-i18n="silentForever">Jusqu’à ce que je le désactive</button>
+      <button class="btn btn-primary wide" type="button" data-silent="off" id="silentOff" data-i18n="silentOff">Réactiver l’Adhan</button>
+    </div>
+  </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 

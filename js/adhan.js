@@ -1,21 +1,24 @@
 // Adhan (audio), vibration et notifications.
-// Les fichiers MP3 ne sont PAS fournis : déposer des enregistrements libres de droits
-// ou sous licence dans /audio/adhan/ avec les noms ci-dessous.
+// Sons disponibles. Tous sont téléchargés automatiquement par le workflow GitHub
+// « Télécharger les Adhans » (Freesound + Wikimedia Commons, licences libres vérifiées).
 export const ADHANS = [
-  { id: 'morocco', labelKey: 'adhanMorocco', file: 'audio/adhan/morocco.mp3' },
-  { id: 'makkah',  labelKey: 'adhanMakkah',  file: 'audio/adhan/makkah.mp3' },
-  { id: 'madinah', labelKey: 'adhanMadinah', file: 'audio/adhan/madinah.mp3' },
-  { id: 'egypt',   labelKey: 'adhanEgypt',   file: 'audio/adhan/egypt.mp3' },
-  { id: 'adhan1',  label: 'Adhan 1', file: 'audio/adhan/adhan1.mp3' },
-  { id: 'adhan2',  label: 'Adhan 2', file: 'audio/adhan/adhan2.mp3' },
-  { id: 'adhan3',  label: 'Adhan 3', file: 'audio/adhan/adhan3.mp3' },
-  { id: 'beep',    labelKey: 'beep' },
-  { id: 'none',    labelKey: 'noneAdhan' },
+  { id: 'morocco', labelKey: 'adhanMorocco', file: 'audio/adhan/morocco.mp3',
+    credit: 'Iain McCurdy — Aroumd (Maroc), Freesound, CC BY 4.0' },
+  { id: 'madinah', labelKey: 'adhanMadinah', file: 'audio/adhan/madinah.mp3',
+    credit: 'ejaz215 — Mosquée du Prophète, Wikimedia Commons, CC BY 3.0' },
+  { id: 'adhan1', labelKey: 'adhanCalm', file: 'audio/adhan/adhan1.mp3',
+    credit: '« Beautiful adhan », Wikimedia Commons, CC0' },
+  { id: 'adhan2', labelKey: 'adhanClassic', file: 'audio/adhan/adhan2.mp3',
+    credit: '« Adhan wiki », Wikimedia Commons, CC BY-SA 2.5' },
+  { id: 'beep', labelKey: 'beep' },
+  { id: 'none', labelKey: 'noneAdhan' },
 ];
+const FALLBACK_ORDER = ['morocco', 'madinah', 'adhan1', 'adhan2'];
 
 let audio = null;
 let ctx = null;
 let beepNodes = [];
+let onEnded = null;
 
 /** Débloque l'audio : les navigateurs exigent un premier geste de l'utilisateur. */
 export function unlockAudio() {
@@ -29,18 +32,62 @@ export function stopAdhan() {
   if (audio) { audio.pause(); audio.src = ''; audio = null; }
   beepNodes.forEach(n => { try { n.stop(); } catch {} });
   beepNodes = [];
+  if ('mediaSession' in navigator) { try { navigator.mediaSession.playbackState = 'none'; } catch {} }
+  if (onEnded) { const f = onEnded; onEnded = null; f(); }
 }
 
-/** Joue un Adhan. Renvoie 'played' | 'fallback' (fichier absent → bip) | 'none'. */
-export async function playAdhan(id, volume = 0.8) {
+async function tryFile(file, volume) {
+  const a = new Audio(file);
+  a.volume = Math.min(1, Math.max(0, volume));
+  await a.play();
+  return a;
+}
+
+// Contrôle depuis l'écran verrouillé / la barre de notifications (Android, iOS)
+function setupMediaSession(title) {
+  if (!('mediaSession' in navigator)) return;
+  try {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title, artist: 'Prière', artwork: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+    });
+    for (const action of ['pause', 'stop']) navigator.mediaSession.setActionHandler(action, () => stopAdhan());
+    navigator.mediaSession.playbackState = 'playing';
+  } catch {}
+}
+
+/**
+ * Joue un Adhan. Si le fichier choisi manque, essaie les autres Adhans disponibles, puis un bip.
+ * Renvoie 'played' | 'fallback' | 'beep' | 'none'. `ended` est appelé à la fin ou à l'arrêt.
+ */
+export async function playAdhan(id, volume = 0.8, { title = '', ended = null } = {}) {
   stopAdhan();
   const item = ADHANS.find(a => a.id === id);
   if (!item || id === 'none') return 'none';
-  if (id === 'beep') { beep(volume); return 'played'; }
-  audio = new Audio(item.file);
-  audio.volume = Math.min(1, Math.max(0, volume));
-  try { await audio.play(); return 'played'; }
-  catch { audio = null; beep(volume); return 'fallback'; }
+  onEnded = ended;
+  if (id === 'beep') { beep(volume); setTimeout(() => { if (!beepNodes.length) stopAdhan(); }, 2000); return 'played'; }
+  const order = [id, ...FALLBACK_ORDER.filter(x => x !== id)];
+  for (let i = 0; i < order.length; i++) {
+    const it = ADHANS.find(a => a.id === order[i]);
+    try {
+      audio = await tryFile(it.file, volume);
+      audio.addEventListener('ended', () => stopAdhan(), { once: true });
+      setupMediaSession(title || 'Adhan');
+      return i === 0 ? 'played' : 'fallback';
+    } catch { audio = null; }
+  }
+  beep(volume);
+  setTimeout(() => stopAdhan(), 2000);
+  return 'beep';
+}
+
+/** Vérifie quels fichiers existent (pour l'affichage dans les réglages). */
+export async function availableAdhans() {
+  const out = {};
+  await Promise.all(ADHANS.filter(a => a.file).map(async a => {
+    try { const r = await fetch(a.file, { method: 'HEAD', cache: 'no-store' }); out[a.id] = r.ok; }
+    catch { out[a.id] = false; }
+  }));
+  return out;
 }
 
 export const isPlaying = () => !!(audio && !audio.paused) || beepNodes.length > 0;

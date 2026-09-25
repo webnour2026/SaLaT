@@ -13,6 +13,8 @@ export const DEFAULTS = {
   school: 0,                    // 0 = Shafi/standard, 1 = Hanafi
   adjust: { Fajr: 0, Sunrise: 0, Dhuhr: 0, Asr: 0, Maghrib: 0, Isha: 0 },
   hijriOffset: 0,               // -2 … +2
+  whiteDays: true,              // rappel des jours blancs
+  silentUntil: 0,               // mode silencieux : timestamp de fin (Infinity = jusqu'à désactivation)
   declAuto: true,               // déclinaison calculée par WMM2025
   declination: 0,               // valeur manuelle (degrés, Est positif)
   adhan: {

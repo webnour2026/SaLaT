@@ -1,6 +1,21 @@
 // Traductions FR / AR / EN — ajouter une langue = ajouter un objet ici.
 const DICT = {
   fr: {
+    calendar: 'Calendrier', today: 'Aujourd’hui', occasions: 'Occasions', backToday: 'Revenir à aujourd’hui',
+    calNote: 'Calendrier Umm al-Qura calculé. Au Maroc, le début des mois dépend de l’observation du croissant : ajustez la correction (±2 jours) dans les Réglages.',
+    hijriMonths: ['Mouharram','Safar','Rabia al-Awal','Rabia ath-Thani','Joumada al-Oula','Joumada ath-Thania','Rajab','Chaabane','Ramadan','Chawwal','Dhou al-Qi’da','Dhou al-Hijja'],
+    hijriEra: 'H',
+    occNewYear: 'Nouvel an de l’Hégire', occAshura: 'Achoura', occMawlid: 'Mawlid (naissance du Prophète ﷺ)', occIsra: 'Isra et Mi’raj',
+    occNisfShaban: 'Mi-Chaabane', occRamadan: 'Début du Ramadan', occQadr: 'Nuit du Destin (27)', occFitr: 'Aïd al-Fitr', occArafa: 'Jour de ‘Arafa', occAdha: 'Aïd al-Adha',
+    whiteDays: 'Jours blancs', whiteReminder: 'Rappel du jeûne des jours blancs (13, 14, 15)',
+    whiteToday: 'Aujourd’hui est un jour blanc ({d} {m}). Jeûne recommandé.',
+    whiteSoon: 'Jeûne des jours blancs : {list}.', whiteNotifTitle: 'Demain : jour blanc', whiteNotifBody: 'Jeûne recommandé demain, {d} {m}.',
+    stopAdhan: 'Arrêter l’Adhan', silentMode: 'Mode silencieux',
+    silentHelp: 'L’Adhan ne sera pas joué (notification discrète seulement). Pratique en réunion, à la mosquée ou la nuit.',
+    silent1h: '1 heure', silent2h: '2 heures', silentFajr: 'Jusqu’au prochain Fajr', silentForever: 'Jusqu’à ce que je le désactive', silentOff: 'Réactiver l’Adhan',
+    silentUntil: 'Silencieux jusqu’à {t}', silentOn: 'Mode silencieux activé', silentOffMsg: 'Adhan réactivé',
+    adhanMorocco: 'Maroc', adhanMadinah: 'Médine', adhanCalm: 'Adhan doux', adhanClassic: 'Adhan classique',
+    adhanUnavailable: 'non installé', audioCreditsTitle: 'Enregistrements Adhan (licences libres) :',
     compassSearching: 'Recherche du capteur de la boussole…', compassBlocked: 'Capteurs bloqués : dans Chrome, touchez l’icône à gauche de l’adresse → Autorisations → Capteurs de mouvement → Autoriser, puis « Activer la boussole ».',
     noLocText: 'Pour afficher les horaires, indiquez votre ville (le GPS n’est pas obligatoire).',
     qiblaIn: 'Direction de la Qibla à', calibrateShort: 'Calibrer', moreDetails: 'Plus de détails',
@@ -69,6 +84,21 @@ const DICT = {
     cardinals: ['Nord','Nord-Nord-Est','Nord-Est','Est-Nord-Est','Est','Est-Sud-Est','Sud-Est','Sud-Sud-Est','Sud','Sud-Sud-Ouest','Sud-Ouest','Ouest-Sud-Ouest','Ouest','Ouest-Nord-Ouest','Nord-Ouest','Nord-Nord-Ouest'],
   },
   ar: {
+    calendar: 'التقويم', today: 'اليوم', occasions: 'مناسبات', backToday: 'العودة إلى اليوم',
+    calNote: 'تقويم أم القرى المحسوب. في المغرب تبدأ الشهور حسب رؤية الهلال: عدّل التصحيح (±2 يوم) في الإعدادات.',
+    hijriMonths: ['محرم','صفر','ربيع الأول','ربيع الآخر','جمادى الأولى','جمادى الآخرة','رجب','شعبان','رمضان','شوال','ذو القعدة','ذو الحجة'],
+    hijriEra: 'هـ',
+    occNewYear: 'رأس السنة الهجرية', occAshura: 'عاشوراء', occMawlid: 'المولد النبوي الشريف', occIsra: 'الإسراء والمعراج',
+    occNisfShaban: 'ليلة النصف من شعبان', occRamadan: 'بداية رمضان', occQadr: 'ليلة القدر (27)', occFitr: 'عيد الفطر', occArafa: 'يوم عرفة', occAdha: 'عيد الأضحى',
+    whiteDays: 'الأيام البيض', whiteReminder: 'تذكير بصيام الأيام البيض (13، 14، 15)',
+    whiteToday: 'اليوم من الأيام البيض ({d} {m}). يُستحب الصيام.',
+    whiteSoon: 'صيام الأيام البيض: {list}.', whiteNotifTitle: 'غدًا من الأيام البيض', whiteNotifBody: 'يُستحب صيام الغد، {d} {m}.',
+    stopAdhan: 'إيقاف الأذان', silentMode: 'الوضع الصامت',
+    silentHelp: 'لن يُشغَّل الأذان (إشعار صامت فقط). مفيد في الاجتماع أو المسجد أو الليل.',
+    silent1h: 'ساعة واحدة', silent2h: 'ساعتان', silentFajr: 'حتى الفجر القادم', silentForever: 'حتى أُلغيه', silentOff: 'إعادة تشغيل الأذان',
+    silentUntil: 'صامت حتى {t}', silentOn: 'تم تفعيل الوضع الصامت', silentOffMsg: 'تمت إعادة تشغيل الأذان',
+    adhanMorocco: 'المغرب', adhanMadinah: 'المدينة المنورة', adhanCalm: 'أذان هادئ', adhanClassic: 'أذان تقليدي',
+    adhanUnavailable: 'غير مثبت', audioCreditsTitle: 'تسجيلات الأذان (رخص حرة):',
     compassSearching: 'جارٍ البحث عن مستشعر البوصلة…', compassBlocked: 'المستشعرات محظورة: في Chrome اضغط على الأيقونة بجانب العنوان ← الأذونات ← مستشعرات الحركة ← السماح، ثم «تشغيل البوصلة».',
     noLocText: 'لعرض المواقيت، اختر مدينتك (GPS غير ضروري).',
     qiblaIn: 'اتجاه القبلة في', calibrateShort: 'معايرة', moreDetails: 'تفاصيل أكثر',
@@ -136,6 +166,21 @@ const DICT = {
     cardinals: ['شمال','شمال شمال شرق','شمال شرق','شرق شمال شرق','شرق','شرق جنوب شرق','جنوب شرق','جنوب جنوب شرق','جنوب','جنوب جنوب غرب','جنوب غرب','غرب جنوب غرب','غرب','غرب شمال غرب','شمال غرب','شمال شمال غرب'],
   },
   en: {
+    calendar: 'Calendar', today: 'Today', occasions: 'Occasions', backToday: 'Back to today',
+    calNote: 'Calculated Umm al-Qura calendar. In Morocco months begin with moon sighting: adjust the correction (±2 days) in Settings.',
+    hijriMonths: ['Muharram','Safar','Rabi al-Awwal','Rabi al-Thani','Jumada al-Ula','Jumada al-Akhirah','Rajab','Shaban','Ramadan','Shawwal','Dhu al-Qadah','Dhu al-Hijjah'],
+    hijriEra: 'AH',
+    occNewYear: 'Islamic New Year', occAshura: 'Ashura', occMawlid: 'Mawlid (Prophet’s birth ﷺ)', occIsra: 'Isra and Mi’raj',
+    occNisfShaban: 'Mid-Shaban', occRamadan: 'Start of Ramadan', occQadr: 'Night of Decree (27)', occFitr: 'Eid al-Fitr', occArafa: 'Day of Arafah', occAdha: 'Eid al-Adha',
+    whiteDays: 'White days', whiteReminder: 'Reminder to fast the white days (13, 14, 15)',
+    whiteToday: 'Today is a white day ({d} {m}). Fasting recommended.',
+    whiteSoon: 'White days fasting: {list}.', whiteNotifTitle: 'Tomorrow: white day', whiteNotifBody: 'Fasting recommended tomorrow, {d} {m}.',
+    stopAdhan: 'Stop Adhan', silentMode: 'Silent mode',
+    silentHelp: 'The Adhan will not play (quiet notification only). Handy in meetings, at the mosque or at night.',
+    silent1h: '1 hour', silent2h: '2 hours', silentFajr: 'Until next Fajr', silentForever: 'Until I turn it off', silentOff: 'Turn Adhan back on',
+    silentUntil: 'Silent until {t}', silentOn: 'Silent mode on', silentOffMsg: 'Adhan back on',
+    adhanMorocco: 'Morocco', adhanMadinah: 'Madinah', adhanCalm: 'Soft Adhan', adhanClassic: 'Classic Adhan',
+    adhanUnavailable: 'not installed', audioCreditsTitle: 'Adhan recordings (free licences):',
     compassSearching: 'Looking for the compass sensor…', compassBlocked: 'Sensors blocked: in Chrome tap the icon left of the address → Permissions → Motion sensors → Allow, then “Start compass”.',
     noLocText: 'To show prayer times, choose your city (GPS is not required).',
     qiblaIn: 'Qibla direction in', calibrateShort: 'Calibrate', moreDetails: 'More details',
@@ -213,6 +258,7 @@ export function setLang(l) {
   document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label', el.title); });
 }
 export const getLang = () => lang;
 export const locale = () => `${LOCALES[lang]}-u-nu-latn`;
