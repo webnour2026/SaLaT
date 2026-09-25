@@ -22,7 +22,7 @@ const prettify = n => { const t = n.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' 
 
 /**
  * Sur GitHub Pages, liste les fichiers audio d'un dossier du dépôt via l'API publique de GitHub
- * (sans clé, résultat gardé 1 h pour rester sous la limite de 60 requêtes/heure).
+ * (sans clé ; résultat gardé 10 min pour rester sous la limite de 60 requêtes/heure).
  * Permet d'afficher un Adhan déposé même si le workflow de conversion n'a pas (encore) tourné.
  */
 async function githubListing(dir) {
@@ -34,7 +34,7 @@ async function githubListing(dir) {
   const key = `priere.gh.${repo}.${dir}`;
   try {
     const c = JSON.parse(localStorage.getItem(key) || 'null');
-    if (c && Date.now() - c.t < 36e5) return c.files;
+    if (c && Date.now() - c.t < 10 * 60000) return c.files;
   } catch {}
   try {
     const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${dir}`, { headers: { Accept: 'application/vnd.github+json' } });
@@ -56,6 +56,11 @@ export async function loadSiteAdhans() {
   const extra = [];
   if (!list) extra.push(...await githubListing('audio/adhan'));   // pas de list.json : on lit le dépôt
   extra.push(...await githubListing('audio/adhan/nouveaux'));     // déposés mais pas encore convertis
+  // on vérifie que chaque fichier existe encore sur le site (un fichier supprimé du dépôt disparaît)
+  const alive = await Promise.all(extra.map(async it => {
+    try { return (await fetch(it.file, { method: 'HEAD', cache: 'no-store' })).ok; } catch { return false; }
+  }));
+  for (let i = extra.length - 1; i >= 0; i--) if (!alive[i]) extra.splice(i, 1);
   siteList = [...(list || []), ...extra];
   const at = () => { const i = ADHANS.findIndex(x => x.custom || x.id === 'beep'); return i < 0 ? ADHANS.length : i; };
   for (const it of siteList) {
