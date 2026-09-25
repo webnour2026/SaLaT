@@ -17,20 +17,54 @@ export const RETIRED = ['makkah', 'makkah2', 'casablanca', 'sham', 'adhan2'];
 const FALLBACK_ORDER = ['aaqib', 'madinah', 'adhan1', 'morocco'];
 let siteList = null;
 
-/** Lit audio/adhan/list.json et ajoute les Adhans du site qui ne sont pas encore dans ADHANS. */
+const AUDIO_RE = /\.(mp3|m4a|aac|ogg|oga|opus|wav)$/i;
+const prettify = n => { const t = n.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim(); return t.charAt(0).toUpperCase() + t.slice(1); };
+
+/**
+ * Sur GitHub Pages, liste les fichiers audio d'un dossier du dépôt via l'API publique de GitHub
+ * (sans clé, résultat gardé 1 h pour rester sous la limite de 60 requêtes/heure).
+ * Permet d'afficher un Adhan déposé même si le workflow de conversion n'a pas (encore) tourné.
+ */
+async function githubListing(dir) {
+  const host = location.hostname;
+  if (!host.endsWith('.github.io')) return [];
+  const owner = host.split('.')[0];
+  const seg = location.pathname.split('/').filter(Boolean)[0];
+  const repo = seg && !/\.html?$/.test(seg) ? seg : host;
+  const key = `priere.gh.${repo}.${dir}`;
+  try {
+    const c = JSON.parse(localStorage.getItem(key) || 'null');
+    if (c && Date.now() - c.t < 36e5) return c.files;
+  } catch {}
+  try {
+    const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${dir}`, { headers: { Accept: 'application/vnd.github+json' } });
+    if (!r.ok) throw 0;
+    const files = (await r.json()).filter(f => f.type === 'file' && AUDIO_RE.test(f.name))
+      .map(f => ({ id: f.name.replace(/\.[^.]+$/, ''), file: `${dir}/${encodeURIComponent(f.name)}`, label: prettify(f.name) }));
+    try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), files })); } catch {}
+    return files;
+  } catch { return []; }
+}
+
+/** Ajoute à ADHANS les Adhans du site : list.json (workflow) + fichiers déposés dans le dépôt. */
 export async function loadSiteAdhans() {
+  let list = null;
   try {
     const r = await fetch('audio/adhan/list.json', { cache: 'no-cache' });
-    if (!r.ok) throw 0;
-    siteList = await r.json();
-    const at = () => { const i = ADHANS.findIndex(x => x.custom || x.id === 'beep'); return i < 0 ? ADHANS.length : i; };
-    for (const it of siteList) {
-      if (!it || !it.id || !it.file || RETIRED.includes(it.id)) continue;
-      if (ADHANS.some(x => x.id === it.id)) continue;
-      ADHANS.splice(at(), 0, { id: it.id, label: it.label || it.id, file: it.file });
-      FALLBACK_ORDER.push(it.id);
-    }
-  } catch { siteList = null; }
+    if (r.ok) list = await r.json();
+  } catch {}
+  const extra = [];
+  if (!list) extra.push(...await githubListing('audio/adhan'));   // pas de list.json : on lit le dépôt
+  extra.push(...await githubListing('audio/adhan/nouveaux'));     // déposés mais pas encore convertis
+  siteList = [...(list || []), ...extra];
+  const at = () => { const i = ADHANS.findIndex(x => x.custom || x.id === 'beep'); return i < 0 ? ADHANS.length : i; };
+  for (const it of siteList) {
+    if (!it || !it.id || !it.file || RETIRED.includes(it.id)) continue;
+    if (ADHANS.some(x => x.id === it.id)) continue;
+    ADHANS.splice(at(), 0, { id: it.id, label: it.label || prettify(it.id), file: it.file });
+    FALLBACK_ORDER.push(it.id);
+  }
+  if (!siteList.length) siteList = null;
 }
 
 // ---------- Adhan personnel (fichier choisi par l'utilisateur, gardé sur l'appareil) ----------

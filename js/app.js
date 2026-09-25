@@ -634,7 +634,9 @@ async function renderCredits() {
     const r = await fetch('audio/adhan/credits.json', { cache: 'no-cache' });
     if (!r.ok) throw 0;
     const list = await r.json();
-    ul.replaceChildren(...list.map(c => {
+    // on n'affiche que les Adhans réellement proposés (un credits.json ancien peut contenir des Adhans retirés)
+    const shown = list.filter(c => !RETIRED.includes(c.id) && ADHANS.some(x => x.id === c.id && x.file));
+    ul.replaceChildren(...shown.map(c => {
       const li = document.createElement('li');
       const item = ADHANS.find(x => x.id === c.id);
       li.textContent = `${item ? t(item.labelKey) : c.id} — ${c.author || '?'}, ${c.license || ''} `;
@@ -822,6 +824,7 @@ function init() {
     }
     sanitizeAdhans(); renderCustomAdhan(); state.adhanAvail = null; renderAdhanPickers();
     availableAdhans().then(av => { state.adhanAvail = { ...av }; renderAdhanPickers(); });
+    renderCredits();
   });
   // premier lancement : langue de l'appareil (arabe si le téléphone est en arabe)
   if (!localStorage.getItem('priere.settings.v1')) {
