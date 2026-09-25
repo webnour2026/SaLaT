@@ -11,6 +11,11 @@ import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNoti
 import { PRESET_CITIES, METHOD_BY_COUNTRY, getGpsPosition, reverseGeocode, searchCity } from './location.js';
 
 const $ = sel => document.querySelector(sel);
+// branche un écouteur sans planter si l'élément n'existe pas (ancien index.html en cache, etc.)
+function on(sel, ev, fn, opts) {
+  const el = document.querySelector(sel);
+  if (el) el.addEventListener(ev, fn, opts); else console.warn('Élément absent :', sel);
+}
 const METHOD_IDS = [21, 3, 5, 4, 1, 2, 13, 12, 19, 18, 8, 16, 15];
 const LIST_ROWS = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 const EXTRA_ROWS = ['Imsak', 'Sunset', 'Midnight'];
@@ -198,7 +203,14 @@ function skyFor(t) {
 
 function renderAll() { renderHeader(); renderHome(); }
 
+function renderNoLoc() {
+  const none = !S().location;
+  const box = $('#noLoc'); if (box) box.hidden = !none;
+  const arch = $('#arch'); if (arch) arch.hidden = none;
+}
+
 function renderHeader() {
+  renderNoLoc();
   const loc = S().location;
   $('#placeName').textContent = loc ? (loc.name || `${loc.lat.toFixed(3)}, ${loc.lng.toFixed(3)}`) : t('chooseCity');
   const { greg, hijri } = fmtDates(now());
@@ -525,31 +537,31 @@ async function ensureNotifPermission() {
 }
 
 function bindSettings() {
-  $('#changeLoc').addEventListener('click', openLocationDialog);
-  $('#sMethod').addEventListener('change', e => { S().method = Number(e.target.value); S().methodAuto = false; save(); refresh(); });
-  $('#sSchool').addEventListener('change', e => { S().school = Number(e.target.value); save(); refresh(); });
-  $('#sAdhanOn').addEventListener('change', e => { S().adhan.enabled = e.target.checked; save(); if (e.target.checked) unlockAudio(); });
-  $('#sAdhanMode').addEventListener('change', e => { S().adhan.mode = e.target.value; save(); renderAdhanPickers(); });
-  $('#sVolume').addEventListener('input', e => { S().adhan.volume = Number(e.target.value); save(); });
-  $('#sVibrate').addEventListener('change', e => { S().adhan.vibrate = e.target.checked; save(); if (e.target.checked) vibrate(80); });
-  $('#sNotifyAt').addEventListener('change', async e => {
+  on('#changeLoc', 'click', openLocationDialog);
+  on('#sMethod', 'change', e => { S().method = Number(e.target.value); S().methodAuto = false; save(); refresh(); });
+  on('#sSchool', 'change', e => { S().school = Number(e.target.value); save(); refresh(); });
+  on('#sAdhanOn', 'change', e => { S().adhan.enabled = e.target.checked; save(); if (e.target.checked) unlockAudio(); });
+  on('#sAdhanMode', 'change', e => { S().adhan.mode = e.target.value; save(); renderAdhanPickers(); });
+  on('#sVolume', 'input', e => { S().adhan.volume = Number(e.target.value); save(); });
+  on('#sVibrate', 'change', e => { S().adhan.vibrate = e.target.checked; save(); if (e.target.checked) vibrate(80); });
+  on('#sNotifyAt', 'change', async e => {
     S().adhan.notifyAt = e.target.checked; save();
     if (e.target.checked) await ensureNotifPermission(); else updateNotifWarn();
   });
-  $('#sNotifyBefore').addEventListener('change', async e => {
+  on('#sNotifyBefore', 'change', async e => {
     S().adhan.notifyBefore = Number(e.target.value); save();
     if (S().adhan.notifyBefore > 0) await ensureNotifPermission(); else updateNotifWarn();
   });
-  $('#testNotif').addEventListener('click', async () => {
+  on('#testNotif', 'click', async () => {
     if (await ensureNotifPermission()) notify(`${t('itsTime')} ${t('Asr')}`, fmtTime(now()), { tag: 'test', vibrateOn: S().adhan.vibrate });
   });
-  $('#sLang').addEventListener('change', e => { S().lang = e.target.value; save(); applyLang(); renderAll(); renderSettings(); renderQibla(); });
-  $('#sTheme').addEventListener('change', e => { S().theme = e.target.value; save(); applyTheme(); });
-  $('#sHijri').addEventListener('change', e => { S().hijriOffset = Number(e.target.value); save(); renderHeader(); });
-  $('#sDecl').addEventListener('change', e => { S().declination = Math.max(-30, Math.min(30, Number(String(e.target.value).replace(',', '.')) || 0)); save(); state.decl = currentDeclination(); });
-  $('#sDeclAuto').addEventListener('change', e => { S().declAuto = e.target.checked; save(); state.decl = currentDeclination(); renderSettings(); });
-  $('#syncBtn').addEventListener('click', async () => { await syncClock(); computeNext(); renderSettings(); });
-  $('#clearBtn').addEventListener('click', () => { clearMonths(); toast(t('cleared')); refresh(); });
+  on('#sLang', 'change', e => { S().lang = e.target.value; save(); applyLang(); renderAll(); renderSettings(); renderQibla(); });
+  on('#sTheme', 'change', e => { S().theme = e.target.value; save(); applyTheme(); });
+  on('#sHijri', 'change', e => { S().hijriOffset = Number(e.target.value); save(); renderHeader(); });
+  on('#sDecl', 'change', e => { S().declination = Math.max(-30, Math.min(30, Number(String(e.target.value).replace(',', '.')) || 0)); save(); state.decl = currentDeclination(); });
+  on('#sDeclAuto', 'change', e => { S().declAuto = e.target.checked; save(); state.decl = currentDeclination(); renderSettings(); });
+  on('#syncBtn', 'click', async () => { await syncClock(); computeNext(); renderSettings(); });
+  on('#clearBtn', 'click', () => { clearMonths(); toast(t('cleared')); refresh(); });
 }
 
 // ================= Service worker =================
@@ -568,22 +580,24 @@ function registerSW() {
 // ================= Démarrage =================
 function bind() {
   document.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click', () => go(b.dataset.goto)));
-  $('#placeBtn').addEventListener('click', openLocationDialog);
-  $('#langBtn').addEventListener('click', () => {
+  on('#placeBtn', 'click', openLocationDialog);
+  on('#langBtn', 'click', () => {
     S().lang = { fr: 'ar', ar: 'en', en: 'fr' }[S().lang] || 'fr';
     save(); applyLang(); renderAll();
     if (!$('#view-settings').hidden) renderSettings();
     if (!$('#view-qibla').hidden) renderQibla();
   });
-  $('#gpsBtn').addEventListener('click', useGps);
-  $('#citySearch').addEventListener('input', onSearch);
-  $('#compassStart').addEventListener('click', async () => { unlockAudio(); await compass.start(); });
-  $('#calibrateBtn').addEventListener('click', () => $('#calDialog').showModal());
-  $('#adhanStop').addEventListener('click', () => { stopAdhan(); $('#adhanAlert').hidden = true; });
+  on('#gpsBtn', 'click', useGps);
+  on('#citySearch', 'input', onSearch);
+  on('#compassStart', 'click', async () => { unlockAudio(); await compass.start(); });
+  on('#calibrateBtn', 'click', () => $('#calDialog').showModal());
+  on('#adhanStop', 'click', () => { stopAdhan(); $('#adhanAlert').hidden = true; });
   // l'audio ne peut démarrer qu'après un premier geste de l'utilisateur
   document.addEventListener('pointerdown', unlockAudio, { once: true });
   window.addEventListener('online', () => { state.online = true; refresh(); syncClock(); });
   window.addEventListener('offline', () => { state.online = false; renderHome(); });
+  on('#noLocCity', 'click', openLocationDialog);
+  on('#noLocGps', 'click', useGps);
   bindSettings();
 }
 
@@ -603,6 +617,7 @@ function init() {
 
   const view = (location.hash || '#home').slice(1);
   go(['home', 'qibla', 'settings'].includes(view) ? view : 'home');
+  renderNoLoc();
 
   if (!S().location) {
     // premier lancement : on demande la position GPS
@@ -622,4 +637,4 @@ function init() {
   syncClock().then(() => { if (state.today) computeNext(); });
 }
 
-init();
+try { init(); } finally { window.__appStarted = true; }

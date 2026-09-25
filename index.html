@@ -38,6 +38,12 @@
         <p id="hijriDate" class="hijri">&nbsp;</p>
       </div>
 
+      <div class="noloc" id="noLoc" hidden>
+        <p data-i18n="noLocText">Pour afficher les horaires, indiquez votre ville.</p>
+        <button class="btn btn-primary wide" type="button" id="noLocCity" data-i18n="chooseCity">Choisir une ville</button>
+        <button class="btn wide" type="button" id="noLocGps" data-i18n="useGps">Utiliser ma position GPS</button>
+      </div>
+
       <div class="arch" id="arch" data-sky="day">
         <p class="arch-label" id="nextLabel" data-i18n="nextPrayer">Prochaine prière</p>
         <h1 class="arch-name" id="nextName">—</h1>
@@ -252,6 +258,24 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+  <div class="bootfail" id="bootFail" hidden>
+    <p>L’application n’a pas pu démarrer (mise à jour incomplète).<br><span lang="ar" dir="rtl">تعذّر تشغيل التطبيق (تحديث غير مكتمل).</span></p>
+    <button class="btn btn-primary" type="button" id="bootFix">Réparer et recharger / إصلاح</button>
+  </div>
+  <script>
+    // Garde-fou : si le script principal ne démarre pas en 5 s, on propose de vider le cache.
+    setTimeout(function () {
+      if (window.__appStarted) return;
+      var box = document.getElementById('bootFail'); box.hidden = false;
+      document.getElementById('bootFix').onclick = async function () {
+        try {
+          if ('serviceWorker' in navigator) for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
+          if (window.caches) for (const k of await caches.keys()) await caches.delete(k);
+        } catch (e) {}
+        location.reload();
+      };
+    }, 5000);
+  </script>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>

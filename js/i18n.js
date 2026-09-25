@@ -1,6 +1,7 @@
 // Traductions FR / AR / EN — ajouter une langue = ajouter un objet ici.
 const DICT = {
   fr: {
+    noLocText: 'Pour afficher les horaires, indiquez votre ville (le GPS n’est pas obligatoire).',
     qiblaIn: 'Direction de la Qibla à', calibrateShort: 'Calibrer', moreDetails: 'Plus de détails',
     sensorGood: 'Capteur précis', sensorFair: 'Précision moyenne, calibration conseillée',
     sensorPoor: 'Le capteur du téléphone doit être calibré', sensorOff: 'Boussole inactive',
@@ -67,6 +68,7 @@ const DICT = {
     cardinals: ['Nord','Nord-Nord-Est','Nord-Est','Est-Nord-Est','Est','Est-Sud-Est','Sud-Est','Sud-Sud-Est','Sud','Sud-Sud-Ouest','Sud-Ouest','Ouest-Sud-Ouest','Ouest','Ouest-Nord-Ouest','Nord-Ouest','Nord-Nord-Ouest'],
   },
   ar: {
+    noLocText: 'لعرض المواقيت، اختر مدينتك (GPS غير ضروري).',
     qiblaIn: 'اتجاه القبلة في', calibrateShort: 'معايرة', moreDetails: 'تفاصيل أكثر',
     sensorGood: 'المستشعر دقيق', sensorFair: 'دقة متوسطة، يُنصح بالمعايرة',
     sensorPoor: 'يحتاج مستشعر الهاتف إلى المعايرة', sensorOff: 'البوصلة غير مفعّلة',
@@ -132,6 +134,7 @@ const DICT = {
     cardinals: ['شمال','شمال شمال شرق','شمال شرق','شرق شمال شرق','شرق','شرق جنوب شرق','جنوب شرق','جنوب جنوب شرق','جنوب','جنوب جنوب غرب','جنوب غرب','غرب جنوب غرب','غرب','غرب شمال غرب','شمال غرب','شمال شمال غرب'],
   },
   en: {
+    noLocText: 'To show prayer times, choose your city (GPS is not required).',
     qiblaIn: 'Qibla direction in', calibrateShort: 'Calibrate', moreDetails: 'More details',
     sensorGood: 'Sensor accurate', sensorFair: 'Medium accuracy, calibration advised',
     sensorPoor: 'The phone sensor needs calibration', sensorOff: 'Compass inactive',

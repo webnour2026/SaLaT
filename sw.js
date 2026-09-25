@@ -1,5 +1,5 @@
 // Service worker — changer VERSION à chaque déploiement pour forcer la mise à jour.
-const VERSION = 'priere-v1.2.2';
+const VERSION = 'priere-v1.3.0';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
@@ -12,7 +12,7 @@ const APP_SHELL = [
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(SHELL).then(c => c.addAll(APP_SHELL)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(SHELL).then(c => c.addAll(APP_SHELL.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', event => {
@@ -65,8 +65,12 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Fichiers de l'appli : cache puis mise à jour en arrière-plan
-  event.respondWith(staleWhileRevalidate(req));
+  // Fichiers de l'appli (JS, CSS, icônes) : RÉSEAU D'ABORD, cache seulement hors ligne.
+  // Évite de mélanger une nouvelle page avec d'anciens scripts après une mise à jour.
+  event.respondWith(fetch(req, { cache: 'no-cache' }).then(res => {
+    if (res.ok) { const copy = res.clone(); caches.open(SHELL).then(c => c.put(req, copy)); }
+    return res;
+  }).catch(() => caches.match(req, { ignoreSearch: true })));
 });
 
 function staleWhileRevalidate(req) {
