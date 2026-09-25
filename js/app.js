@@ -5,6 +5,8 @@ import { ensureMonths, getDay, findNext, dateKeyInTz, addDays, deviceTz } from '
 import { Countdown, formatHMS } from './countdown.js';
 import { qiblaBearing, distanceToKaaba, cardinalIndex } from './qibla.js';
 import { Compass } from './compass.js';
+import { declination as wmmDeclination } from './wmm.js';
+import { sunPosition, timesAtAzimuth } from './sun.js';
 import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNotifPermission, notifPermission } from './adhan.js';
 import { PRESET_CITIES, METHOD_BY_COUNTRY, getGpsPosition, reverseGeocode, searchCity } from './location.js';
 
@@ -19,10 +21,18 @@ const state = {
   online: navigator.onLine, fetchFailed: false,
   fired: new Set(JSON.parse(sessionStorage.getItem('priere.fired') || '[]')),
   qibla: null,
+  decl: 0,
 };
 const S = () => state.settings;
 const save = () => saveSettings(state.settings);
-const tz = () => S().location?.tz || deviceTz();
+// Maroc : retour définitif à GMT le 20/09/2026 à 2 h (décret n° 2.26.530).
+// Certains navigateurs ont encore l'ancienne base de fuseaux (GMT+1) : on force UTC.
+const MOROCCO_GMT_FROM = Date.UTC(2026, 8, 20, 1, 0);
+function effectiveTz(name) {
+  if ((name === 'Africa/Casablanca' || name === 'Africa/El_Aaiun') && Date.now() >= MOROCCO_GMT_FROM) return 'UTC';
+  return name;
+}
+const tz = () => effectiveTz(S().location?.tz || deviceTz());
 
 // ================= Formatage =================
 const fmtTime = ts => ts == null ? '--:--'
@@ -54,8 +64,10 @@ function applyTheme() {
 }
 function applyLang() {
   setLang(S().lang);
-  const letters = { fr: ['N', 'E', 'S', 'O'], en: ['N', 'E', 'S', 'W'], ar: ['ش', 'ق', 'ج', 'غ'] }[getLang()];
-  document.querySelectorAll('.dial-n, .dial-c').forEach((el, i) => { el.textContent = letters[i]; });
+  if ($('#roseLabels')) renderDialLabels();
+  const next = { fr: 'ع', ar: 'EN', en: 'FR' }[getLang()];
+  $('#langBtn').textContent = next;
+  state.sensorQ = null; // retraduit le texte du capteur
 }
 
 // ================= Navigation =================
@@ -65,7 +77,7 @@ function go(view) {
     if (b.dataset.goto === view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
   if (view !== 'qibla') compass.stop();
-  if (view === 'qibla') renderQibla();
+  if (view === 'qibla') { renderQibla(); if (!Compass.needsPermission()) compass.start(); }
   if (view === 'settings') renderSettings();
   window.scrollTo({ top: 0 });
   history.replaceState(null, '', `#${view}`);
@@ -251,7 +263,7 @@ const countdown = new Countdown({
     // changement de jour dans le fuseau du lieu
     if (state.dayKey && dateKeyInTz(tNow, tz()) !== state.dayKey) { loadDays(); renderAll(); refresh(); }
     checkEvents(tNow);
-    if (tNow % 60000 < 1000) renderHome(); // rafraîchit les coches chaque minute
+    if (tNow % 60000 < 1000) { renderHome(); if (!$('#view-qibla').hidden) renderSun(); } // chaque minute
   },
   onReach() {
     // la prière est arrivée : on passe à la suivante
@@ -305,65 +317,127 @@ async function fireEvent(ev) {
 }
 
 // ================= Qibla =================
+function currentDeclination() {
+  const loc = S().location;
+  if (!S().declAuto || !loc) return Number(S().declination) || 0;
+  try { return wmmDeclination(loc.lat, loc.lng, 0); } catch { return Number(S().declination) || 0; }
+}
+const fmtDeg = (v, digits = 1) => v.toLocaleString(locale(), { minimumFractionDigits: digits, maximumFractionDigits: digits });
+
 const compass = new Compass({
-  onHeading(magnetic, { flat }) {
+  onHeading(magnetic, { flat, source, accuracy, quality }) {
     if (state.qibla == null) return;
-    const heading = (magnetic + Number(S().declination || 0) + 360) % 360; // → nord géographique
-    // angle cumulé pour que la rose ne fasse pas un tour complet entre 359° et 0°
+    const heading = (magnetic + state.decl + 360) % 360; // → nord géographique
+    // angle cumulé : la rose ne fait pas un tour complet entre 359° et 0°
     const target = -heading;
     state.roseAngle = state.roseAngle ?? target;
     state.roseAngle += ((target - state.roseAngle + 540) % 360) - 180;
     $('#rose').style.transform = `rotate(${state.roseAngle}deg)`;
-    if (compass.lastStatus === 'calibrate') return;
-    let diff = ((state.qibla - heading + 540) % 360) - 180; // −180…180
+    $('#headingBig').textContent = Math.round(heading) % 360;
+    setSensor(quality);
+    $('#compassDebug').textContent = `${t('heading')} : ${fmtDeg(heading)}°`
+      + (accuracy != null && accuracy >= 0 ? ` · ${t('accuracy')} ±${Math.round(accuracy)}°` : '') + ` · ${source}`;
+
+    const diff = ((state.qibla - heading + 540) % 360) - 180; // −180…180
+    // hystérésis : aligné sous 2°, désaligné au-delà de 4°
+    const aligned = flat && Math.abs(diff) <= (compass.wasAligned ? 4 : 2);
+    $('#dial').classList.toggle('aligned', aligned);
+    $('#kaabaTop').classList.toggle('on', aligned);
+    $('#headingBig').classList.toggle('on', aligned);
     const msg = $('#compassMsg');
-    const aligned = Math.abs(diff) <= 3;
-    $('#dial').classList.toggle('aligned', aligned && flat);
-    if (!flat) { msg.textContent = t('notFlat'); msg.className = 'compass-msg alert-s'; return; }
-    if (aligned) {
-      msg.textContent = t('aligned'); msg.className = 'compass-msg ok-s';
-      if (!compass.wasAligned) vibrate(60);
-    } else {
-      msg.textContent = `${diff > 0 ? t('turnRight') : t('turnLeft')} ${Math.round(Math.abs(diff))}°`;
-      msg.className = 'compass-msg';
-    }
+    if (!flat) { msg.textContent = t('notFlat'); msg.className = 'compass-msg alert-s'; }
+    else if (aligned) { msg.textContent = t('aligned'); msg.className = 'compass-msg ok-s'; if (!compass.wasAligned) vibrate(60); }
+    else { msg.textContent = `${diff > 0 ? t('turnRight') : t('turnLeft')} \u2066${Math.round(Math.abs(diff))}°\u2069`; msg.className = 'compass-msg'; }
     compass.wasAligned = aligned;
   },
   onStatus(s) {
     compass.lastStatus = s;
-    const msg = $('#compassMsg');
-    const map = { unsupported: 'compassUnsupported', denied: 'compassDenied', nodata: 'compassNoData', relative: 'compassRelative', calibrate: 'needCalibration' };
-    if (map[s]) { msg.textContent = t(map[s]); msg.className = 'compass-msg alert-s'; }
-    if (s === 'unsupported' || s === 'denied' || s === 'relative') { $('#rose').style.transform = ''; }
-    if (s !== 'ok' && s !== 'calibrate') $('#compassStart').hidden = false;
-    else $('#compassStart').hidden = true;
+    const map = { unsupported: 'compassUnsupported', denied: 'compassDenied', nodata: 'compassNoData', relative: 'compassRelative' };
+    if (map[s]) {
+      $('#compassMsg').textContent = t(map[s]); $('#compassMsg').className = 'compass-msg alert-s';
+      $('#rose').style.transform = ''; state.roseAngle = null; $('#headingBig').textContent = '--';
+      setSensor('off');
+    }
+    if (s === 'calibrate') setSensor('poor');
+    $('#compassStart').hidden = s === 'ok' || s === 'calibrate';
   },
 });
 
+function setSensor(q) {
+  if (state.sensorQ === q) return;
+  state.sensorQ = q;
+  $('#sensorDot').dataset.q = q;
+  $('#sensorText').textContent = t({ good: 'sensorGood', fair: 'sensorFair', poor: 'sensorPoor', off: 'sensorOff' }[q]);
+}
+
 function buildDial() {
-  const g = $('#ticks');
   const ns = 'http://www.w3.org/2000/svg';
-  for (let a = 0; a < 360; a += 5) {
-    const major = a % 30 === 0;
+  const ticks = $('#roseTicks');
+  for (let a = 0; a < 360; a += 45) {
     const l = document.createElementNS(ns, 'line');
-    l.setAttribute('x1', 0); l.setAttribute('x2', 0);
-    l.setAttribute('y1', -130); l.setAttribute('y2', major ? -116 : a % 10 === 0 ? -121 : -125);
-    l.setAttribute('transform', `rotate(${a})`);
-    l.setAttribute('class', major ? 'dial-tick major' : 'dial-tick');
-    g.append(l);
+    l.setAttribute('x1', 0); l.setAttribute('x2', 0); l.setAttribute('y1', -140); l.setAttribute('y2', -160);
+    l.setAttribute('transform', `rotate(${a + 22.5})`);
+    l.setAttribute('class', 'rtick');
+    ticks.append(l);
   }
+  renderDialLabels();
+}
+function renderDialLabels() {
+  const ns = 'http://www.w3.org/2000/svg';
+  const names = { fr: ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'], en: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'], ar: ['شمال', '', 'شرق', '', 'جنوب', '', 'غرب', ''] }[getLang()];
+  $('#roseLabels').replaceChildren(...names.map((n, i) => n && (() => {
+    const a = i * 45, r = 98;
+    const x = Math.sin(a * Math.PI / 180) * r, y = -Math.cos(a * Math.PI / 180) * r;
+    const tx = document.createElementNS(ns, 'text');
+    tx.setAttribute('x', x.toFixed(1)); tx.setAttribute('y', y.toFixed(1));
+    tx.setAttribute('transform', `rotate(${a} ${x.toFixed(1)} ${y.toFixed(1)})`);
+    tx.setAttribute('class', i === 0 ? 'rlabel n' : 'rlabel');
+    tx.textContent = n;
+    return tx;
+  })()).filter(Boolean));
 }
 
 function renderQibla() {
   const loc = S().location;
   if (!loc) return;
   state.qibla = qiblaBearing(loc.lat, loc.lng);
-  const dist = distanceToKaaba(loc.lat, loc.lng);
-  $('#qiblaDeg').textContent = state.qibla.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  state.decl = currentDeclination();
+  $('#qiblaCity').textContent = loc.name || `${loc.lat.toFixed(2)}, ${loc.lng.toFixed(2)}`;
+  $('#qiblaDeg').textContent = `${fmtDeg(state.qibla)}°`;
   $('#qiblaCardinal').textContent = t('cardinals')[cardinalIndex(state.qibla)];
-  $('#qiblaDist').textContent = `${Math.round(dist).toLocaleString(locale())} km`;
-  $('#kaabaMark').setAttribute('transform', `rotate(${state.qibla})`);
+  const mag = (state.qibla - state.decl + 360) % 360;
+  $('#qiblaMag').textContent = `${fmtDeg(mag)}° (${t('declShort')} ${state.decl >= 0 ? '+' : ''}${fmtDeg(state.decl)}°)`;
+  $('#qiblaDist').textContent = `${Math.round(distanceToKaaba(loc.lat, loc.lng)).toLocaleString(locale())} km`;
+  $('#qiblaMark').setAttribute('transform', `rotate(${state.qibla})`);
+  if (!state.sensorQ) setSensor('off');
+  renderSun();
   if (!Compass.isSupported()) compass.onStatus('unsupported');
+}
+
+function renderSun() {
+  const loc = S().location; if (!loc || state.qibla == null) return;
+  const tNow = now();
+  const sp = sunPosition(tNow, loc.lat, loc.lng);
+  if (sp.elevation > 0) {
+    $('#sunNow').textContent = t('sunNow', { az: fmtDeg(sp.azimuth), el: fmtDeg(sp.elevation) });
+    const d = ((state.qibla - sp.azimuth + 540) % 360) - 180;
+    $('#sunRel').textContent = t('sunRel', { d: fmtDeg(Math.abs(d)), side: d > 0 ? t('toRight') : t('toLeft') });
+  } else {
+    $('#sunNow').textContent = t('sunDown'); $('#sunRel').textContent = '';
+  }
+  // journée dans le fuseau du lieu : de Fajr à Isha si connus, sinon ±12 h
+  const day = state.today?.times;
+  const from = day?.Fajr ?? tNow - 12 * 36e5, to = day?.Isha ?? tNow + 12 * 36e5;
+  const items = [
+    ...timesAtAzimuth(state.qibla, loc.lat, loc.lng, from, to).map(ts => ({ ts, key: 'faceSun' })),
+    ...timesAtAzimuth((state.qibla + 180) % 360, loc.lat, loc.lng, from, to).map(ts => ({ ts, key: 'shadow' })),
+  ].sort((a, b) => a.ts - b.ts);
+  $('#sunTimes').replaceChildren(...(items.length ? items.map(({ ts, key }) => {
+    const li = document.createElement('li');
+    li.textContent = t(key, { t: fmtTime(ts) }) + (ts < tNow ? ` ${t('sunPast')}` : '');
+    if (ts < tNow) li.className = 'past';
+    return li;
+  }) : [Object.assign(document.createElement('li'), { textContent: t('sunNone'), className: 'past' })]));
 }
 
 // ================= Réglages =================
@@ -402,7 +476,9 @@ function renderSettings() {
   document.querySelectorAll('input[name="lang"]').forEach(r => { r.checked = r.value === s.lang; });
   document.querySelectorAll('input[name="theme"]').forEach(r => { r.checked = r.value === s.theme; });
   $('#sHijri').value = s.hijriOffset > 0 ? `+${s.hijriOffset}` : String(s.hijriOffset);
-  $('#sDecl').value = s.declination;
+  $('#sDeclAuto').checked = s.declAuto;
+  $('#sDecl').disabled = s.declAuto;
+  $('#sDecl').value = s.declAuto ? fmtDeg(currentDeclination()).replace(',', '.') : s.declination;
   $('#clockOffset').textContent = `${getOffset() >= 0 ? '+' : ''}${Math.round(getOffset() / 1000)} s`;
 }
 
@@ -470,7 +546,8 @@ function bindSettings() {
   $('#sLang').addEventListener('change', e => { S().lang = e.target.value; save(); applyLang(); renderAll(); renderSettings(); renderQibla(); });
   $('#sTheme').addEventListener('change', e => { S().theme = e.target.value; save(); applyTheme(); });
   $('#sHijri').addEventListener('change', e => { S().hijriOffset = Number(e.target.value); save(); renderHeader(); });
-  $('#sDecl').addEventListener('change', e => { S().declination = Math.max(-30, Math.min(30, Number(e.target.value) || 0)); save(); });
+  $('#sDecl').addEventListener('change', e => { S().declination = Math.max(-30, Math.min(30, Number(String(e.target.value).replace(',', '.')) || 0)); save(); state.decl = currentDeclination(); });
+  $('#sDeclAuto').addEventListener('change', e => { S().declAuto = e.target.checked; save(); state.decl = currentDeclination(); renderSettings(); });
   $('#syncBtn').addEventListener('click', async () => { await syncClock(); computeNext(); renderSettings(); });
   $('#clearBtn').addEventListener('click', () => { clearMonths(); toast(t('cleared')); refresh(); });
 }
@@ -492,6 +569,12 @@ function registerSW() {
 function bind() {
   document.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click', () => go(b.dataset.goto)));
   $('#placeBtn').addEventListener('click', openLocationDialog);
+  $('#langBtn').addEventListener('click', () => {
+    S().lang = { fr: 'ar', ar: 'en', en: 'fr' }[S().lang] || 'fr';
+    save(); applyLang(); renderAll();
+    if (!$('#view-settings').hidden) renderSettings();
+    if (!$('#view-qibla').hidden) renderQibla();
+  });
   $('#gpsBtn').addEventListener('click', useGps);
   $('#citySearch').addEventListener('input', onSearch);
   $('#compassStart').addEventListener('click', async () => { unlockAudio(); await compass.start(); });
@@ -505,6 +588,12 @@ function bind() {
 }
 
 function init() {
+  // premier lancement : langue de l'appareil (arabe si le téléphone est en arabe)
+  if (!localStorage.getItem('priere.settings.v1')) {
+    const dev = (navigator.language || 'fr').slice(0, 2);
+    S().lang = ['ar', 'fr', 'en'].includes(dev) ? dev : 'fr';
+    save();
+  }
   applyTheme();
   applyLang();
   buildDial();

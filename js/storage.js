@@ -13,12 +13,13 @@ export const DEFAULTS = {
   school: 0,                    // 0 = Shafi/standard, 1 = Hanafi
   adjust: { Fajr: 0, Sunrise: 0, Dhuhr: 0, Asr: 0, Maghrib: 0, Isha: 0 },
   hijriOffset: 0,               // -2 … +2
-  declination: 0,               // degrés, Est positif
+  declAuto: true,               // déclinaison calculée par WMM2025
+  declination: 0,               // valeur manuelle (degrés, Est positif)
   adhan: {
     enabled: true,
     mode: 'global',             // global | perPrayer
-    global: 'makkah',
-    perPrayer: { Fajr: 'makkah', Dhuhr: 'makkah', Asr: 'makkah', Maghrib: 'makkah', Isha: 'makkah' },
+    global: 'morocco',
+    perPrayer: { Fajr: 'morocco', Dhuhr: 'morocco', Asr: 'morocco', Maghrib: 'morocco', Isha: 'morocco' },
     volume: 0.8,
     vibrate: true,
     notifyAt: false,

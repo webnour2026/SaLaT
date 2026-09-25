@@ -2,10 +2,10 @@
 // Les fichiers MP3 ne sont PAS fournis : déposer des enregistrements libres de droits
 // ou sous licence dans /audio/adhan/ avec les noms ci-dessous.
 export const ADHANS = [
-  { id: 'makkah',  label: 'Makkah',  file: 'audio/adhan/makkah.mp3' },
-  { id: 'madinah', label: 'Madinah', file: 'audio/adhan/madinah.mp3' },
-  { id: 'morocco', label: 'Maroc / Morocco', file: 'audio/adhan/morocco.mp3' },
-  { id: 'egypt',   label: 'Égypte / Egypt', file: 'audio/adhan/egypt.mp3' },
+  { id: 'morocco', labelKey: 'adhanMorocco', file: 'audio/adhan/morocco.mp3' },
+  { id: 'makkah',  labelKey: 'adhanMakkah',  file: 'audio/adhan/makkah.mp3' },
+  { id: 'madinah', labelKey: 'adhanMadinah', file: 'audio/adhan/madinah.mp3' },
+  { id: 'egypt',   labelKey: 'adhanEgypt',   file: 'audio/adhan/egypt.mp3' },
   { id: 'adhan1',  label: 'Adhan 1', file: 'audio/adhan/adhan1.mp3' },
   { id: 'adhan2',  label: 'Adhan 2', file: 'audio/adhan/adhan2.mp3' },
   { id: 'adhan3',  label: 'Adhan 3', file: 'audio/adhan/adhan3.mp3' },
