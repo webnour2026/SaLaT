@@ -1,0 +1,45 @@
+# Télécharge des Adhans sous licence libre (Freesound + Wikimedia Commons),
+# les convertit en MP3 léger (mono 96 kbit/s, volume normalisé) et les ajoute au dépôt.
+# Lancer à la main : onglet Actions → « Télécharger les Adhans » → Run workflow.
+name: Télécharger les Adhans
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  adhans:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Télécharger et convertir
+        run: |
+          set -e
+          UA="PriereApp/1.0 (https://github.com/${GITHUB_REPOSITORY})"
+          dl() {  # $1 = nom du fichier sur Commons, $2 = fichier de sortie
+            echo "→ $2 depuis Commons : $1"
+            curl -fsSL -A "$UA" -o /tmp/src "https://commons.wikimedia.org/wiki/Special:FilePath/$1"
+            ffmpeg -y -loglevel error -i /tmp/src \
+              -af "silenceremove=start_periods=1:start_threshold=-45dB,loudnorm=I=-16:TP=-1.5" \
+              -ac 1 -ar 44100 -b:a 96k "audio/adhan/$2"
+          }
+          mkdir -p audio/adhan
+          # Adhan marocain (Aroumd, Haut Atlas) — Iain McCurdy, Freesound, CC BY 4.0.
+          # Aperçu public HQ de Freesound (pas besoin de compte), repli sur la version LQ.
+          echo "→ morocco.mp3 depuis Freesound"
+          curl -fsSL -A "$UA" -o /tmp/src "https://cdn.freesound.org/previews/807/807484_3655844-hq.mp3" \
+            || curl -fsSL -A "$UA" -o /tmp/src "https://cdn.freesound.org/previews/807/807484_3655844-lq.mp3"
+          ffmpeg -y -loglevel error -i /tmp/src \
+            -af "silenceremove=start_periods=1:start_threshold=-45dB,loudnorm=I=-16:TP=-1.5" \
+            -ac 1 -ar 44100 -b:a 96k audio/adhan/morocco.mp3
+          dl "33937_ejaz215_call-to-prayer-from-the-prophet-s-mo.ogg" madinah.mp3   # CC BY 3.0
+          dl "Beautiful_adhan.ogg" adhan1.mp3                                          # CC0
+          dl "Adhan_wiki.oga" adhan2.mp3                                               # CC BY-SA 2.5
+          ls -la audio/adhan
+      - name: Enregistrer dans le dépôt
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add audio/adhan/*.mp3
+          git commit -m "Adhans libres téléchargés (Freesound + Wikimedia Commons)" || echo "Rien de nouveau"
+          git push
