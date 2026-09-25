@@ -1,5 +1,6 @@
-# Télécharge des Adhans sous licence libre (Freesound + Wikimedia Commons),
-# les convertit en MP3 léger (mono 96 kbit/s, volume normalisé) et les ajoute au dépôt.
+# Télécharge des Adhans sous licence libre (Wikimedia Commons + Freesound),
+# les convertit en MP3 de bonne qualité et écrit audio/adhan/credits.json
+# (auteur + licence lus automatiquement sur Commons, affichés dans l'appli).
 # Lancer à la main : onglet Actions → « Télécharger les Adhans » → Run workflow.
 name: Télécharger les Adhans
 on:
@@ -12,34 +13,70 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
-      - name: Télécharger et convertir
+      - name: Télécharger, nettoyer, convertir
         run: |
-          set -e
-          UA="PriereApp/1.0 (https://github.com/${GITHUB_REPOSITORY})"
-          dl() {  # $1 = nom du fichier sur Commons, $2 = fichier de sortie
-            echo "→ $2 depuis Commons : $1"
-            curl -fsSL -A "$UA" -o /tmp/src "https://commons.wikimedia.org/wiki/Special:FilePath/$1"
-            ffmpeg -y -loglevel error -i /tmp/src \
-              -af "silenceremove=start_periods=1:start_threshold=-45dB,loudnorm=I=-16:TP=-1.5" \
-              -ac 1 -ar 44100 -b:a 96k "audio/adhan/$2"
+          UA="PriereApp/1.1 (https://github.com/${GITHUB_REPOSITORY})"
+          mkdir -p audio/adhan /tmp/meta
+          # filtre audio : coupe les basses parasites, retire le silence du début,
+          # égalise le volume, 4 min max, fondu de fin
+          FILTER="highpass=f=70,silenceremove=start_periods=1:start_threshold=-40dB,loudnorm=I=-16:TP=-1.5:LRA=11"
+          enc() {  # $1 source, $2 sortie, $3 durée max (s)
+            ffmpeg -y -loglevel error -i "$1" -vn -t "${3:-240}" -af "$FILTER,afade=t=out:st=$(( ${3:-240} - 3 )):d=3" \
+              -ac 2 -ar 44100 -b:a 160k "audio/adhan/$2" && echo "  ✓ $2"
           }
-          mkdir -p audio/adhan
-          # Adhan marocain (Aroumd, Haut Atlas) — Iain McCurdy, Freesound, CC BY 4.0.
-          # Aperçu public HQ de Freesound (pas besoin de compte), repli sur la version LQ.
-          echo "→ morocco.mp3 depuis Freesound"
-          curl -fsSL -A "$UA" -o /tmp/src "https://cdn.freesound.org/previews/807/807484_3655844-hq.mp3" \
-            || curl -fsSL -A "$UA" -o /tmp/src "https://cdn.freesound.org/previews/807/807484_3655844-lq.mp3"
-          ffmpeg -y -loglevel error -i /tmp/src \
-            -af "silenceremove=start_periods=1:start_threshold=-45dB,loudnorm=I=-16:TP=-1.5" \
-            -ac 1 -ar 44100 -b:a 96k audio/adhan/morocco.mp3
-          dl "33937_ejaz215_call-to-prayer-from-the-prophet-s-mo.ogg" madinah.mp3   # CC BY 3.0
-          dl "Beautiful_adhan.ogg" adhan1.mp3                                          # CC0
-          dl "Adhan_wiki.oga" adhan2.mp3                                               # CC BY-SA 2.5
+          commons() {  # $1 = nom du fichier sur Commons, $2 = sortie, $3 = durée max
+            enc_title=$(python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1]))' "$1")
+            echo "→ $2 : $1"
+            if curl -fsSL -A "$UA" -o /tmp/src "https://commons.wikimedia.org/wiki/Special:FilePath/$enc_title"; then
+              enc /tmp/src "$2" "$3"
+              curl -fsSL -A "$UA" "https://commons.wikimedia.org/w/api.php?action=query&format=json&prop=imageinfo&iiprop=extmetadata&titles=File:$enc_title" \
+                -o "/tmp/meta/${2%.mp3}.json" || true
+              echo "$1" > "/tmp/meta/${2%.mp3}.title"
+            else echo "  ✗ échec du téléchargement"; fi
+          }
+          commons "Maghrib_Adhan_at_the_Masjid_al_Haram,_Mecca_-_25_Feb,_2012.webm" makkah.mp3 240
+          commons "Adhan,_Great_Mosque_of_Mecca_-_Jan_21,_2013.webm"                 makkah2.mp3 200
+          commons "33937_ejaz215_call-to-prayer-from-the-prophet-s-mo.ogg"            madinah.mp3 200
+          commons "Llamada_a_oración_Mezquita_Hassan_II.wav"                          casablanca.mp3 180
+          commons "Call_to_prayer_by_Sabah_Fakhry.mp3"                                sham.mp3 170
+          commons "Beautiful_adhan.ogg"                                               adhan1.mp3 160
+          # Haut Atlas (Maroc) — Iain McCurdy, Freesound n° 807484, CC BY 4.0 (aperçu public)
+          echo "→ morocco.mp3 : Freesound 807484"
+          if curl -fsSL -A "$UA" -o /tmp/src "https://cdn.freesound.org/previews/807/807484_3655844-hq.mp3" \
+             || curl -fsSL -A "$UA" -o /tmp/src "https://cdn.freesound.org/previews/807/807484_3655844-lq.mp3"; then
+            enc /tmp/src morocco.mp3 80
+          fi
+          # anciens fichiers retirés de la liste
+          rm -f audio/adhan/adhan2.mp3
+      - name: Écrire les crédits (auteur + licence)
+        run: |
+          python3 - <<'PY'
+          import json, glob, os, re, html, urllib.parse
+          out = []
+          for meta in sorted(glob.glob('/tmp/meta/*.json')):
+              key = os.path.basename(meta)[:-5]
+              if not os.path.exists(f'audio/adhan/{key}.mp3'): continue
+              title = open(meta[:-5] + '.title').read().strip()
+              try:
+                  page = next(iter(json.load(open(meta))['query']['pages'].values()))
+                  em = page['imageinfo'][0]['extmetadata']
+              except Exception:
+                  em = {}
+              clean = lambda v: html.unescape(re.sub(r'<[^>]+>', '', (em.get(v) or {}).get('value', ''))).strip()
+              out.append({'id': key, 'author': clean('Artist') or clean('Credit') or 'Wikimedia Commons',
+                          'license': clean('LicenseShortName'), 'source': 'Wikimedia Commons',
+                          'url': 'https://commons.wikimedia.org/wiki/File:' + urllib.parse.quote(title)})
+          if os.path.exists('audio/adhan/morocco.mp3'):
+              out.append({'id': 'morocco', 'author': 'Iain McCurdy (Aroumd, Haut Atlas)', 'license': 'CC BY 4.0',
+                          'source': 'Freesound', 'url': 'https://freesound.org/people/iainmccurdy/sounds/807484/'})
+          json.dump(out, open('audio/adhan/credits.json', 'w'), ensure_ascii=False, indent=1)
+          print(json.dumps(out, ensure_ascii=False, indent=1))
+          PY
           ls -la audio/adhan
       - name: Enregistrer dans le dépôt
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
-          git add audio/adhan/*.mp3
-          git commit -m "Adhans libres téléchargés (Freesound + Wikimedia Commons)" || echo "Rien de nouveau"
+          git add -A audio/adhan
+          git commit -m "Adhans libres mis à jour (Commons + Freesound)" || echo "Rien de nouveau"
           git push
