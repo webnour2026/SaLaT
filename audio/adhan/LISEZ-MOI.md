@@ -11,7 +11,7 @@ il télécharge, nettoie et convertit ces enregistrements libres, puis écrit `c
 | Médine — Mosquée du Prophète | madinah.mp3 | ejaz215, Wikimedia Commons, CC BY 3.0 |
 | Maroc — Mosquée Hassan II (Casablanca) | casablanca.mp3 | Wikimedia Commons |
 | Maroc — Haut Atlas | morocco.mp3 | Iain McCurdy, Freesound, CC BY 4.0 |
-| Syrie — Sabah Fakhri | sham.mp3 | Wikimedia Commons |
+| Voix seule — Aaqib Azeez | aaqib.mp3 | Wikimedia Commons, CC BY-SA 4.0 |
 | Adhan doux | adhan1.mp3 | Wikimedia Commons, CC0 |
 
 Ce sont des enregistrements réels (souvent pris depuis la rue), pas des enregistrements de studio.

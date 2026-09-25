@@ -7,13 +7,12 @@ export const ADHANS = [
   { id: 'madinah',    labelKey: 'adhanMadinah',    file: 'audio/adhan/madinah.mp3' },
   { id: 'casablanca', labelKey: 'adhanCasablanca', file: 'audio/adhan/casablanca.mp3' },
   { id: 'morocco',    labelKey: 'adhanAtlas',      file: 'audio/adhan/morocco.mp3' },
-  { id: 'sham',       labelKey: 'adhanSham',       file: 'audio/adhan/sham.mp3' },
+  { id: 'aaqib',      labelKey: 'adhanAaqib',      file: 'audio/adhan/aaqib.mp3' },
   { id: 'adhan1',     labelKey: 'adhanCalm',       file: 'audio/adhan/adhan1.mp3' },
-  { id: 'custom',     labelKey: 'adhanCustom',     custom: true },
   { id: 'beep',       labelKey: 'beep' },
   { id: 'none',       labelKey: 'noneAdhan' },
 ];
-const FALLBACK_ORDER = ['custom', 'makkah', 'casablanca', 'madinah', 'makkah2', 'morocco', 'sham', 'adhan1'];
+const FALLBACK_ORDER = ['makkah', 'casablanca', 'madinah', 'aaqib', 'makkah2', 'morocco', 'adhan1'];
 
 // ---------- Adhan personnel (fichier choisi par l'utilisateur, gardé sur l'appareil) ----------
 const DB = 'priere-audio', STORE = 'files';
@@ -44,33 +43,92 @@ function canPlay(url) {
     a.preload = 'metadata'; a.src = url;
   });
 }
-/** Importe un fichier audio du téléphone. Lève 'type', 'size' ou 'decode'. */
+// Plusieurs Adhans personnels : chacun est stocké sous la clé « u:<horodatage> » et apparaît
+// dans la liste avec son nom de fichier. Ils restent sur l'appareil (jamais envoyés au site).
+const urlCache = new Map();
+const niceName = n => n.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Adhan';
+
+/** Lit les Adhans importés et les ajoute à ADHANS (avant « Bip » et « Aucun »).
+ *  Convertit l'ancien emplacement unique « custom ». Renvoie { migratedTo } si besoin. */
+export async function loadCustomAdhans() {
+  let migratedTo = null;
+  try {
+    const old = await idbDo('readonly', st => st.get('custom'));
+    if (old) {
+      migratedTo = `u:${old.ts || Date.now()}`;
+      await idbDo('readwrite', st => { st.put(old, migratedTo); return st.delete('custom'); });
+    }
+    const keys = (await idbDo('readonly', st => st.getAllKeys())) || [];
+    const recs = await Promise.all(keys.filter(k => String(k).startsWith('u:')).map(async k => [k, await idbDo('readonly', st => st.get(k))]));
+    for (let i = ADHANS.length - 1; i >= 0; i--) if (ADHANS[i].custom) ADHANS.splice(i, 1);
+    const at = ADHANS.findIndex(x => x.id === 'beep');
+    const items = recs.filter(([, r]) => r).sort((x, y) => x[1].ts - y[1].ts)
+      .map(([k, r]) => ({ id: k, label: '★ ' + niceName(r.name), custom: true, size: r.size, name: r.name }));
+    ADHANS.splice(at, 0, ...items);
+  } catch { /* IndexedDB indisponible (navigation privée) */ }
+  return { migratedTo };
+}
+export const customAdhans = () => ADHANS.filter(x => x.custom);
+
+/** Importe un fichier audio du téléphone. Renvoie l'id créé. Lève 'type', 'size' ou 'decode'. */
 export async function importCustomAdhan(file) {
   const okType = (file.type || '').startsWith('audio/') || /\.(mp3|m4a|aac|ogg|oga|opus|wav|flac|webm|3gp|amr)$/i.test(file.name);
   if (!okType) throw new Error('type');
   if (file.size > 30e6) throw new Error('size');
   const url = URL.createObjectURL(file);
   try { await canPlay(url); } finally { URL.revokeObjectURL(url); }
-  await idbDo('readwrite', st => st.put({ blob: file, name: file.name, size: file.size, ts: Date.now() }, 'custom'));
+  const start = await voiceStart(file);
+  const ts = Date.now() + Math.floor(Math.random() * 1000);
+  const id = `u:${ts}`;
+  await idbDo('readwrite', st => st.put({ blob: file, name: file.name, size: file.size, start, ts }, id));
   try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch {}
-  customUrl = null;
+  return id;
 }
-export async function customAdhanInfo() {
-  try { const r = await idbDo('readonly', st => st.get('custom')); return r ? { name: r.name, size: r.size } : null; }
-  catch { return null; }
+export async function removeCustomAdhan(id) {
+  try { await idbDo('readwrite', st => st.delete(id)); } catch {}
+  const u = urlCache.get(id); if (u) { URL.revokeObjectURL(u.split('#')[0]); urlCache.delete(id); }
+  const i = ADHANS.findIndex(x => x.id === id); if (i >= 0) ADHANS.splice(i, 1);
 }
-export async function removeCustomAdhan() {
-  try { await idbDo('readwrite', st => st.delete('custom')); } catch {}
-  if (customUrl) { URL.revokeObjectURL(customUrl); customUrl = null; }
+
+/**
+ * Début de la voix dans un fichier importé (en secondes) : ignore les bruits courts du début
+ * (ouverture du micro, clic) et le bruit de fond, comme le workflow de conversion.
+ */
+async function voiceStart(file) {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const ac = new AC();
+    const buf = await ac.decodeAudioData(await file.arrayBuffer());
+    ac.close && ac.close();
+    const data = buf.getChannelData(0), W = Math.round(buf.sampleRate * 0.05);
+    const n = Math.min(Math.floor(data.length / W), 20 * 60 * 5);   // 5 premières minutes max
+    const db = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      let sum = 0;
+      for (let j = i * W, e = j + W; j < e; j++) sum += data[j] * data[j];
+      db[i] = 10 * Math.log10(sum / W + 1e-12);
+    }
+    const sorted = Array.from(db).sort((a, b) => a - b);
+    const floor = sorted[Math.floor(n * 0.15)], peak = sorted[Math.floor(n * 0.95)];
+    const thr = floor + 0.5 * (peak - floor);
+    let run = 0, gap = 0, runStart = 0;
+    for (let i = 0; i < n; i++) {
+      if (db[i] > thr) { if (run === 0) runStart = i; run += 1 + gap; gap = 0; }
+      else if (run) { gap++; if (gap > 8) { run = 0; gap = 0; } }
+      if (run >= 30) return Math.max(0, runStart * 0.05 - 0.25);        // ≥ 1,5 s de voix
+    }
+  } catch { /* fichier non décodable ici : on joue depuis le début */ }
+  return 0;
 }
-let customUrl = null;
 async function sourceFor(item) {
   if (!item.custom) return item.file;
-  if (customUrl) return customUrl;
-  const r = await idbDo('readonly', st => st.get('custom'));
+  if (urlCache.has(item.id)) return urlCache.get(item.id);
+  const r = await idbDo('readonly', st => st.get(item.id));
   if (!r) throw new Error('absent');
-  customUrl = URL.createObjectURL(r.blob);
-  return customUrl;
+  // on saute ce qui précède la voix (ouverture du micro, bruit) : fragment #t=
+  const u = URL.createObjectURL(r.blob) + (r.start > 0.3 ? `#t=${r.start.toFixed(2)}` : '');
+  urlCache.set(item.id, u);
+  return u;
 }
 
 let audio = null;
@@ -123,9 +181,10 @@ export async function playAdhan(id, volume = 0.8, { title = '', ended = null } =
   if (!item || id === 'none') return 'none';
   onEnded = ended;
   if (id === 'beep') { beep(volume); setTimeout(() => { if (!beepNodes.length) stopAdhan(); }, 2000); return 'played'; }
-  const order = [id, ...FALLBACK_ORDER.filter(x => x !== id)];
+  const order = [id, ...customAdhans().map(x => x.id), ...FALLBACK_ORDER].filter((x, i, arr) => arr.indexOf(x) === i);
   for (let i = 0; i < order.length; i++) {
     const it = ADHANS.find(a => a.id === order[i]);
+    if (!it || !(it.file || it.custom)) continue;
     try {
       audio = await tryFile(await sourceFor(it), volume);
       audio.addEventListener('ended', () => stopAdhan(), { once: true });
@@ -141,7 +200,6 @@ export async function playAdhan(id, volume = 0.8, { title = '', ended = null } =
 /** Vérifie quels fichiers existent (pour l'affichage dans les réglages). */
 export async function availableAdhans() {
   const out = {};
-  out.custom = !!(await customAdhanInfo());
   await Promise.all(ADHANS.filter(a => a.file).map(async a => {
     try { const r = await fetch(a.file, { method: 'HEAD', cache: 'no-store' }); out[a.id] = r.ok; }
     catch { out[a.id] = false; }

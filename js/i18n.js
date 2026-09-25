@@ -1,6 +1,7 @@
 // Traductions FR / AR / EN — ajouter une langue = ajouter un objet ici.
 const DICT = {
   fr: {
+    adhanAaqib: 'Voix seule — Aaqib Azeez',
     backMode: 'Visée avec le dos du téléphone', tapToEnable: 'Touchez « Activer la boussole » (autorisation demandée par l’iPhone).',
     calendar: 'Calendrier', today: 'Aujourd’hui', occasions: 'Occasions', backToday: 'Revenir à aujourd’hui',
     calNote: 'Calendrier Umm al-Qura calculé. Au Maroc, le début des mois dépend de l’observation du croissant : ajustez la correction (±2 jours) dans les Réglages.',
@@ -84,8 +85,11 @@ const DICT = {
     methods: { 21: 'Maroc (Habous)', 3: 'Ligue islamique mondiale', 5: 'Égypte', 4: 'Umm Al-Qura (La Mecque)', 1: 'Karachi', 2: 'ISNA (Amérique du Nord)', 13: 'Diyanet (Turquie)', 12: 'UOIF (France)', 19: 'Algérie', 18: 'Tunisie', 8: 'Golfe', 16: 'Dubaï', 15: 'Moonsighting Committee' },
     cardinals: ['Nord','Nord-Nord-Est','Nord-Est','Est-Nord-Est','Est','Est-Sud-Est','Sud-Est','Sud-Sud-Est','Sud','Sud-Sud-Ouest','Sud-Ouest','Ouest-Sud-Ouest','Ouest','Ouest-Nord-Ouest','Nord-Ouest','Nord-Nord-Ouest'],
     adhanMakkah: 'La Mecque — Masjid al-Haram', adhanMakkah2: 'La Mecque 2', adhanMadinah: 'Médine — Mosquée du Prophète', adhanCasablanca: 'Maroc — Mosquée Hassan II', adhanAtlas: 'Maroc — Haut Atlas', adhanSham: 'Syrie — Sabah Fakhri', adhanCustom: 'Mon Adhan (importé)', importAdhan: 'Importer mon Adhan', removeAdhan: 'Supprimer', importHelp: 'Choisissez un fichier audio sur votre téléphone (MP3, M4A…). Il reste uniquement sur cet appareil.', customLoaded: 'Importé : {name} ({size} Mo). Choisissez « Mon Adhan (importé) » dans la liste.', importOk: 'Adhan importé', importErrType: 'Ce fichier n’est pas un fichier audio.', importErrSize: 'Fichier trop lourd (30 Mo maximum).', importErrDecode: 'Ce format audio n’est pas lu par votre navigateur. Essayez un MP3.',
+    adhanMissing: 'Cet Adhan n’est pas encore installé : un autre son est joué à la place.', adhanUnavailable: 'non installé',
+    myAdhans: 'Mes Adhans (importés)', importAdhans: 'Importer des Adhans', noCustom: 'Aucun Adhan importé pour l’instant.', importedN: '{n} Adhan(s) importé(s) — choisissez-les dans la liste ci-dessus, pour toutes les prières ou une par une.', importHelp: 'Ajoutez un ou plusieurs fichiers audio de votre téléphone (MP3, M4A…). Ils restent uniquement sur cet appareil.', deleteQ: 'Supprimer « {name} » ?',
   },
   ar: {
+    adhanAaqib: 'صوت منفرد — عاقب عزيز',
     backMode: 'التصويب بظهر الهاتف', tapToEnable: 'اضغط «تشغيل البوصلة» (إذن يطلبه الآيفون).',
     calendar: 'التقويم', today: 'اليوم', occasions: 'مناسبات', backToday: 'العودة إلى اليوم',
     calNote: 'تقويم أم القرى المحسوب. في المغرب تبدأ الشهور حسب رؤية الهلال: عدّل التصحيح (±2 يوم) في الإعدادات.',
@@ -168,8 +172,11 @@ const DICT = {
     methods: { 21: 'المغرب (وزارة الأوقاف)', 3: 'رابطة العالم الإسلامي', 5: 'مصر', 4: 'أم القرى (مكة)', 1: 'كراتشي', 2: 'أمريكا الشمالية (ISNA)', 13: 'ديانت (تركيا)', 12: 'فرنسا (UOIF)', 19: 'الجزائر', 18: 'تونس', 8: 'الخليج', 16: 'دبي', 15: 'لجنة رؤية الهلال' },
     cardinals: ['شمال','شمال شمال شرق','شمال شرق','شرق شمال شرق','شرق','شرق جنوب شرق','جنوب شرق','جنوب جنوب شرق','جنوب','جنوب جنوب غرب','جنوب غرب','غرب جنوب غرب','غرب','غرب شمال غرب','شمال غرب','شمال شمال غرب'],
     adhanMakkah: 'مكة المكرمة — المسجد الحرام', adhanMakkah2: 'مكة المكرمة 2', adhanMadinah: 'المدينة المنورة — المسجد النبوي', adhanCasablanca: 'المغرب — مسجد الحسن الثاني', adhanAtlas: 'المغرب — الأطلس الكبير', adhanSham: 'الشام — صباح فخري', adhanCustom: 'أذاني (مستورد)', importAdhan: 'استيراد أذان من الهاتف', removeAdhan: 'حذف', importHelp: 'اختر ملفًا صوتيًا من هاتفك (MP3، M4A…). يبقى الملف على هذا الجهاز فقط.', customLoaded: 'تم الاستيراد: {name} ({size} ميغا). اختر «أذاني (مستورد)» من القائمة.', importOk: 'تم استيراد الأذان', importErrType: 'هذا ليس ملفًا صوتيًا.', importErrSize: 'الملف كبير جدًا (30 ميغا كحد أقصى).', importErrDecode: 'المتصفح لا يقرأ هذه الصيغة. جرّب ملف MP3.',
+    adhanMissing: 'هذا الأذان غير مثبّت بعد، سيتم تشغيل صوت آخر بدلًا منه.', adhanUnavailable: 'غير مثبّت',
+    myAdhans: 'أذاناتي (المستوردة)', importAdhans: 'استيراد أذانات', noCustom: 'لا يوجد أذان مستورد بعد.', importedN: 'تم استيراد {n} — اخترها من القائمة أعلاه، لكل الصلوات أو لكل صلاة على حدة.', importHelp: 'أضف ملفًا صوتيًا أو أكثر من هاتفك (MP3، M4A…). تبقى الملفات على هذا الجهاز فقط.', deleteQ: 'حذف «{name}»؟',
   },
   en: {
+    adhanAaqib: 'Solo voice — Aaqib Azeez',
     backMode: 'Aiming with the back of the phone', tapToEnable: 'Tap “Start compass” (permission required by iPhone).',
     calendar: 'Calendar', today: 'Today', occasions: 'Occasions', backToday: 'Back to today',
     calNote: 'Calculated Umm al-Qura calendar. In Morocco months begin with moon sighting: adjust the correction (±2 days) in Settings.',
@@ -252,6 +259,8 @@ const DICT = {
     methods: { 21: 'Morocco', 3: 'Muslim World League', 5: 'Egyptian', 4: 'Umm Al-Qura (Makkah)', 1: 'Karachi', 2: 'ISNA (North America)', 13: 'Diyanet (Turkey)', 12: 'UOIF (France)', 19: 'Algeria', 18: 'Tunisia', 8: 'Gulf', 16: 'Dubai', 15: 'Moonsighting Committee' },
     cardinals: ['North','North-northeast','Northeast','East-northeast','East','East-southeast','Southeast','South-southeast','South','South-southwest','Southwest','West-southwest','West','West-northwest','Northwest','North-northwest'],
     adhanMakkah: 'Makkah — Masjid al-Haram', adhanMakkah2: 'Makkah 2', adhanMadinah: 'Madinah — Prophet’s Mosque', adhanCasablanca: 'Morocco — Hassan II Mosque', adhanAtlas: 'Morocco — High Atlas', adhanSham: 'Syria — Sabah Fakhri', adhanCustom: 'My Adhan (imported)', importAdhan: 'Import my Adhan', removeAdhan: 'Remove', importHelp: 'Pick an audio file on your phone (MP3, M4A…). It stays on this device only.', customLoaded: 'Imported: {name} ({size} MB). Choose “My Adhan (imported)” in the list.', importOk: 'Adhan imported', importErrType: 'This is not an audio file.', importErrSize: 'File too large (30 MB max).', importErrDecode: 'Your browser cannot play this format. Try an MP3.',
+    adhanMissing: 'This Adhan is not installed yet: another sound is played instead.', adhanUnavailable: 'not installed',
+    myAdhans: 'My Adhans (imported)', importAdhans: 'Import Adhans', noCustom: 'No imported Adhan yet.', importedN: '{n} Adhan(s) imported — pick them in the list above, for all prayers or one by one.', importHelp: 'Add one or more audio files from your phone (MP3, M4A…). They stay on this device only.', deleteQ: 'Delete “{name}”?',
   },
 };
 

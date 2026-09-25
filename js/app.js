@@ -8,7 +8,7 @@ import { Compass } from './compass.js';
 import { formatHijri } from './hijri.js';
 import { declination as wmmDeclination } from './wmm.js';
 import { sunPosition, timesAtAzimuth } from './sun.js';
-import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, customAdhanInfo, removeCustomAdhan } from './adhan.js';
+import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, removeCustomAdhan, loadCustomAdhans, customAdhans } from './adhan.js';
 import { hijriMonth, upcomingWhiteDays, civilNoon, hijriOf } from './calendar.js';
 import { PRESET_CITIES, METHOD_BY_COUNTRY, getGpsPosition, reverseGeocode, searchCity } from './location.js';
 
@@ -644,17 +644,35 @@ async function renderCredits() {
   } catch { ul.replaceChildren(); }
 }
 
-async function renderCustomAdhan() {
-  const info = await customAdhanInfo();
-  const p = $('#customInfo'); if (!p) return;
-  p.textContent = info ? t('customLoaded', { name: info.name, size: (info.size / 1e6).toFixed(1).replace('.', getLang() === 'en' ? '.' : ',') }) : t('importHelp');
-  $('#customRemove').hidden = !info;
-  state.adhanAvail = { ...(state.adhanAvail || {}), custom: !!info };
+function renderCustomAdhan() {
+  const ul = $('#customList'); if (!ul) return;
+  const list = customAdhans();
+  if (!list.length) { ul.replaceChildren(Object.assign(document.createElement('li'), { className: 'note', textContent: t('noCustom') })); return; }
+  ul.replaceChildren(...list.map(x => {
+    const li = document.createElement('li');
+    const name = document.createElement('span'); name.textContent = x.label.replace(/^★ /, '');
+    const size = document.createElement('small'); size.textContent = ` ${(x.size / 1e6).toFixed(1)} Mo`;
+    const play = document.createElement('button'); play.type = 'button'; play.className = 'icon-btn'; play.textContent = '▶'; play.setAttribute('aria-label', t('preview'));
+    play.addEventListener('click', async () => {
+      if (play.dataset.on) { stopAdhan(); return; }
+      unlockAudio(); play.dataset.on = '1'; play.textContent = '■';
+      await playAdhan(x.id, S().adhan.volume, { title: x.label, ended: () => { delete play.dataset.on; play.textContent = '▶'; } });
+    });
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'icon-btn'; del.textContent = '🗑'; del.setAttribute('aria-label', t('removeAdhan'));
+    del.addEventListener('click', async () => {
+      if (!confirm(t('deleteQ', { name: name.textContent }))) return;
+      await removeCustomAdhan(x.id);
+      sanitizeAdhans(); renderCustomAdhan(); renderAdhanPickers();
+    });
+    li.append(name, size, play, del);
+    return li;
+  }));
 }
 
 function adhanOptions(selected) {
   const av = state.adhanAvail || {};
-  return ADHANS.filter(x => !x.custom || av.custom || x.id === selected).map(x => new Option((x.labelKey ? t(x.labelKey) : x.label) + (x.file && av[x.id] === false ? ` (${t('adhanUnavailable')})` : ''), x.id, false, x.id === selected));
+  // on masque les Adhans absents du site (sauf celui déjà choisi, pour que l'utilisateur le voie)
+  return ADHANS.filter(x => x.custom || !(x.file && av[x.id] === false) || x.id === selected).map(x => new Option((x.labelKey ? t(x.labelKey) : x.label) + (x.file && av[x.id] === false ? ` (${t('adhanUnavailable')})` : ''), x.id, false, x.id === selected));
 }
 function renderAdhanPickers() {
   const a = S().adhan;
@@ -767,29 +785,43 @@ function bind() {
   on('#noLocGps', 'click', useGps);
   on('#customImport', 'click', () => $('#customFile').click());
   on('#customFile', 'change', async e => {
-    const f = e.target.files && e.target.files[0]; e.target.value = '';
-    if (!f) return;
-    try {
-      await importCustomAdhan(f);
-      await renderCustomAdhan();
-      // on sélectionne directement l'Adhan importé
-      S().adhan.global = 'custom'; save(); renderAdhanPickers();
-      toast(t('importOk'));
-    } catch (err) {
-      toast(t({ type: 'importErrType', size: 'importErrSize' }[err.message] || 'importErrDecode'), 6000);
+    const files = Array.from(e.target.files || []); e.target.value = '';
+    if (!files.length) return;
+    const hadNone = !customAdhans().length;
+    let ok = 0, firstId = null, lastErr = null;
+    for (const f of files) {
+      try { const id = await importCustomAdhan(f); firstId = firstId || id; ok++; }
+      catch (err) { lastErr = err; }
     }
-  });
-  on('#customRemove', 'click', async () => {
-    await removeCustomAdhan();
-    const a = S().adhan;
-    if (a.global === 'custom') a.global = 'casablanca';
-    for (const k of Object.keys(a.perPrayer)) if (a.perPrayer[k] === 'custom') a.perPrayer[k] = 'casablanca';
-    save(); await renderCustomAdhan(); renderAdhanPickers();
+    await loadCustomAdhans();
+    // premier import : on sélectionne directement le premier Adhan importé
+    if (ok && hadNone && S().adhan.mode !== 'perPrayer') { S().adhan.global = firstId; save(); }
+    renderCustomAdhan(); renderAdhanPickers();
+    if (ok) toast(t('importedN', { n: ok }), 6000);
+    if (lastErr) toast(t({ type: 'importErrType', size: 'importErrSize' }[lastErr.message] || 'importErrDecode'), 6000);
   });
   bindSettings();
 }
 
+// un Adhan choisi autrefois mais retiré de la liste (ex. « sham ») → Mosquée Hassan II
+function sanitizeAdhans() {
+  const a = S().adhan, ok = id => ADHANS.some(x => x.id === id);
+  let changed = false;
+  if (!ok(a.global)) { a.global = 'casablanca'; changed = true; }
+  for (const k of Object.keys(a.perPrayer)) if (!ok(a.perPrayer[k])) { a.perPrayer[k] = 'casablanca'; changed = true; }
+  if (changed) save();
+}
+
 function init() {
+  loadCustomAdhans().then(({ migratedTo }) => {
+    const a = S().adhan;
+    if (migratedTo) {       // ancien emplacement unique « custom » → nouvel identifiant
+      if (a.global === 'custom') a.global = migratedTo;
+      for (const k of Object.keys(a.perPrayer)) if (a.perPrayer[k] === 'custom') a.perPrayer[k] = migratedTo;
+      save();
+    }
+    sanitizeAdhans(); renderCustomAdhan(); renderAdhanPickers();
+  });
   // premier lancement : langue de l'appareil (arabe si le téléphone est en arabe)
   if (!localStorage.getItem('priere.settings.v1')) {
     const dev = (navigator.language || 'fr').slice(0, 2);
@@ -797,7 +829,8 @@ function init() {
     save();
   }
   // Adhans retirés de la liste (anciennes versions) → Adhan marocain
-  const ids = ADHANS.map(x => x.id), fix = v => (ids.includes(v) ? v : 'morocco');
+  // (les Adhans importés « u:… » et l'ancien « custom » sont vérifiés après leur chargement)
+  const ids = ADHANS.map(x => x.id), fix = v => (ids.includes(v) || /^u:|^custom$/.test(v) ? v : 'casablanca');
   S().adhan.global = fix(S().adhan.global);
   for (const k of Object.keys(S().adhan.perPrayer)) S().adhan.perPrayer[k] = fix(S().adhan.perPrayer[k]);
   save();

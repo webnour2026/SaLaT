@@ -177,13 +177,11 @@
         </div>
         <div id="adhanPickers"></div>
         <div class="custom-adhan">
-          <p class="sub" data-i18n="adhanCustom">Mon Adhan</p>
-          <p class="note" id="customInfo" data-i18n="importHelp"></p>
-          <input type="file" id="customFile" accept="audio/*,.mp3,.m4a,.aac,.ogg,.opus,.wav,.flac" hidden>
-          <div class="row-btns">
-            <button class="btn small" type="button" id="customImport" data-i18n="importAdhan">Importer mon Adhan</button>
-            <button class="btn small" type="button" id="customRemove" data-i18n="removeAdhan" hidden>Supprimer</button>
-          </div>
+          <p class="sub" data-i18n="myAdhans">Mes Adhans</p>
+          <p class="note" data-i18n="importHelp"></p>
+          <ul class="custom-list" id="customList"></ul>
+          <input type="file" id="customFile" accept="audio/*,.mp3,.m4a,.aac,.ogg,.opus,.wav,.flac" multiple hidden>
+          <button class="btn small" type="button" id="customImport" data-i18n="importAdhans">Importer des Adhans</button>
         </div>
         <label class="field"><span data-i18n="volume">Volume</span><input type="range" id="sVolume" min="0" max="1" step="0.05"></label>
         <label class="switch"><input type="checkbox" id="sVibrate"><span data-i18n="vibration"></span></label>
