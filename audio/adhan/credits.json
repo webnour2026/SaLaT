@@ -1,19 +1,5 @@
 [
  {
-  "id": "adhan1",
-  "author": "Adam-synagda",
-  "license": "CC0",
-  "source": "Wikimedia Commons",
-  "url": "https://commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg"
- },
- {
-  "id": "casablanca",
-  "author": "Fraguando",
-  "license": "CC BY-SA 4.0",
-  "source": "Wikimedia Commons",
-  "url": "https://commons.wikimedia.org/wiki/File:Llamada_a_oraci%C3%B3n_Mezquita_Hassan_II.wav"
- },
- {
   "id": "madinah",
   "author": "ejaz215",
   "license": "CC BY 3.0",
@@ -21,25 +7,18 @@
   "url": "https://commons.wikimedia.org/wiki/File:33937_ejaz215_call-to-prayer-from-the-prophet-s-mo.ogg"
  },
  {
-  "id": "makkah",
-  "author": "3omar Faruq",
-  "license": "CC BY 3.0",
+  "id": "aaqib",
+  "author": "Atcovi",
+  "license": "CC BY-SA 4.0",
   "source": "Wikimedia Commons",
-  "url": "https://commons.wikimedia.org/wiki/File:Maghrib_Adhan_at_the_Masjid_al_Haram%2C_Mecca_-_25_Feb%2C_2012.webm"
+  "url": "https://commons.wikimedia.org/wiki/File:The_Adhan_-_Muslim_Call_to_Prayer_-_Aaqib_Azeez.mp3"
  },
  {
-  "id": "makkah2",
-  "author": "Seyfula Islam",
-  "license": "CC BY 3.0",
+  "id": "adhan1",
+  "author": "Adam-synagda",
+  "license": "CC0",
   "source": "Wikimedia Commons",
-  "url": "https://commons.wikimedia.org/wiki/File:Adhan%2C_Great_Mosque_of_Mecca_-_Jan_21%2C_2013.webm"
- },
- {
-  "id": "sham",
-  "author": "Sabah Fakhri",
-  "license": "Public domain",
-  "source": "Wikimedia Commons",
-  "url": "https://commons.wikimedia.org/wiki/File:Call_to_prayer_by_Sabah_Fakhry.mp3"
+  "url": "https://commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg"
  },
  {
   "id": "morocco",

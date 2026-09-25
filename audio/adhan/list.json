@@ -1,0 +1,22 @@
+[
+ {
+  "id": "aaqib",
+  "file": "audio/adhan/aaqib.mp3",
+  "label": "Aaqib"
+ },
+ {
+  "id": "adhan1",
+  "file": "audio/adhan/adhan1.mp3",
+  "label": "Adhan1"
+ },
+ {
+  "id": "madinah",
+  "file": "audio/adhan/madinah.mp3",
+  "label": "Madinah"
+ },
+ {
+  "id": "morocco",
+  "file": "audio/adhan/morocco.mp3",
+  "label": "Morocco"
+ }
+]
