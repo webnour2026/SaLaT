@@ -8,7 +8,7 @@ import { Compass } from './compass.js';
 import { formatHijri } from './hijri.js';
 import { declination as wmmDeclination } from './wmm.js';
 import { sunPosition, timesAtAzimuth } from './sun.js';
-import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans } from './adhan.js';
+import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, customAdhanInfo, removeCustomAdhan } from './adhan.js';
 import { hijriMonth, upcomingWhiteDays, civilNoon, hijriOf } from './calendar.js';
 import { PRESET_CITIES, METHOD_BY_COUNTRY, getGpsPosition, reverseGeocode, searchCity } from './location.js';
 
@@ -83,8 +83,9 @@ function go(view) {
   if (view !== 'qibla') compass.stop();
   if (view === 'qibla') {
     renderQibla();
-    if (Compass.needsPermission()) { $('#compassStart').hidden = false; }
-    else { setCompassMsg(t('compassSearching'), ''); compass.start(); }
+    // démarrage automatique ; sur iPhone, un toucher n'est demandé que si Safari ne l'a pas déjà autorisé
+    setCompassMsg(t('compassSearching'), '');
+    compass.start({ ask: !Compass.needsPermission() });
   }
   if (view === 'settings') renderSettings();
   if (view === 'calendar') { state.calAnchor = null; renderCalendar(); }
@@ -451,7 +452,7 @@ function currentDeclination() {
 const fmtDeg = (v, digits = 1) => v.toLocaleString(locale(), { minimumFractionDigits: digits, maximumFractionDigits: digits });
 
 const compass = new Compass({
-  onHeading(magnetic, { flat, source, accuracy, quality }) {
+  onHeading(magnetic, { flat, source, accuracy, quality, mode }) {
     if (state.qibla == null) return;
     const heading = (magnetic + state.decl + 360) % 360; // → nord géographique
     // angle cumulé : la rose ne fait pas un tour complet entre 359° et 0°
@@ -474,11 +475,12 @@ const compass = new Compass({
     const msg = $('#compassMsg');
     if (!flat) { msg.textContent = t('notFlat'); msg.className = 'compass-msg alert-s'; }
     else if (aligned) { msg.textContent = t('aligned'); msg.className = 'compass-msg ok-s'; if (!compass.wasAligned) vibrate(60); }
-    else { msg.textContent = `${diff > 0 ? t('turnRight') : t('turnLeft')} \u2066${Math.round(Math.abs(diff))}°\u2069`; msg.className = 'compass-msg'; }
+    else { msg.textContent = (mode === 'back' ? t('backMode') + ' · ' : '') + `${diff > 0 ? t('turnRight') : t('turnLeft')} \u2066${Math.round(Math.abs(diff))}°\u2069`; msg.className = 'compass-msg'; }
     compass.wasAligned = aligned;
   },
   onStatus(s) {
     compass.lastStatus = s;
+    if (s === 'needTap') { setCompassMsg(t('tapToEnable'), ''); $('#compassStart').hidden = false; setSensor('off'); return; }
     const map = { unsupported: 'compassUnsupported', denied: 'compassDenied', nodata: 'compassBlocked', relative: 'compassRelative', blocked: 'compassBlocked' };
     if (map[s]) {
       $('#compassMsg').textContent = t(map[s]); $('#compassMsg').className = 'compass-msg alert-s';
@@ -609,7 +611,8 @@ function renderSettings() {
   $('#sVolume').value = a.volume;
   $('#sVibrate').checked = a.vibrate;
   $('#sWhiteDays').checked = s.whiteDays;
-  $('#audioCredits').replaceChildren(...ADHANS.filter(x => x.credit).map(x => Object.assign(document.createElement('li'), { textContent: `${t(x.labelKey)} : ${x.credit}` })));
+  renderCredits();
+  renderCustomAdhan();
   if (!state.adhanAvail) availableAdhans().then(av => { state.adhanAvail = av; renderAdhanPickers(); });
   $('#sNotifyAt').checked = a.notifyAt;
   $('#sNotifyBefore').replaceChildren(...[0, 5, 10, 15].map(n => new Option(n ? `${n} ${t('minBefore')}` : t('none'), n, false, n === a.notifyBefore)));
@@ -624,9 +627,34 @@ function renderSettings() {
   $('#clockOffset').textContent = `${getOffset() >= 0 ? '+' : ''}${Math.round(getOffset() / 1000)} s`;
 }
 
+// Auteurs et licences des Adhans : fichier généré par le workflow « Télécharger les Adhans »
+async function renderCredits() {
+  const ul = $('#audioCredits'); if (!ul) return;
+  try {
+    const r = await fetch('audio/adhan/credits.json', { cache: 'no-cache' });
+    if (!r.ok) throw 0;
+    const list = await r.json();
+    ul.replaceChildren(...list.map(c => {
+      const li = document.createElement('li');
+      const item = ADHANS.find(x => x.id === c.id);
+      li.textContent = `${item ? t(item.labelKey) : c.id} — ${c.author || '?'}, ${c.license || ''} `;
+      if (c.url) { const a = document.createElement('a'); a.href = c.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = c.source || 'source'; li.append(a); }
+      return li;
+    }));
+  } catch { ul.replaceChildren(); }
+}
+
+async function renderCustomAdhan() {
+  const info = await customAdhanInfo();
+  const p = $('#customInfo'); if (!p) return;
+  p.textContent = info ? t('customLoaded', { name: info.name, size: (info.size / 1e6).toFixed(1).replace('.', getLang() === 'en' ? '.' : ',') }) : t('importHelp');
+  $('#customRemove').hidden = !info;
+  state.adhanAvail = { ...(state.adhanAvail || {}), custom: !!info };
+}
+
 function adhanOptions(selected) {
   const av = state.adhanAvail || {};
-  return ADHANS.map(x => new Option((x.labelKey ? t(x.labelKey) : x.label) + (x.file && av[x.id] === false ? ` (${t('adhanUnavailable')})` : ''), x.id, false, x.id === selected));
+  return ADHANS.filter(x => !x.custom || av.custom || x.id === selected).map(x => new Option((x.labelKey ? t(x.labelKey) : x.label) + (x.file && av[x.id] === false ? ` (${t('adhanUnavailable')})` : ''), x.id, false, x.id === selected));
 }
 function renderAdhanPickers() {
   const a = S().adhan;
@@ -737,6 +765,27 @@ function bind() {
   window.addEventListener('offline', () => { state.online = false; renderHome(); });
   on('#noLocCity', 'click', openLocationDialog);
   on('#noLocGps', 'click', useGps);
+  on('#customImport', 'click', () => $('#customFile').click());
+  on('#customFile', 'change', async e => {
+    const f = e.target.files && e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    try {
+      await importCustomAdhan(f);
+      await renderCustomAdhan();
+      // on sélectionne directement l'Adhan importé
+      S().adhan.global = 'custom'; save(); renderAdhanPickers();
+      toast(t('importOk'));
+    } catch (err) {
+      toast(t({ type: 'importErrType', size: 'importErrSize' }[err.message] || 'importErrDecode'), 6000);
+    }
+  });
+  on('#customRemove', 'click', async () => {
+    await removeCustomAdhan();
+    const a = S().adhan;
+    if (a.global === 'custom') a.global = 'casablanca';
+    for (const k of Object.keys(a.perPrayer)) if (a.perPrayer[k] === 'custom') a.perPrayer[k] = 'casablanca';
+    save(); await renderCustomAdhan(); renderAdhanPickers();
+  });
   bindSettings();
 }
 

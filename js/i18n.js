@@ -1,6 +1,7 @@
 // Traductions FR / AR / EN — ajouter une langue = ajouter un objet ici.
 const DICT = {
   fr: {
+    backMode: 'Visée avec le dos du téléphone', tapToEnable: 'Touchez « Activer la boussole » (autorisation demandée par l’iPhone).',
     calendar: 'Calendrier', today: 'Aujourd’hui', occasions: 'Occasions', backToday: 'Revenir à aujourd’hui',
     calNote: 'Calendrier Umm al-Qura calculé. Au Maroc, le début des mois dépend de l’observation du croissant : ajustez la correction (±2 jours) dans les Réglages.',
     hijriMonths: ['Mouharram','Safar','Rabia al-Awal','Rabia ath-Thani','Joumada al-Oula','Joumada ath-Thania','Rajab','Chaabane','Ramadan','Chawwal','Dhou al-Qi’da','Dhou al-Hijja'],
@@ -49,7 +50,7 @@ const DICT = {
     qiblaDir: 'Direction de la Qibla', distance: 'Distance jusqu’à La Mecque',
     enableCompass: 'Activer la boussole', calibrate: 'Calibrer la boussole',
     holdFlat: 'Tenez le téléphone à plat, loin des objets métalliques et aimants.',
-    notFlat: 'Posez le téléphone à plat',
+    notFlat: 'Tenez le téléphone à plat, ou bien debout face à vous',
     compassUnsupported: 'Ce navigateur ne fournit pas l’orientation du téléphone. Utilisez l’angle affiché avec une boussole classique.',
     compassNoData: 'Aucune donnée de boussole reçue. Votre appareil n’a peut-être pas de magnétomètre.',
     compassDenied: 'Accès aux capteurs refusé.',
@@ -82,8 +83,10 @@ const DICT = {
     fetchError: 'Impossible de récupérer les horaires.',
     methods: { 21: 'Maroc (Habous)', 3: 'Ligue islamique mondiale', 5: 'Égypte', 4: 'Umm Al-Qura (La Mecque)', 1: 'Karachi', 2: 'ISNA (Amérique du Nord)', 13: 'Diyanet (Turquie)', 12: 'UOIF (France)', 19: 'Algérie', 18: 'Tunisie', 8: 'Golfe', 16: 'Dubaï', 15: 'Moonsighting Committee' },
     cardinals: ['Nord','Nord-Nord-Est','Nord-Est','Est-Nord-Est','Est','Est-Sud-Est','Sud-Est','Sud-Sud-Est','Sud','Sud-Sud-Ouest','Sud-Ouest','Ouest-Sud-Ouest','Ouest','Ouest-Nord-Ouest','Nord-Ouest','Nord-Nord-Ouest'],
+    adhanMakkah: 'La Mecque — Masjid al-Haram', adhanMakkah2: 'La Mecque 2', adhanMadinah: 'Médine — Mosquée du Prophète', adhanCasablanca: 'Maroc — Mosquée Hassan II', adhanAtlas: 'Maroc — Haut Atlas', adhanSham: 'Syrie — Sabah Fakhri', adhanCustom: 'Mon Adhan (importé)', importAdhan: 'Importer mon Adhan', removeAdhan: 'Supprimer', importHelp: 'Choisissez un fichier audio sur votre téléphone (MP3, M4A…). Il reste uniquement sur cet appareil.', customLoaded: 'Importé : {name} ({size} Mo). Choisissez « Mon Adhan (importé) » dans la liste.', importOk: 'Adhan importé', importErrType: 'Ce fichier n’est pas un fichier audio.', importErrSize: 'Fichier trop lourd (30 Mo maximum).', importErrDecode: 'Ce format audio n’est pas lu par votre navigateur. Essayez un MP3.',
   },
   ar: {
+    backMode: 'التصويب بظهر الهاتف', tapToEnable: 'اضغط «تشغيل البوصلة» (إذن يطلبه الآيفون).',
     calendar: 'التقويم', today: 'اليوم', occasions: 'مناسبات', backToday: 'العودة إلى اليوم',
     calNote: 'تقويم أم القرى المحسوب. في المغرب تبدأ الشهور حسب رؤية الهلال: عدّل التصحيح (±2 يوم) في الإعدادات.',
     hijriMonths: ['محرم','صفر','ربيع الأول','ربيع الآخر','جمادى الأولى','جمادى الآخرة','رجب','شعبان','رمضان','شوال','ذو القعدة','ذو الحجة'],
@@ -132,7 +135,7 @@ const DICT = {
     qiblaDir: 'اتجاه القبلة', distance: 'المسافة إلى مكة',
     enableCompass: 'تشغيل البوصلة', calibrate: 'معايرة البوصلة',
     holdFlat: 'أمسك الهاتف بشكل مسطّح، بعيدًا عن المعادن والمغناطيس.',
-    notFlat: 'ضع الهاتف بشكل مسطّح',
+    notFlat: 'أمسك الهاتف مسطّحًا أو قائمًا أمامك',
     compassUnsupported: 'هذا المتصفح لا يوفّر اتجاه الهاتف. استعمل الزاوية المعروضة مع بوصلة عادية.',
     compassNoData: 'لم تصل بيانات البوصلة. ربما لا يحتوي جهازك على مستشعر مغناطيسي.',
     compassDenied: 'تم رفض الوصول إلى المستشعرات.',
@@ -164,8 +167,10 @@ const DICT = {
     fetchError: 'تعذّر جلب المواقيت.',
     methods: { 21: 'المغرب (وزارة الأوقاف)', 3: 'رابطة العالم الإسلامي', 5: 'مصر', 4: 'أم القرى (مكة)', 1: 'كراتشي', 2: 'أمريكا الشمالية (ISNA)', 13: 'ديانت (تركيا)', 12: 'فرنسا (UOIF)', 19: 'الجزائر', 18: 'تونس', 8: 'الخليج', 16: 'دبي', 15: 'لجنة رؤية الهلال' },
     cardinals: ['شمال','شمال شمال شرق','شمال شرق','شرق شمال شرق','شرق','شرق جنوب شرق','جنوب شرق','جنوب جنوب شرق','جنوب','جنوب جنوب غرب','جنوب غرب','غرب جنوب غرب','غرب','غرب شمال غرب','شمال غرب','شمال شمال غرب'],
+    adhanMakkah: 'مكة المكرمة — المسجد الحرام', adhanMakkah2: 'مكة المكرمة 2', adhanMadinah: 'المدينة المنورة — المسجد النبوي', adhanCasablanca: 'المغرب — مسجد الحسن الثاني', adhanAtlas: 'المغرب — الأطلس الكبير', adhanSham: 'الشام — صباح فخري', adhanCustom: 'أذاني (مستورد)', importAdhan: 'استيراد أذان من الهاتف', removeAdhan: 'حذف', importHelp: 'اختر ملفًا صوتيًا من هاتفك (MP3، M4A…). يبقى الملف على هذا الجهاز فقط.', customLoaded: 'تم الاستيراد: {name} ({size} ميغا). اختر «أذاني (مستورد)» من القائمة.', importOk: 'تم استيراد الأذان', importErrType: 'هذا ليس ملفًا صوتيًا.', importErrSize: 'الملف كبير جدًا (30 ميغا كحد أقصى).', importErrDecode: 'المتصفح لا يقرأ هذه الصيغة. جرّب ملف MP3.',
   },
   en: {
+    backMode: 'Aiming with the back of the phone', tapToEnable: 'Tap “Start compass” (permission required by iPhone).',
     calendar: 'Calendar', today: 'Today', occasions: 'Occasions', backToday: 'Back to today',
     calNote: 'Calculated Umm al-Qura calendar. In Morocco months begin with moon sighting: adjust the correction (±2 days) in Settings.',
     hijriMonths: ['Muharram','Safar','Rabi al-Awwal','Rabi al-Thani','Jumada al-Ula','Jumada al-Akhirah','Rajab','Shaban','Ramadan','Shawwal','Dhu al-Qadah','Dhu al-Hijjah'],
@@ -214,7 +219,7 @@ const DICT = {
     qiblaDir: 'Qibla direction', distance: 'Distance to Makkah',
     enableCompass: 'Start compass', calibrate: 'Calibrate compass',
     holdFlat: 'Hold the phone flat, away from metal objects and magnets.',
-    notFlat: 'Lay the phone flat',
+    notFlat: 'Hold the phone flat, or upright in front of you',
     compassUnsupported: 'This browser does not expose device orientation. Use the angle shown with a regular compass.',
     compassNoData: 'No compass data received. Your device may lack a magnetometer.',
     compassDenied: 'Sensor access denied.',
@@ -246,6 +251,7 @@ const DICT = {
     fetchError: 'Could not fetch prayer times.',
     methods: { 21: 'Morocco', 3: 'Muslim World League', 5: 'Egyptian', 4: 'Umm Al-Qura (Makkah)', 1: 'Karachi', 2: 'ISNA (North America)', 13: 'Diyanet (Turkey)', 12: 'UOIF (France)', 19: 'Algeria', 18: 'Tunisia', 8: 'Gulf', 16: 'Dubai', 15: 'Moonsighting Committee' },
     cardinals: ['North','North-northeast','Northeast','East-northeast','East','East-southeast','Southeast','South-southeast','South','South-southwest','Southwest','West-southwest','West','West-northwest','Northwest','North-northwest'],
+    adhanMakkah: 'Makkah — Masjid al-Haram', adhanMakkah2: 'Makkah 2', adhanMadinah: 'Madinah — Prophet’s Mosque', adhanCasablanca: 'Morocco — Hassan II Mosque', adhanAtlas: 'Morocco — High Atlas', adhanSham: 'Syria — Sabah Fakhri', adhanCustom: 'My Adhan (imported)', importAdhan: 'Import my Adhan', removeAdhan: 'Remove', importHelp: 'Pick an audio file on your phone (MP3, M4A…). It stays on this device only.', customLoaded: 'Imported: {name} ({size} MB). Choose “My Adhan (imported)” in the list.', importOk: 'Adhan imported', importErrType: 'This is not an audio file.', importErrSize: 'File too large (30 MB max).', importErrDecode: 'Your browser cannot play this format. Try an MP3.',
   },
 };
 

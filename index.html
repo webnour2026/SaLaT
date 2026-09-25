@@ -176,6 +176,15 @@
           <label><input type="radio" name="adhanMode" value="perPrayer"><span data-i18n="perPrayer"></span></label>
         </div>
         <div id="adhanPickers"></div>
+        <div class="custom-adhan">
+          <p class="sub" data-i18n="adhanCustom">Mon Adhan</p>
+          <p class="note" id="customInfo" data-i18n="importHelp"></p>
+          <input type="file" id="customFile" accept="audio/*,.mp3,.m4a,.aac,.ogg,.opus,.wav,.flac" hidden>
+          <div class="row-btns">
+            <button class="btn small" type="button" id="customImport" data-i18n="importAdhan">Importer mon Adhan</button>
+            <button class="btn small" type="button" id="customRemove" data-i18n="removeAdhan" hidden>Supprimer</button>
+          </div>
+        </div>
         <label class="field"><span data-i18n="volume">Volume</span><input type="range" id="sVolume" min="0" max="1" step="0.05"></label>
         <label class="switch"><input type="checkbox" id="sVibrate"><span data-i18n="vibration"></span></label>
         <label class="switch"><input type="checkbox" id="sNotifyAt"><span data-i18n="notifyAt"></span></label>

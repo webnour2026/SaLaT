@@ -24,9 +24,9 @@ export class Compass {
   }
 
   /** Sur iOS, doit être appelé depuis un clic. Sur Android, peut être appelé directement. */
-  async start() {
+  async start({ ask = true } = {}) {
     if (!Compass.isSupported()) { this.onStatus('unsupported'); return false; }
-    if (Compass.needsPermission()) {
+    if (Compass.needsPermission() && ask) {
       try {
         if (await DeviceOrientationEvent.requestPermission() !== 'granted') { this.onStatus('denied'); return false; }
       } catch { this.onStatus('denied'); return false; }
@@ -47,6 +47,7 @@ export class Compass {
     clearTimeout(this.fallbackTimer);
     this.fallbackTimer = setTimeout(() => {
       if (this.gotHeading) return;
+      if (!ask) { this.onStatus('needTap'); return; }   // iOS : il faut un toucher sur « Activer »
       if (!this.startSensor()) this.onStatus(this.sawRelative ? 'relative' : 'nodata');
       else setTimeout(() => { if (!this.gotHeading) this.onStatus(this.blocked ? 'blocked' : this.sawRelative ? 'relative' : 'nodata'); }, 2500);
     }, 1500);
@@ -93,10 +94,11 @@ export class Compass {
     }
     if (kind === 'orientation' && Date.now() - this.lastAbs < 500) return; // doublon
     if (kind === 'absolute') this.lastAbs = Date.now();
-    this.emit((360 - e.alpha) % 360, { beta: e.beta, gamma: e.gamma, accuracy: null, source: kind });
+    const h = tiltHeading(e.alpha, e.beta || 0, e.gamma || 0, this);
+    this.emit(h.heading, { beta: e.beta, gamma: e.gamma, accuracy: null, source: kind, screenCorrected: h.mode === 'back', mode: h.mode });
   }
 
-  emit(heading, { beta, gamma, accuracy, source, screenCorrected }) {
+  emit(heading, { beta, gamma, accuracy, source, screenCorrected, mode = 'top' }) {
     this.gotHeading = true;
     if (this.sensor && source !== 'sensor') { try { this.sensor.stop(); } catch {} this.sensor = null; }
     if (!screenCorrected) {
@@ -104,7 +106,10 @@ export class Compass {
       heading = (heading + screenAngle + 360) % 360;
     }
     // lissage circulaire
-    const k = 0.25, r = heading * Math.PI / 180;
+    const r = heading * Math.PI / 180;
+    const prev = this.sin == null ? heading : (deg(Math.atan2(this.sin, this.cos)) + 360) % 360;
+    const jump = Math.abs(((heading - prev + 540) % 360) - 180);
+    const k = Math.min(0.6, Math.max(0.06, jump / 25));
     // qualité : une rotation normale est régulière ; un capteur mal calibré « saute ».
     // On mesure la médiane des variations d'accélération angulaire (2e différence).
     this.hist = this.hist || [];
@@ -131,9 +136,35 @@ export class Compass {
     this.cos = this.cos == null ? Math.cos(r) : this.cos + k * (Math.cos(r) - this.cos);
     const smooth = (deg(Math.atan2(this.sin, this.cos)) + 360) % 360;
 
-    const flat = beta == null || (Math.abs(beta) < 40 && Math.abs(gamma) < 40);
+    // « à plat » ou « debout » sont tous deux valides ; seule la position intermédiaire est imprécise
+    const flat = beta == null || mode === 'back' || (Math.abs(beta) < 50 && Math.abs(gamma) < 50);
     const needsCalib = accuracy != null && (accuracy < 0 || accuracy > 25);
     this.onStatus(needsCalib ? 'calibrate' : 'ok');
-    this.onHeading(smooth, { flat, accuracy, source, quality });
+    this.onHeading(smooth, { flat, accuracy, source, quality, mode });
   }
+}
+
+/**
+ * Cap compensé en inclinaison (angles W3C : alpha Z, beta X, gamma Y ; repère Est-Nord-Haut).
+ *  - téléphone à plat ou peu incliné : direction du BORD SUPÉRIEUR (projection horizontale),
+ *  - téléphone tenu debout (beta > ~60°) : direction du DOS du téléphone (comme une visée).
+ * Hystérésis 50°/65° pour éviter de basculer sans cesse entre les deux modes.
+ */
+function tiltHeading(alpha, beta, gamma, st) {
+  const r = Math.PI / 180;
+  const cA = Math.cos(alpha * r), sA = Math.sin(alpha * r);
+  const cB = Math.cos(beta * r), sB = Math.sin(beta * r);
+  const cG = Math.cos(gamma * r), sG = Math.sin(gamma * r);
+  const upright = Math.abs(beta) > (st.mode === 'back' ? 50 : 65);
+  st.mode = upright ? 'back' : 'top';
+  let east, north;
+  if (upright) {             // axe -Z (dos) tourné dans le repère terrestre
+    east = -cA * sG - sA * sB * cG;
+    north = -sA * sG + cA * sB * cG;
+  } else {                   // axe +Y (bord supérieur)
+    east = -sA * cB;
+    north = cA * cB;
+  }
+  const heading = (deg(Math.atan2(east, north)) + 360) % 360;
+  return { heading, mode: st.mode };
 }
