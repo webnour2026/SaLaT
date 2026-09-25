@@ -1,0 +1,31 @@
+name: Décompresser l'appli
+on:
+  workflow_dispatch:
+  push:
+    paths: ['*.zip']
+permissions:
+  contents: write
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          shopt -s nullglob
+          for z in *.zip; do
+            rm -rf /tmp/x && mkdir /tmp/x
+            unzip -oq "$z" -d /tmp/x
+            src=/tmp/x
+            # zip contenant un seul dossier (ex. priere/) : on prend son contenu
+            if [ "$(ls -A /tmp/x | wc -l)" -eq 1 ] && [ -d "/tmp/x/$(ls -A /tmp/x)" ]; then
+              src="/tmp/x/$(ls -A /tmp/x)"
+            fi
+            rm -rf "$src/.github"
+            cp -r "$src"/. .
+            git rm -q "$z"
+          done
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          git commit -m "Mise à jour de l'appli depuis le zip" || echo "Rien à valider"
+          git push
