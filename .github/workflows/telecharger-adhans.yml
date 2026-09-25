@@ -1,7 +1,10 @@
-# Télécharge des Adhans sous licence libre (Wikimedia Commons + Freesound),
-# les convertit en MP3 de bonne qualité et écrit audio/adhan/credits.json
-# (auteur + licence lus automatiquement sur Commons, affichés dans l'appli).
-# Lancer à la main : onglet Actions → « Télécharger les Adhans » → Run workflow.
+# Télécharge des Adhans sous licence libre (Wikimedia Commons + Freesound), coupe automatiquement
+# ce qui précède la voix (ouverture du micro, clics, bruit) et ce qui la suit, convertit en MP3
+# 160 kbit/s et écrit audio/adhan/credits.json (auteur + licence lus sur Commons).
+# Retirés : La Mecque (x2) et Mosquée Hassan II (trop de bruit de fond).
+# Si un Adhan commence encore trop tôt ou trop tard : dans SOURCES ci-dessous, remplacez None
+# par le début voulu en secondes (ex. 4.5), puis relancez.
+# Lancer : onglet Actions → « Télécharger les Adhans » → Run workflow.
 name: Télécharger les Adhans
 on:
   workflow_dispatch:
@@ -13,70 +16,134 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
-      - name: Télécharger, nettoyer, convertir
+      - name: Télécharger, découper, convertir
         run: |
-          UA="PriereApp/1.1 (https://github.com/${GITHUB_REPOSITORY})"
-          mkdir -p audio/adhan /tmp/meta
-          # filtre audio : coupe les basses parasites, retire le silence du début,
-          # égalise le volume, 4 min max, fondu de fin
-          FILTER="highpass=f=70,silenceremove=start_periods=1:start_threshold=-40dB,loudnorm=I=-16:TP=-1.5:LRA=11"
-          enc() {  # $1 source, $2 sortie, $3 durée max (s)
-            ffmpeg -y -loglevel error -i "$1" -vn -t "${3:-240}" -af "$FILTER,afade=t=out:st=$(( ${3:-240} - 3 )):d=3" \
-              -ac 2 -ar 44100 -b:a 160k "audio/adhan/$2" && echo "  ✓ $2"
-          }
-          commons() {  # $1 = nom du fichier sur Commons, $2 = sortie, $3 = durée max
-            enc_title=$(python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1]))' "$1")
-            echo "→ $2 : $1"
-            if curl -fsSL -A "$UA" -o /tmp/src "https://commons.wikimedia.org/wiki/Special:FilePath/$enc_title"; then
-              enc /tmp/src "$2" "$3"
-              curl -fsSL -A "$UA" "https://commons.wikimedia.org/w/api.php?action=query&format=json&prop=imageinfo&iiprop=extmetadata&titles=File:$enc_title" \
-                -o "/tmp/meta/${2%.mp3}.json" || true
-              echo "$1" > "/tmp/meta/${2%.mp3}.title"
-            else echo "  ✗ échec du téléchargement"; fi
-          }
-          commons "Maghrib_Adhan_at_the_Masjid_al_Haram,_Mecca_-_25_Feb,_2012.webm" makkah.mp3 240
-          commons "Adhan,_Great_Mosque_of_Mecca_-_Jan_21,_2013.webm"                 makkah2.mp3 200
-          commons "33937_ejaz215_call-to-prayer-from-the-prophet-s-mo.ogg"            madinah.mp3 200
-          commons "Llamada_a_oración_Mezquita_Hassan_II.wav"                          casablanca.mp3 180
-          commons "Call_to_prayer_by_Sabah_Fakhry.mp3"                                sham.mp3 170
-          commons "Beautiful_adhan.ogg"                                               adhan1.mp3 160
-          # Haut Atlas (Maroc) — Iain McCurdy, Freesound n° 807484, CC BY 4.0 (aperçu public)
-          echo "→ morocco.mp3 : Freesound 807484"
-          if curl -fsSL -A "$UA" -o /tmp/src "https://cdn.freesound.org/previews/807/807484_3655844-hq.mp3" \
-             || curl -fsSL -A "$UA" -o /tmp/src "https://cdn.freesound.org/previews/807/807484_3655844-lq.mp3"; then
-            enc /tmp/src morocco.mp3 80
-          fi
-          # anciens fichiers retirés de la liste
-          rm -f audio/adhan/adhan2.mp3
-      - name: Écrire les crédits (auteur + licence)
-        run: |
-          python3 - <<'PY'
-          import json, glob, os, re, html, urllib.parse
-          out = []
-          for meta in sorted(glob.glob('/tmp/meta/*.json')):
-              key = os.path.basename(meta)[:-5]
-              if not os.path.exists(f'audio/adhan/{key}.mp3'): continue
-              title = open(meta[:-5] + '.title').read().strip()
+          cat > /tmp/adhans.py <<'PY'
+          # Télécharge, découpe (début/fin de la voix) et convertit les Adhans libres, puis écrit credits.json.
+          import json, os, re, html, subprocess, sys, urllib.parse, urllib.request
+
+          UA = f"PriereApp/1.2 (https://github.com/{os.environ.get('GITHUB_REPOSITORY', 'local')})"
+          OUT = 'audio/adhan'
+          os.makedirs(OUT, exist_ok=True)
+
+          # id, fichier Commons (ou URL), durée max (s), début forcé en secondes (None = automatique)
+          SOURCES = [
+              ('madinah',    '33937_ejaz215_call-to-prayer-from-the-prophet-s-mo.ogg',            200, None),
+              ('aaqib',      'The_Adhan_-_Muslim_Call_to_Prayer_-_Aaqib_Azeez.mp3',               100, None),
+              ('adhan1',     'Beautiful_adhan.ogg',                                               160, None),
+              ('morocco',    'https://cdn.freesound.org/previews/807/807484_3655844-hq.mp3',      80,  None),
+          ]
+
+          def get(url, dest=None):
+              req = urllib.request.Request(url, headers={'User-Agent': UA})
+              with urllib.request.urlopen(req, timeout=120) as r:
+                  data = r.read()
+              if dest: open(dest, 'wb').write(data)
+              return data
+
+          def voice_bounds(src):
+              """Début et fin de la VOIX de l'Adhan. On ignore les bruits courts (ouverture du micro, clic,
+              larsen) et le bruit de fond continu (foule, rue) : seuil adaptatif entre le niveau du fond et
+              celui de la voix, dans la bande de la voix (250–3500 Hz), maintenu au moins 1,5 s."""
+              import array, math
+              pcm = subprocess.run(['ffmpeg', '-v', 'error', '-i', src, '-vn', '-af', 'highpass=f=250,lowpass=f=3500',
+                                    '-ac', '1', '-ar', '8000', '-f', 's16le', '-'], capture_output=True).stdout
+              a = array.array('h'); a.frombytes(pcm[: len(pcm) // 2 * 2])
+              W = 400                                   # fenêtres de 50 ms
+              db = []
+              for i in range(0, len(a) - W, W):
+                  seg = a[i:i + W]
+                  rms = math.sqrt(sum(x * x for x in seg) / W) or 1
+                  db.append(20 * math.log10(rms))
+              if not db: return 0.0, None
+              srt = sorted(db)
+              floor, peak = srt[int(len(srt) * 0.15)], srt[int(len(srt) * 0.95)]
+              thr = floor + 0.5 * (peak - floor)
+              active = [d > thr for d in db]
+              # combler les petites respirations (< 0,4 s) à l'intérieur d'une phrase
+              gap = 0
+              for i, v in enumerate(active):
+                  if v:
+                      if 0 < gap <= 8:
+                          for j in range(i - gap, i): active[j] = True
+                      gap = 0
+                  else: gap += 1
+              runs, i = [], 0
+              while i < len(active):
+                  if active[i]:
+                      j = i
+                      while j < len(active) and active[j]: j += 1
+                      if (j - i) * 0.05 >= 1.5: runs.append((i * 0.05, j * 0.05))
+                      i = j
+                  else: i += 1
+              total = len(db) * 0.05
+              if not runs: return 0.0, total
+              return max(0.0, runs[0][0] - 0.25), min(total, runs[-1][1] + 1.0)
+
+          def encode(src, out, maxdur, forced):
+              begin, end = voice_bounds(src)
+              if forced is not None: begin = forced
+              length = min(maxdur, (end - begin) if end else maxdur)
+              fade = 2.5
+              af = (f'highpass=f=70,afade=t=in:st=0:d=0.4,afade=t=out:st={max(0, length - fade):.2f}:d={fade},'
+                    'loudnorm=I=-16:TP=-1.5:LRA=11')
+              subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-ss', f'{begin:.2f}', '-i', src, '-vn',
+                              '-t', f'{length:.2f}', '-af', af, '-ac', '2', '-ar', '44100', '-b:a', '160k',
+                              f'{OUT}/{out}.mp3'], check=True)
+              print(f'  ✓ {out}.mp3 : voix de {begin:.1f}s à {begin + length:.1f}s ({length:.0f}s)')
+
+          credits = []
+          for key, name, maxdur, forced in SOURCES:
+              print(f'→ {key} : {name}')
               try:
-                  page = next(iter(json.load(open(meta))['query']['pages'].values()))
-                  em = page['imageinfo'][0]['extmetadata']
-              except Exception:
-                  em = {}
+                  if name.startswith('http'):
+                      get(name, '/tmp/src')
+                  else:
+                      q = urllib.parse.quote(name)
+                      get(f'https://commons.wikimedia.org/wiki/Special:FilePath/{q}', '/tmp/src')
+                  encode('/tmp/src', key, maxdur, forced)
+              except Exception as e:
+                  print('  ✗', e); continue
+              if name.startswith('http'):
+                  credits.append({'id': key, 'author': 'Iain McCurdy (Aroumd, Haut Atlas)', 'license': 'CC BY 4.0',
+                                  'source': 'Freesound', 'url': 'https://freesound.org/people/iainmccurdy/sounds/807484/'})
+                  continue
+              em = {}
+              try:
+                  meta = json.loads(get('https://commons.wikimedia.org/w/api.php?action=query&format=json&prop=imageinfo'
+                                        f'&iiprop=extmetadata&titles=File:{urllib.parse.quote(name)}'))
+                  em = next(iter(meta['query']['pages'].values()))['imageinfo'][0]['extmetadata']
+              except Exception: pass
               clean = lambda v: html.unescape(re.sub(r'<[^>]+>', '', (em.get(v) or {}).get('value', ''))).strip()
-              out.append({'id': key, 'author': clean('Artist') or clean('Credit') or 'Wikimedia Commons',
-                          'license': clean('LicenseShortName'), 'source': 'Wikimedia Commons',
-                          'url': 'https://commons.wikimedia.org/wiki/File:' + urllib.parse.quote(title)})
-          if os.path.exists('audio/adhan/morocco.mp3'):
-              out.append({'id': 'morocco', 'author': 'Iain McCurdy (Aroumd, Haut Atlas)', 'license': 'CC BY 4.0',
-                          'source': 'Freesound', 'url': 'https://freesound.org/people/iainmccurdy/sounds/807484/'})
-          json.dump(out, open('audio/adhan/credits.json', 'w'), ensure_ascii=False, indent=1)
-          print(json.dumps(out, ensure_ascii=False, indent=1))
+              credits.append({'id': key, 'author': clean('Artist') or clean('Credit') or 'Wikimedia Commons',
+                              'license': clean('LicenseShortName'), 'source': 'Wikimedia Commons',
+                              'url': 'https://commons.wikimedia.org/wiki/File:' + urllib.parse.quote(name)})
+
+
+          def write_list(out_dir='audio/adhan'):
+              """audio/adhan/list.json : tous les MP3 présents, avec un nom lisible tiré du nom de fichier.
+              L'appli l'utilise pour afficher automatiquement chaque Adhan déposé."""
+              import glob, json, os, re
+              items = []
+              for f in sorted(glob.glob(out_dir + '/*.mp3')):
+                  key = os.path.splitext(os.path.basename(f))[0]
+                  label = re.sub(r'[-_]+', ' ', key).strip()
+                  label = label[:1].upper() + label[1:]
+                  items.append({'id': key, 'file': f'audio/adhan/{os.path.basename(f)}', 'label': label})
+              json.dump(items, open(out_dir + '/list.json', 'w'), ensure_ascii=False, indent=1)
+              print('list.json :', [x['id'] for x in items])
+          if '--no-credits' not in sys.argv:
+              json.dump(credits, open(f'{OUT}/credits.json', 'w'), ensure_ascii=False, indent=1)
+          write_list(OUT)
           PY
+          # retirés : La Mecque x2 et Hassan II (bruit), adhan2 (trop court), sham (droits pas assez clairs)
+          rm -f audio/adhan/adhan2.mp3 audio/adhan/sham.mp3 audio/adhan/makkah.mp3 audio/adhan/makkah2.mp3 audio/adhan/casablanca.mp3
+          python3 /tmp/adhans.py
           ls -la audio/adhan
       - name: Enregistrer dans le dépôt
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
           git add -A audio/adhan
-          git commit -m "Adhans libres mis à jour (Commons + Freesound)" || echo "Rien de nouveau"
+          git commit -m "Adhans libres : début et fin coupés automatiquement" || echo "Rien de nouveau"
           git push
