@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Prière — horaires et Qibla</title>
   <meta name="description" content="Horaires de prière précis par GPS, compte à rebours, direction de la Qibla et Adhan.">
-  <meta name="theme-color" content="#5B3F28">
+  <meta name="theme-color" content="#0B5B4B">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -24,7 +24,10 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>
       <span id="placeName" data-i18n="locating">Localisation en cours…</span>
     </button>
-    <time class="clock" id="clock" aria-live="off">--:--:--</time>
+    <div class="top-right">
+      <time class="clock" id="clock" aria-live="off">--:--:--</time>
+      <button class="lang-btn" id="langBtn" type="button" aria-label="Langue / اللغة / Language">ع</button>
+    </div>
   </header>
 
   <main id="main">
@@ -60,42 +63,54 @@
     </section>
 
     <!-- ============ QIBLA ============ -->
-    <section class="view" id="view-qibla" hidden aria-labelledby="qiblaTitle">
-      <h1 class="view-title" id="qiblaTitle" data-i18n="qiblaDir">Direction de la Qibla</h1>
+    <section class="view qibla-view" id="view-qibla" hidden aria-labelledby="qiblaTitle">
+      <h1 class="sr-only" id="qiblaTitle" data-i18n="qiblaDir">Direction de la Qibla</h1>
 
-      <div class="qibla-read">
-        <p class="qibla-deg"><span id="qiblaDeg">--</span>°</p>
-        <p class="qibla-card" id="qiblaCardinal">&nbsp;</p>
-        <p class="qibla-dist"><span data-i18n="distance">Distance jusqu’à La Mecque</span> : <strong id="qiblaDist">--</strong></p>
-      </div>
-
-      <div class="dial-wrap">
-        <svg class="dial" id="dial" viewBox="-160 -160 320 320" role="img" aria-labelledby="qiblaTitle">
-          <polygon class="dial-pointer" points="0,-156 -9,-138 9,-138"/>
-          <g id="rose">
-            <circle class="dial-ring" r="130"/>
-            <g id="ticks"></g>
-            <text class="dial-n" x="0" y="-100">N</text>
-            <text class="dial-c" x="100" y="6">E</text>
-            <text class="dial-c" x="0" y="112">S</text>
-            <text class="dial-c" x="-100" y="6">O</text>
-            <g id="kaabaMark">
-              <line class="kaaba-line" x1="0" y1="0" x2="0" y2="-118"/>
-              <rect class="kaaba" x="-11" y="-146" width="22" height="22" rx="2"/>
-              <rect class="kaaba-band" x="-11" y="-140" width="22" height="4"/>
-            </g>
-          </g>
-          <circle class="dial-hub" r="6"/>
+      <div class="kaaba-top" id="kaabaTop" aria-hidden="true">
+        <svg viewBox="0 0 64 64">
+          <path class="k-top" d="M32 8 56 18 32 28 8 18Z"/>
+          <path class="k-left" d="M8 18 32 28v28L8 46Z"/>
+          <path class="k-right" d="M56 18 32 28v28l24-10Z"/>
+          <path class="k-band" d="M8 23.5 32 33.5 56 23.5v4L32 37.5 8 27.5Z"/>
         </svg>
       </div>
 
-      <p class="compass-msg" id="compassMsg" role="status" data-i18n="holdFlat">Tenez le téléphone à plat, loin des objets métalliques et aimants.</p>
-
-      <div class="row-btns">
-        <button class="btn btn-primary" id="compassStart" type="button" data-i18n="enableCompass">Activer la boussole</button>
-        <button class="btn" id="calibrateBtn" type="button" data-i18n="calibrate">Calibrer la boussole</button>
+      <div class="dial-wrap">
+        <svg class="dial" id="dial" viewBox="-175 -175 350 350" aria-hidden="true">
+          <g id="rose">
+            <circle class="ring" r="112"/>
+            <g id="roseTicks"></g>
+            <g id="roseLabels"></g>
+            <g id="qiblaMark"><polygon class="qmark" points="0,-132 -12,-156 12,-156"/></g>
+          </g>
+        </svg>
       </div>
-      <p class="note" data-i18n="trueNorthNote"></p>
+
+      <p class="heading-big" id="headingBig" aria-live="off">--</p>
+      <p class="qibla-cap"><span data-i18n="qiblaIn">Direction de la Qibla à</span> <span id="qiblaCity"></span></p>
+      <p class="qibla-val"><span id="qiblaDeg">--°</span> · <span id="qiblaCardinal"></span></p>
+      <p class="compass-msg" id="compassMsg" role="status"></p>
+
+      <div class="sensor-row">
+        <span class="dot" id="sensorDot" data-q="off"></span>
+        <span class="sensor-text" id="sensorText"></span>
+        <button class="link-btn" id="calibrateBtn" type="button" data-i18n="calibrateShort">Calibrer</button>
+      </div>
+      <button class="btn btn-primary wide" id="compassStart" type="button" hidden data-i18n="enableCompass">Activer la boussole</button>
+
+      <details class="qibla-more">
+        <summary data-i18n="moreDetails">Plus de détails</summary>
+        <p><span data-i18n="distance">Distance jusqu’à La Mecque</span> : <strong id="qiblaDist">--</strong></p>
+        <p><span data-i18n="magCompass">Sur une boussole classique</span> : <strong id="qiblaMag">--</strong></p>
+        <p class="debug" id="compassDebug"></p>
+        <div class="sun-card">
+          <h2 data-i18n="sunCheck">Vérification par le soleil</h2>
+          <p id="sunNow"></p>
+          <p id="sunRel"></p>
+          <ul id="sunTimes"></ul>
+        </div>
+        <p class="note" data-i18n="trueNorthNote"></p>
+      </details>
     </section>
 
     <!-- ============ RÉGLAGES ============ -->
@@ -166,6 +181,7 @@
 
       <fieldset class="group">
         <legend data-i18n="sCompass">Boussole</legend>
+        <label class="switch"><input type="checkbox" id="sDeclAuto"><span data-i18n="declAuto"></span></label>
         <label class="field"><span data-i18n="declination"></span><input type="number" id="sDecl" step="0.1" min="-30" max="30" inputmode="decimal"></label>
         <p class="note" data-i18n="declinationHelp"></p>
       </fieldset>
@@ -180,6 +196,7 @@
         <legend data-i18n="sData">Données</legend>
         <button class="btn small" type="button" id="clearBtn" data-i18n="clearCache"></button>
         <p class="note" data-i18n="about"></p>
+        <p class="note" data-i18n="audioCredits"></p>
       </fieldset>
     </section>
   </main>
