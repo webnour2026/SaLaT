@@ -8,7 +8,7 @@ import { Compass } from './compass.js';
 import { formatHijri } from './hijri.js';
 import { declination as wmmDeclination } from './wmm.js';
 import { sunPosition, timesAtAzimuth } from './sun.js';
-import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, removeCustomAdhan, loadCustomAdhans, customAdhans } from './adhan.js';
+import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, removeCustomAdhan, loadCustomAdhans, customAdhans, loadSiteAdhans, DEFAULT_ADHAN, RETIRED } from './adhan.js';
 import { hijriMonth, upcomingWhiteDays, civilNoon, hijriOf } from './calendar.js';
 import { PRESET_CITIES, METHOD_BY_COUNTRY, getGpsPosition, reverseGeocode, searchCity } from './location.js';
 
@@ -807,20 +807,21 @@ function bind() {
 function sanitizeAdhans() {
   const a = S().adhan, ok = id => ADHANS.some(x => x.id === id);
   let changed = false;
-  if (!ok(a.global)) { a.global = 'casablanca'; changed = true; }
-  for (const k of Object.keys(a.perPrayer)) if (!ok(a.perPrayer[k])) { a.perPrayer[k] = 'casablanca'; changed = true; }
+  if (!ok(a.global)) { a.global = DEFAULT_ADHAN; changed = true; }
+  for (const k of Object.keys(a.perPrayer)) if (!ok(a.perPrayer[k])) { a.perPrayer[k] = DEFAULT_ADHAN; changed = true; }
   if (changed) save();
 }
 
 function init() {
-  loadCustomAdhans().then(({ migratedTo }) => {
+  Promise.all([loadCustomAdhans(), loadSiteAdhans()]).then(([{ migratedTo }]) => {
     const a = S().adhan;
     if (migratedTo) {       // ancien emplacement unique « custom » → nouvel identifiant
       if (a.global === 'custom') a.global = migratedTo;
       for (const k of Object.keys(a.perPrayer)) if (a.perPrayer[k] === 'custom') a.perPrayer[k] = migratedTo;
       save();
     }
-    sanitizeAdhans(); renderCustomAdhan(); renderAdhanPickers();
+    sanitizeAdhans(); renderCustomAdhan(); state.adhanAvail = null; renderAdhanPickers();
+    availableAdhans().then(av => { state.adhanAvail = { ...av }; renderAdhanPickers(); });
   });
   // premier lancement : langue de l'appareil (arabe si le téléphone est en arabe)
   if (!localStorage.getItem('priere.settings.v1')) {
@@ -830,7 +831,8 @@ function init() {
   }
   // Adhans retirés de la liste (anciennes versions) → Adhan marocain
   // (les Adhans importés « u:… » et l'ancien « custom » sont vérifiés après leur chargement)
-  const ids = ADHANS.map(x => x.id), fix = v => (ids.includes(v) || /^u:|^custom$/.test(v) ? v : 'casablanca');
+  // (les Adhans du site et importés sont vérifiés après leur chargement)
+  const fix = v => (RETIRED.includes(v) || !v ? DEFAULT_ADHAN : v);
   S().adhan.global = fix(S().adhan.global);
   for (const k of Object.keys(S().adhan.perPrayer)) S().adhan.perPrayer[k] = fix(S().adhan.perPrayer[k]);
   save();

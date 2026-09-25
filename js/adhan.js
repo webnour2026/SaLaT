@@ -1,18 +1,37 @@
 // Adhan (audio), vibration et notifications.
 // Sons disponibles. Tous sont téléchargés automatiquement par le workflow GitHub
 // « Télécharger les Adhans » (Freesound + Wikimedia Commons, licences libres vérifiées).
+export const DEFAULT_ADHAN = 'aaqib';
+// Adhans connus (libellés traduits). Les autres fichiers déposés dans audio/adhan/ sont ajoutés
+// automatiquement grâce à audio/adhan/list.json (généré par les workflows GitHub).
 export const ADHANS = [
-  { id: 'makkah',     labelKey: 'adhanMakkah',     file: 'audio/adhan/makkah.mp3' },
-  { id: 'makkah2',    labelKey: 'adhanMakkah2',    file: 'audio/adhan/makkah2.mp3' },
-  { id: 'madinah',    labelKey: 'adhanMadinah',    file: 'audio/adhan/madinah.mp3' },
-  { id: 'casablanca', labelKey: 'adhanCasablanca', file: 'audio/adhan/casablanca.mp3' },
-  { id: 'morocco',    labelKey: 'adhanAtlas',      file: 'audio/adhan/morocco.mp3' },
-  { id: 'aaqib',      labelKey: 'adhanAaqib',      file: 'audio/adhan/aaqib.mp3' },
-  { id: 'adhan1',     labelKey: 'adhanCalm',       file: 'audio/adhan/adhan1.mp3' },
-  { id: 'beep',       labelKey: 'beep' },
-  { id: 'none',       labelKey: 'noneAdhan' },
+  { id: 'aaqib',   labelKey: 'adhanAaqib',   file: 'audio/adhan/aaqib.mp3' },
+  { id: 'madinah', labelKey: 'adhanMadinah', file: 'audio/adhan/madinah.mp3' },
+  { id: 'morocco', labelKey: 'adhanAtlas',   file: 'audio/adhan/morocco.mp3' },
+  { id: 'adhan1',  labelKey: 'adhanCalm',    file: 'audio/adhan/adhan1.mp3' },
+  { id: 'beep',    labelKey: 'beep' },
+  { id: 'none',    labelKey: 'noneAdhan' },
 ];
-const FALLBACK_ORDER = ['makkah', 'casablanca', 'madinah', 'aaqib', 'makkah2', 'morocco', 'adhan1'];
+// anciens Adhans retirés (trop de bruit ou droits pas assez clairs)
+export const RETIRED = ['makkah', 'makkah2', 'casablanca', 'sham', 'adhan2'];
+const FALLBACK_ORDER = ['aaqib', 'madinah', 'adhan1', 'morocco'];
+let siteList = null;
+
+/** Lit audio/adhan/list.json et ajoute les Adhans du site qui ne sont pas encore dans ADHANS. */
+export async function loadSiteAdhans() {
+  try {
+    const r = await fetch('audio/adhan/list.json', { cache: 'no-cache' });
+    if (!r.ok) throw 0;
+    siteList = await r.json();
+    const at = () => { const i = ADHANS.findIndex(x => x.custom || x.id === 'beep'); return i < 0 ? ADHANS.length : i; };
+    for (const it of siteList) {
+      if (!it || !it.id || !it.file || RETIRED.includes(it.id)) continue;
+      if (ADHANS.some(x => x.id === it.id)) continue;
+      ADHANS.splice(at(), 0, { id: it.id, label: it.label || it.id, file: it.file });
+      FALLBACK_ORDER.push(it.id);
+    }
+  } catch { siteList = null; }
+}
 
 // ---------- Adhan personnel (fichier choisi par l'utilisateur, gardé sur l'appareil) ----------
 const DB = 'priere-audio', STORE = 'files';
@@ -200,6 +219,11 @@ export async function playAdhan(id, volume = 0.8, { title = '', ended = null } =
 /** Vérifie quels fichiers existent (pour l'affichage dans les réglages). */
 export async function availableAdhans() {
   const out = {};
+  if (siteList) {           // liste du site : pas besoin d'interroger chaque fichier
+    const have = new Set(siteList.map(x => x.id));
+    for (const a of ADHANS) if (a.file) out[a.id] = have.has(a.id);
+    return out;
+  }
   await Promise.all(ADHANS.filter(a => a.file).map(async a => {
     try { const r = await fetch(a.file, { method: 'HEAD', cache: 'no-store' }); out[a.id] = r.ok; }
     catch { out[a.id] = false; }

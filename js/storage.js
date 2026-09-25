@@ -20,8 +20,8 @@ export const DEFAULTS = {
   adhan: {
     enabled: true,
     mode: 'global',             // global | perPrayer
-    global: 'casablanca',
-    perPrayer: { Fajr: 'casablanca', Dhuhr: 'casablanca', Asr: 'casablanca', Maghrib: 'casablanca', Isha: 'casablanca' },
+    global: 'aaqib',
+    perPrayer: { Fajr: 'aaqib', Dhuhr: 'aaqib', Asr: 'aaqib', Maghrib: 'aaqib', Isha: 'aaqib' },
     volume: 0.8,
     vibrate: true,
     notifyAt: false,

@@ -1,21 +1,26 @@
 # Fichiers Adhan
 
-Lancez le workflow **« Télécharger les Adhans »** (onglet Actions → Run workflow) :
-il télécharge, nettoie et convertit ces enregistrements libres, puis écrit `credits.json`
-(auteur + licence, affichés dans l'appli : Réglages → Données).
+## Adhans libres téléchargés automatiquement
+Workflow **« Télécharger les Adhans »** (onglet Actions → Run workflow) :
 
 | Choix dans l'appli | Fichier | Source |
 |---|---|---|
-| La Mecque — Masjid al-Haram (Maghrib, 2012) | makkah.mp3 | Wikimedia Commons, CC BY 3.0 |
-| La Mecque 2 (2013) | makkah2.mp3 | Wikimedia Commons |
+| Voix seule — Aaqib Azeez (par défaut) | aaqib.mp3 | Wikimedia Commons, CC BY-SA 4.0 |
 | Médine — Mosquée du Prophète | madinah.mp3 | ejaz215, Wikimedia Commons, CC BY 3.0 |
-| Maroc — Mosquée Hassan II (Casablanca) | casablanca.mp3 | Wikimedia Commons |
 | Maroc — Haut Atlas | morocco.mp3 | Iain McCurdy, Freesound, CC BY 4.0 |
-| Voix seule — Aaqib Azeez | aaqib.mp3 | Wikimedia Commons, CC BY-SA 4.0 |
 | Adhan doux | adhan1.mp3 | Wikimedia Commons, CC0 |
 
-Ce sont des enregistrements réels (souvent pris depuis la rue), pas des enregistrements de studio.
+Retirés : La Mecque (x2) et Mosquée Hassan II (trop de bruit de fond).
 
-## Adhan personnel
-Chaque utilisateur peut importer son propre fichier audio : Réglages → Adhan → « Importer mon Adhan ».
-Le fichier reste sur son téléphone, il n'est jamais envoyé sur le site.
+## Ajouter un Adhan libre
+1. Déposez le fichier (MP3, WAV, M4A, OGG…) dans **audio/adhan/nouveaux/** sur GitHub.
+2. Son nom devient le nom affiché : `Maroc-Fes.mp3` → « Maroc Fes ».
+3. Le workflow « Convertir les Adhans en MP3 » le nettoie (début coupé sur la voix, volume égalisé),
+   le range dans audio/adhan/ et met à jour `list.json` : il apparaît tout seul dans l'appli.
+
+Uniquement des fichiers dont la licence permet l'usage dans une application
+(CC0, CC BY, CC BY-SA, licence Pixabay…). Pas d'Adhans de YouTube ou d'autres applications.
+
+## Adhans personnels
+Chaque utilisateur peut importer ses propres fichiers : Réglages → Adhan → « Importer des Adhans ».
+Ils restent sur son téléphone.
