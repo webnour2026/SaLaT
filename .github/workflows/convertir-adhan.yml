@@ -1,0 +1,108 @@
+# AJOUTER UN ADHAN : déposez le fichier (MP3, WAV, M4A, OGG…) dans le dossier audio/adhan/nouveaux/
+# Le nom du fichier devient le nom affiché dans l'appli : « Maroc-Fes.mp3 » → « Maroc Fes ».
+# Le workflow coupe ce qui précède la voix (ouverture du micro, bruit), égalise le volume,
+# convertit en MP3 160 kbit/s dans audio/adhan/, supprime l'original et met à jour list.json.
+name: Convertir les Adhans en MP3
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'audio/adhan/nouveaux/**'
+      - 'audio/adhan/*.wav'
+      - 'audio/adhan/*.flac'
+      - 'audio/adhan/*.ogg'
+      - 'audio/adhan/*.oga'
+      - 'audio/adhan/*.m4a'
+      - 'audio/adhan/*.opus'
+permissions:
+  contents: write
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - run: |
+          cat > /tmp/conv.py <<'PY'
+          import glob, os, re, subprocess
+          OUT = 'audio/adhan'
+          def voice_bounds(src):
+              """Début et fin de la VOIX de l'Adhan. On ignore les bruits courts (ouverture du micro, clic,
+              larsen) et le bruit de fond continu (foule, rue) : seuil adaptatif entre le niveau du fond et
+              celui de la voix, dans la bande de la voix (250–3500 Hz), maintenu au moins 1,5 s."""
+              import array, math
+              pcm = subprocess.run(['ffmpeg', '-v', 'error', '-i', src, '-vn', '-af', 'highpass=f=250,lowpass=f=3500',
+                                    '-ac', '1', '-ar', '8000', '-f', 's16le', '-'], capture_output=True).stdout
+              a = array.array('h'); a.frombytes(pcm[: len(pcm) // 2 * 2])
+              W = 400                                   # fenêtres de 50 ms
+              db = []
+              for i in range(0, len(a) - W, W):
+                  seg = a[i:i + W]
+                  rms = math.sqrt(sum(x * x for x in seg) / W) or 1
+                  db.append(20 * math.log10(rms))
+              if not db: return 0.0, None
+              srt = sorted(db)
+              floor, peak = srt[int(len(srt) * 0.15)], srt[int(len(srt) * 0.95)]
+              thr = floor + 0.5 * (peak - floor)
+              active = [d > thr for d in db]
+              # combler les petites respirations (< 0,4 s) à l'intérieur d'une phrase
+              gap = 0
+              for i, v in enumerate(active):
+                  if v:
+                      if 0 < gap <= 8:
+                          for j in range(i - gap, i): active[j] = True
+                      gap = 0
+                  else: gap += 1
+              runs, i = [], 0
+              while i < len(active):
+                  if active[i]:
+                      j = i
+                      while j < len(active) and active[j]: j += 1
+                      if (j - i) * 0.05 >= 1.5: runs.append((i * 0.05, j * 0.05))
+                      i = j
+                  else: i += 1
+              total = len(db) * 0.05
+              if not runs: return 0.0, total
+              return max(0.0, runs[0][0] - 0.25), min(total, runs[-1][1] + 1.0)
+
+          def encode(src, out, maxdur, forced):
+              begin, end = voice_bounds(src)
+              if forced is not None: begin = forced
+              length = min(maxdur, (end - begin) if end else maxdur)
+              fade = 2.5
+              af = (f'highpass=f=70,afade=t=in:st=0:d=0.4,afade=t=out:st={max(0, length - fade):.2f}:d={fade},'
+                    'loudnorm=I=-16:TP=-1.5:LRA=11')
+              subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-ss', f'{begin:.2f}', '-i', src, '-vn',
+                              '-t', f'{length:.2f}', '-af', af, '-ac', '2', '-ar', '44100', '-b:a', '160k',
+                              f'{OUT}/{out}.mp3'], check=True)
+              print(f'  ✓ {out}.mp3 : voix de {begin:.1f}s à {begin + length:.1f}s ({length:.0f}s)')
+
+
+          files = [f for f in glob.glob(OUT + '/nouveaux/*') if os.path.isfile(f)]
+          files += [f for f in glob.glob(OUT + '/*') if re.search(r'\.(wav|flac|ogg|oga|m4a|opus|aac|webm)$', f, re.I)]
+          for f in sorted(files):
+              if not re.search(r'\.(mp3|wav|flac|ogg|oga|m4a|opus|aac|webm|mp4)$', f, re.I): continue
+              key = re.sub(r'\s+', '-', os.path.splitext(os.path.basename(f))[0].strip())
+              encode(f, key, 300, None)
+              os.remove(f)
+
+          def write_list(out_dir='audio/adhan'):
+              """audio/adhan/list.json : tous les MP3 présents, avec un nom lisible tiré du nom de fichier.
+              L'appli l'utilise pour afficher automatiquement chaque Adhan déposé."""
+              import glob, json, os, re
+              items = []
+              for f in sorted(glob.glob(out_dir + '/*.mp3')):
+                  key = os.path.splitext(os.path.basename(f))[0]
+                  label = re.sub(r'[-_]+', ' ', key).strip()
+                  label = label[:1].upper() + label[1:]
+                  items.append({'id': key, 'file': f'audio/adhan/{os.path.basename(f)}', 'label': label})
+              json.dump(items, open(out_dir + '/list.json', 'w'), ensure_ascii=False, indent=1)
+              print('list.json :', [x['id'] for x in items])
+          write_list()
+          PY
+          python3 /tmp/conv.py
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A audio/adhan
+          git commit -m "Adhan ajouté (converti en MP3)" || echo "Rien à convertir"
+          git push
