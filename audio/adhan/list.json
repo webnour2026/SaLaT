@@ -5,6 +5,16 @@
   "label": "Aaqib"
  },
  {
+  "id": "adhan-moroccan-(1)",
+  "file": "audio/adhan/adhan-moroccan-(1).mp3",
+  "label": "Adhan moroccan (1)"
+ },
+ {
+  "id": "adhan-moroccan",
+  "file": "audio/adhan/adhan-moroccan.mp3",
+  "label": "Adhan moroccan"
+ },
+ {
   "id": "adhan1",
   "file": "audio/adhan/adhan1.mp3",
   "label": "Adhan1"
