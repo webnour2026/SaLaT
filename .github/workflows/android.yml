@@ -40,6 +40,7 @@ env:
 jobs:
   android:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
@@ -47,14 +48,17 @@ jobs:
         with: { distribution: temurin, java-version: 17 }
 
       - name: Préparer Bubblewrap et le SDK Android
+        timeout-minutes: 5
         run: |
           npm i -g @bubblewrap/cli@1.25.0
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          # le SDK Android des serveurs GitHub a déjà ses licences acceptées : pas de sdkmanager ici
+          echo "SDK : $ANDROID_HOME" && ls "$ANDROID_HOME/build-tools" | tail -3
           mkdir -p ~/.bubblewrap
           printf '{"jdkPath":"%s","androidSdkPath":"%s"}' "$JAVA_HOME" "$ANDROID_HOME" > ~/.bubblewrap/config.json
           cat ~/.bubblewrap/config.json
 
       - name: Récupérer la clé de signature (depuis les Secrets)
+        timeout-minutes: 2
         env:
           KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
@@ -104,13 +108,14 @@ jobs:
           JSON
 
       - name: Générer le projet puis construire et signer
+        timeout-minutes: 20
         working-directory: app
         env:
           BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           BUBBLEWRAP_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          bubblewrap update --skipVersionUpgrade
-          bubblewrap build --skipPwaValidation
+          bubblewrap update --skipVersionUpgrade < /dev/null
+          bubblewrap build --skipPwaValidation < /dev/null
           ls -la *.apk *.aab
           # empreinte de l'APK : doit correspondre à assetlinks.json
           "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs app-release-signed.apk | grep -i "SHA-256" || true
