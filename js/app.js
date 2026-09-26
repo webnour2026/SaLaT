@@ -81,6 +81,7 @@ function go(view) {
     if (b.dataset.goto === view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
   document.body.classList.toggle('fit', view !== 'settings');   // écran ajusté, sans défilement
+  requestAnimationFrame(() => document.querySelectorAll('main, .view').forEach(el => { el.scrollLeft = 0; }));
   if (view !== 'qibla') compass.stop();
   if (view === 'qibla') {
     renderQibla();
@@ -624,6 +625,7 @@ function renderSettings() {
   $('#sWhiteDays').checked = s.whiteDays;
   renderCredits();
   renderCustomAdhan();
+  const ver = $('#appVersion'); if (ver) ver.textContent = `Version ${APP_VERSION}`;
   if (!state.adhanAvail) availableAdhans().then(av => { state.adhanAvail = av; renderAdhanPickers(); });
   $('#sNotifyAt').checked = a.notifyAt;
   $('#sNotifyBefore').replaceChildren(...[0, 5, 10, 15].map(n => new Option(n ? `${n} ${t('minBefore')}` : t('none'), n, false, n === a.notifyBefore)));
@@ -825,7 +827,21 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
+export const APP_VERSION = '1.9.0';
+
+// Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
+// horizontalement un conteneur même quand le débordement est masqué).
+function lockHorizontal() {
+  const reset = el => { if (el && el.scrollLeft !== 0) el.scrollLeft = 0; };
+  const all = () => { reset(document.scrollingElement); document.querySelectorAll('main, .view').forEach(reset); };
+  document.querySelectorAll('main, .view').forEach(el => el.addEventListener('scroll', () => reset(el), { passive: true }));
+  window.addEventListener('resize', all);
+  window.addEventListener('orientationchange', all);
+  all();
+}
+
 function init() {
+  lockHorizontal();
   Promise.all([loadCustomAdhans(), loadSiteAdhans()]).then(([{ migratedTo }]) => {
     const a = S().adhan;
     if (migratedTo) {       // ancien emplacement unique « custom » → nouvel identifiant

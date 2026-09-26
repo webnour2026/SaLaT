@@ -372,7 +372,7 @@ main { max-width: 560px; margin: 0 auto; padding: 0 16px; }
 .custom-list small { color: var(--muted); }
 
 /* ================= Écran ajusté au téléphone, sans défilement ================= */
-.arch { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20200%2080%22%20fill%3D%22%23fff%22%20fill-opacity%3D%22.16%22%3E%3Cpath%20d%3D%22M0%2080V64h200v16ZM72%2064C72%2040%2084%2028%20100%2025C116%2028%20128%2040%20128%2064ZM99%2010h2v15h-2ZM40%2064c0-9%205-15%2012-16c7%201%2012%207%2012%2016ZM136%2064c0-9%205-15%2012-16c7%201%2012%207%2012%2016ZM18%2064V26h8v38Z%20M16%2034h12v3H16Z%20M16%2046h12v3H16Z%20M18%2026l4-14l4%2014ZM174%2064V26h8v38Z%20M172%2034h12v3h-12Z%20M172%2046h12v3h-12Z%20M174%2026l4-14l4%2014Z%22/%3E%3Cpath%20d%3D%22M100%203a5%205%200%201%200%203.5%208.6a4%204%200%201%201%200-7.2A5%205%200%200%200%20100%203Z%22/%3E%3C/svg%3E"), linear-gradient(180deg, var(--sky-a), var(--sky-b));
+.arch { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%20-6%20200%2086%22%20fill%3D%22%23fff%22%20fill-opacity%3D%22.17%22%3E%3Cpath%20d%3D%22M0%2080V70h200v10ZM30%2070V52h78v18Z%20M26%2053h86l-7-7H33ZM112%2070V14h20v56ZM114%2014h16v-3h-2v-2h-3v2h-2v-2h-3v2h-2v-2h-3v2h-1ZM118%209V2h8v7Z%20M121%202V-4h2v6Z%22/%3E%3C/svg%3E"), linear-gradient(180deg, var(--sky-a), var(--sky-b));
   background-repeat: no-repeat; background-position: center bottom 0, 0 0; background-size: 88% auto, 100% 100%; }
 .prayers .pi { width: 22px; height: 22px; display: block; margin: 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .prayers li .mark { color: var(--muted); }
@@ -460,3 +460,5 @@ main, .view { overflow-x: hidden; }
   body.fit .extras dl { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   body.fit .extras dl div, body.fit .extras dt, body.fit .extras dd { min-width: 0; }
 }
+
+@supports (overflow: clip) { html, body { overflow-x: clip; } }
