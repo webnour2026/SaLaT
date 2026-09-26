@@ -29,6 +29,12 @@ on:
         default: "none"
         type: choice
         options: [none, internal, alpha, beta, production]
+      release_status:
+        description: "État de la version sur Google Play (draft = brouillon à valider dans Play Console)"
+        required: true
+        default: "completed"
+        type: choice
+        options: [completed, draft]
 
 env:
   PACKAGE_ID: io.github.webnour2026.salat
@@ -107,7 +113,7 @@ jobs:
             "isChromeOSOnly": false,
             "isMetaQuest": false,
             "fullScopeUrl": "$SITE/",
-            "minSdkVersion": 21,
+            "minSdkVersion": 24,
             "fingerprints": []
           }
           JSON
@@ -133,6 +139,14 @@ jobs:
             app/app-release-signed.apk
             app/app-release-bundle.aab
 
+      - name: Vérifier l'accès à Google Play
+        if: inputs.play_track != 'none'
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$PLAY_JSON" ]; then echo "::error::Secret PLAY_SERVICE_ACCOUNT_JSON manquant"; exit 1; fi
+          echo "$PLAY_JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Compte de service :', d['client_email'])"
+
       - name: Envoyer sur Google Play
         if: inputs.play_track != 'none'
         uses: r0adkll/upload-google-play@v1
@@ -141,7 +155,9 @@ jobs:
           packageName: ${{ env.PACKAGE_ID }}
           releaseFiles: app/app-release-bundle.aab
           track: ${{ inputs.play_track }}
-          status: draft
+          status: ${{ inputs.release_status }}
+          releaseName: ${{ inputs.version_name }} (${{ inputs.version_code }})
+          inAppUpdatePriority: 2
 
       - name: Effacer la clé
         if: always()
