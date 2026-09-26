@@ -80,6 +80,7 @@ function go(view) {
   document.querySelectorAll('.tabbar button').forEach(b => {
     if (b.dataset.goto === view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
+  document.body.classList.toggle('fit', view !== 'settings');   // écran ajusté, sans défilement
   if (view !== 'qibla') compass.stop();
   if (view === 'qibla') {
     renderQibla();
@@ -223,6 +224,17 @@ function renderHeader() {
   $('#hijriDate').textContent = hijri;
 }
 
+// Icônes simples (trait) pour chaque moment de la journée
+const PRAYER_ICONS = {
+  Fajr: '<path d="M3 17h18M6 17a6 6 0 0 1 12 0"/><path d="M12 4v2M5.6 7.6l1.4 1.4M18.4 7.6 17 9"/><path d="M8 21h8"/>',
+  Sunrise: '<path d="M3 18h18M7 18a5 5 0 0 1 10 0"/><path d="M12 3v6M9 6l3-3 3 3"/>',
+  Dhuhr: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  Asr: '<circle cx="13" cy="10" r="4"/><path d="M13 2.5v1.5M20.5 10H19M18.3 4.7l-1 1M7.7 4.7l1 1M3 20h18M6 17h12"/>',
+  Maghrib: '<path d="M3 17h18M7 17a5 5 0 0 1 10 0"/><path d="M12 3v6M9 6l3 3 3-3"/><path d="M8 21h8"/>',
+  Isha: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/><path d="M17 4v3M15.5 5.5h3"/>',
+};
+const prayerIcon = k => `<svg class="pi" viewBox="0 0 24 24" aria-hidden="true">${PRAYER_ICONS[k] || ''}</svg>`;
+
 function renderHome() {
   if (!state.today) return;
   const tNow = now();
@@ -242,8 +254,7 @@ function renderHome() {
     const isNext = next.day === 'today' && next.name === k;
     const past = ts <= tNow;
     li.className = [past ? 'past' : '', isNext ? 'next' : '', !isPrayer ? 'minor' : '', current === k ? 'current' : ''].filter(Boolean).join(' ');
-    const mark = !isPrayer ? '☀' : isNext ? (document.dir === 'rtl' ? '←' : '→') : past ? '✓' : '○';
-    li.innerHTML = `<span class="mark" aria-hidden="true">${mark}</span><span class="name"></span><time class="time"></time>`;
+    li.innerHTML = `<span class="mark">${prayerIcon(k)}</span><span class="name"></span><time class="time"></time>`;
     li.querySelector('.name').textContent = t(k);
     if (current === k) li.querySelector('.name').dataset.badge = t('inProgress');
     li.querySelector('.time').textContent = fmtTime(ts);

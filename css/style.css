@@ -370,3 +370,84 @@ main { max-width: 560px; margin: 0 auto; padding: 0 16px; }
 .custom-list li.note { display: block; border: 0; }
 .custom-list span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .custom-list small { color: var(--muted); }
+
+/* ================= Écran ajusté au téléphone, sans défilement ================= */
+.arch { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20200%2080%22%20fill%3D%22%23fff%22%20fill-opacity%3D%22.16%22%3E%3Cpath%20d%3D%22M0%2080V64h200v16ZM72%2064C72%2040%2084%2028%20100%2025C116%2028%20128%2040%20128%2064ZM99%2010h2v15h-2ZM40%2064c0-9%205-15%2012-16c7%201%2012%207%2012%2016ZM136%2064c0-9%205-15%2012-16c7%201%2012%207%2012%2016ZM18%2064V26h8v38Z%20M16%2034h12v3H16Z%20M16%2046h12v3H16Z%20M18%2026l4-14l4%2014ZM174%2064V26h8v38Z%20M172%2034h12v3h-12Z%20M172%2046h12v3h-12Z%20M174%2026l4-14l4%2014Z%22/%3E%3Cpath%20d%3D%22M100%203a5%205%200%201%200%203.5%208.6a4%204%200%201%201%200-7.2A5%205%200%200%200%20100%203Z%22/%3E%3C/svg%3E"), linear-gradient(180deg, var(--sky-a), var(--sky-b));
+  background-repeat: no-repeat; background-position: center bottom 0, 0 0; background-size: 88% auto, 100% 100%; }
+.prayers .pi { width: 22px; height: 22px; display: block; margin: 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.prayers li .mark { color: var(--muted); }
+.prayers li.next .mark { color: var(--zellige); }
+.prayers li.past .mark { color: var(--muted); opacity: .55; }
+
+@media (max-width: 700px) {
+  body.fit { height: 100dvh; min-height: 0; overflow: hidden; padding-bottom: 0; display: flex; flex-direction: column; }
+  body.fit .topbar { flex: none; padding: 6px 14px; width: 100%; box-sizing: border-box; }
+  body.fit main { flex: 1; min-height: 0; width: 100%; box-sizing: border-box; display: flex; flex-direction: column;
+    padding: 0 14px calc(var(--tab-h) + env(safe-area-inset-bottom, 0px) + 6px); }
+  body.fit main > .view:not([hidden]) { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; }
+
+  /* --- Horaires --- */
+  body.fit #view-home .dates { flex: none; display: flex; flex-wrap: wrap; justify-content: space-between; column-gap: 10px; margin: 0 0 6px; font-size: .88rem; }
+  body.fit .arch { flex: none; padding: clamp(16px, 4.2vh, 58px) 16px clamp(10px, 2vh, 22px);
+    border-radius: 50% 50% var(--r-lg) var(--r-lg) / clamp(56px, 11vh, 150px) clamp(56px, 11vh, 150px) var(--r-lg) var(--r-lg); }
+  body.fit .arch-label { font-size: .82rem; }
+  body.fit .arch-name { font-size: clamp(1.6rem, 5.6vh, 3.4rem); margin-top: 0; }
+  body.fit .arch-time { font-size: clamp(.95rem, 2.4vh, 1.35rem); }
+  body.fit .arch-in { margin-top: clamp(0px, .8vh, 14px) !important; font-size: .8rem; }
+  body.fit .countdown { font-size: clamp(1.8rem, 7vh, 4.2rem); }
+  body.fit .arch-at { display: none; }
+  body.fit .white-card { flex: none; margin-top: 6px; padding: 5px 12px; font-size: .82rem; }
+  body.fit .white-card .white-title { display: none; }
+  body.fit .prayers { flex: 1; min-height: 0; margin-top: 4px; display: flex; flex-direction: column; justify-content: space-evenly; }
+  body.fit .prayers li { padding: clamp(2px, .9vh, 13px) 4px; }
+  body.fit .prayers .time { font-size: clamp(.95rem, 2.3vh, 1.1rem); }
+  body.fit .extras { flex: none; margin-top: 2px; }
+  body.fit .extras h2 { display: none; }
+  body.fit .extras dl { gap: 6px; }
+  body.fit .extras dl div { padding: 4px 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 4px; }
+  body.fit .extras dt { font-size: .72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  body.fit .extras dd { font-size: .85rem; }
+  body.fit .status { flex: none; margin: 2px 0 0; font-size: .75rem; min-height: 0; }
+  body.fit .status:empty { display: none; }
+  body.fit #view-home > .btn[data-goto="qibla"] { display: none; }   /* l'onglet Qibla suffit */
+
+  /* --- Qibla --- */
+  body.fit .qibla-view { padding-top: 0; }
+  body.fit .qibla-view .kaaba-top { flex: none; width: clamp(34px, 6.5vh, 64px); height: clamp(34px, 6.5vh, 64px); margin-top: 2px; }
+  body.fit .qibla-view .dial-wrap { flex: none; margin: 0; }
+  body.fit .qibla-view .dial { width: min(86vw, 41vh, 360px); }
+  body.fit .heading-big { font-size: clamp(2.1rem, 7.5vh, 4.4rem); margin: 0 0 2px; }
+  body.fit .qibla-cap { font-size: .92rem; }
+  body.fit .qibla-val { font-size: 1rem; margin-top: 0; }
+  body.fit .qibla-view .compass-msg { min-height: 1.3em; margin: 2px 0 0; font-size: .9rem; }
+  body.fit .sensor-row { margin: 2px 0 0; padding: 2px 4px; }
+  body.fit .sensor-row .link-btn { min-height: 36px; }
+  body.fit .qibla-more { margin-top: 0; }
+  body.fit .qibla-more summary { min-height: 34px; }
+
+  /* --- Calendrier --- */
+  body.fit .cal-head { flex: none; margin: 0 0 4px; }
+  body.fit .cal-title { font-size: 1.15rem; }
+  body.fit .cal-grid { flex: none; gap: 3px; }
+  body.fit .cal-day { aspect-ratio: auto; height: clamp(34px, 6.4vh, 58px); }
+  body.fit .cal-legend { flex: none; margin: 6px 0; }
+  body.fit #calToday + .note, body.fit #view-calendar .note { display: none; }
+}
+@media (max-width: 700px) {
+  body.fit .cal-events { flex: 1; min-height: 0; overflow-y: auto; margin-bottom: 4px; }
+  body.fit #calToday { flex: none; align-self: center; min-height: 34px; }
+}
+@media (max-width: 700px) and (max-height: 660px) {
+  body.fit #view-home .dates { font-size: .8rem; margin-bottom: 4px; }
+  body.fit .arch-in { display: none; }
+  body.fit .arch { padding-top: 14px; }
+  body.fit .prayers li { padding-block: 1px; }
+  body.fit .prayers .pi { width: 19px; height: 19px; }
+  body.fit .extras dl div { padding: 2px 6px; }
+  body.fit .cal-legend { display: none; }
+}
+@media (max-width: 700px) {
+  body.fit .extras dl div { display: grid; justify-items: center; text-align: center; gap: 0; padding: 3px 4px; }
+  body.fit .extras dt { font-size: .7rem; max-width: 100%; }
+  body.fit .extras dd { font-size: .85rem; line-height: 1.2; }
+}
