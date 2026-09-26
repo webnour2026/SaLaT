@@ -48,11 +48,16 @@ jobs:
         with: { distribution: temurin, java-version: 17 }
 
       - name: Préparer Bubblewrap et le SDK Android
-        timeout-minutes: 5
+        timeout-minutes: 8
         run: |
           npm i -g @bubblewrap/cli@1.25.0
-          # le SDK Android des serveurs GitHub a déjà ses licences acceptées : pas de sdkmanager ici
-          echo "SDK : $ANDROID_HOME" && ls "$ANDROID_HOME/build-tools" | tail -3
+          # Bubblewrap attend « sdkmanager » dans <SDK>/bin : on y relie les outils de GitHub
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin"
+          [ -e "$ANDROID_HOME/bin" ] || sudo ln -s "$SDKM" "$ANDROID_HOME/bin"
+          # version des build-tools exigée par Bubblewrap 1.25 (licences déjà acceptées sur GitHub)
+          timeout 240 "$SDKM/sdkmanager" --install "build-tools;36.1.0" < /dev/null | tail -2
+          ls "$ANDROID_HOME/build-tools" | tail -3
+          test -x "$ANDROID_HOME/build-tools/36.1.0/apksigner" || { echo "::error::build-tools 36.1.0 non installés"; exit 1; }
           mkdir -p ~/.bubblewrap
           printf '{"jdkPath":"%s","androidSdkPath":"%s"}' "$JAVA_HOME" "$ANDROID_HOME" > ~/.bubblewrap/config.json
           cat ~/.bubblewrap/config.json
