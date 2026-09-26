@@ -1,0 +1,138 @@
+# Fabrique l'application Android (APK + AAB signés) sans PWABuilder, avec Bubblewrap,
+# l'outil officiel de Google pour les Trusted Web Activities.
+#
+# À configurer UNE FOIS : Settings → Secrets and variables → Actions → New repository secret
+#   ANDROID_KEYSTORE_BASE64   contenu du fichier signing.keystore encodé en base64
+#   ANDROID_KEYSTORE_PASSWORD mot de passe du keystore  (signing-key-info.txt)
+#   ANDROID_KEY_ALIAS         alias de la clé            (signing-key-info.txt)
+#   ANDROID_KEY_PASSWORD      mot de passe de la clé     (signing-key-info.txt)
+# Facultatif, pour envoyer directement sur Google Play (après un 1er envoi manuel) :
+#   PLAY_SERVICE_ACCOUNT_JSON contenu JSON du compte de service Google Play
+#
+# Lancer : Actions → « Construire l'appli Android » → Run workflow.
+# Résultat : APK et AAB à télécharger en bas de la page du workflow (section Artifacts).
+name: Construire l'appli Android
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Version affichée (ex. 1.9.1)"
+        required: true
+        default: "1.9.1"
+      version_code:
+        description: "Version code (entier, +1 à chaque envoi sur Google Play)"
+        required: true
+        default: "2"
+      play_track:
+        description: "Envoyer sur Google Play (none = non)"
+        required: true
+        default: "none"
+        type: choice
+        options: [none, internal, alpha, beta, production]
+
+env:
+  PACKAGE_ID: io.github.webnour2026.salat
+  HOST: webnour2026.github.io
+  START_URL: /SaLaT/?source=pwa
+  APP_NAME: SaLaTi
+  SITE: https://webnour2026.github.io/SaLaT
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+
+      - name: Préparer Bubblewrap et le SDK Android
+        run: |
+          npm i -g @bubblewrap/cli@1.25.0
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          mkdir -p ~/.bubblewrap
+          printf '{"jdkPath":"%s","androidSdkPath":"%s"}' "$JAVA_HOME" "$ANDROID_HOME" > ~/.bubblewrap/config.json
+          cat ~/.bubblewrap/config.json
+
+      - name: Récupérer la clé de signature (depuis les Secrets)
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KS" ]; then echo "::error::Secret ANDROID_KEYSTORE_BASE64 manquant"; exit 1; fi
+          mkdir -p app && echo "$KS" | base64 -d > app/signing.keystore
+          keytool -list -keystore app/signing.keystore -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" | grep -i "SHA-256" || true
+
+      - name: Écrire twa-manifest.json
+        working-directory: app
+        run: |
+          cat > twa-manifest.json <<JSON
+          {
+            "packageId": "$PACKAGE_ID",
+            "host": "$HOST",
+            "name": "$APP_NAME",
+            "launcherName": "$APP_NAME",
+            "display": "standalone",
+            "orientation": "portrait",
+            "themeColor": "#0E6B58",
+            "themeColorDark": "#0C1720",
+            "navigationColor": "#0C1720",
+            "navigationColorDark": "#0C1720",
+            "navigationDividerColor": "#0C1720",
+            "navigationDividerColorDark": "#0C1720",
+            "backgroundColor": "#0C1720",
+            "enableNotifications": true,
+            "startUrl": "$START_URL",
+            "iconUrl": "$SITE/icons/icon-512.png?v=190",
+            "maskableIconUrl": "$SITE/icons/icon-maskable-512.png?v=190",
+            "splashScreenFadeOutDuration": 300,
+            "signingKey": { "path": "./signing.keystore", "alias": "${{ secrets.ANDROID_KEY_ALIAS }}" },
+            "appVersion": "${{ inputs.version_name }}",
+            "appVersionCode": ${{ inputs.version_code }},
+            "shortcuts": [],
+            "generatorApp": "bubblewrap-cli",
+            "webManifestUrl": "$SITE/manifest.json",
+            "fallbackType": "customtabs",
+            "features": {},
+            "alphaDependencies": { "enabled": false },
+            "enableSiteSettingsShortcut": true,
+            "isChromeOSOnly": false,
+            "isMetaQuest": false,
+            "fullScopeUrl": "$SITE/",
+            "minSdkVersion": 21,
+            "fingerprints": []
+          }
+          JSON
+
+      - name: Générer le projet puis construire et signer
+        working-directory: app
+        env:
+          BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          BUBBLEWRAP_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          bubblewrap update --skipVersionUpgrade
+          bubblewrap build --skipPwaValidation
+          ls -la *.apk *.aab
+          # empreinte de l'APK : doit correspondre à assetlinks.json
+          "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs app-release-signed.apk | grep -i "SHA-256" || true
+
+      - name: Mettre l'APK et l'AAB à disposition
+        uses: actions/upload-artifact@v4
+        with:
+          name: SaLaTi-${{ inputs.version_name }}-code${{ inputs.version_code }}
+          path: |
+            app/app-release-signed.apk
+            app/app-release-bundle.aab
+
+      - name: Envoyer sur Google Play
+        if: inputs.play_track != 'none'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: ${{ env.PACKAGE_ID }}
+          releaseFiles: app/app-release-bundle.aab
+          track: ${{ inputs.play_track }}
+          status: draft
+
+      - name: Effacer la clé
+        if: always()
+        run: rm -f app/signing.keystore
