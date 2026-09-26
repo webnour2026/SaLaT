@@ -123,7 +123,7 @@ jobs:
           bubblewrap build --skipPwaValidation < /dev/null
           ls -la *.apk *.aab
           # empreinte de l'APK : doit correspondre à assetlinks.json
-          "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs app-release-signed.apk | grep -i "SHA-256" || true
+          "$ANDROID_HOME/build-tools/36.1.0/apksigner" verify --print-certs app-release-signed.apk | grep -i "SHA-256" || true
 
       - name: Mettre l'APK et l'AAB à disposition
         uses: actions/upload-artifact@v4
