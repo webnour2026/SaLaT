@@ -1,13 +1,13 @@
 {
   "id": "./",
-  "name": "Prière — horaires et Qibla",
-  "short_name": "Prière",
+  "name": "SaLaTi — horaires et Qibla",
+  "short_name": "SaLaTi",
   "description": "Horaires de prière précis par GPS, compte à rebours en temps réel, direction de la Qibla, Adhan et notifications. Fonctionne hors connexion.",
   "lang": "fr",
   "dir": "auto",
   "start_url": "./?source=pwa#home",
   "scope": "./",
-  "display": "standalone",
+  "display": "fullscreen",
   "display_override": [
     "standalone",
     "minimal-ui"
