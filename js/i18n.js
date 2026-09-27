@@ -1,6 +1,8 @@
 // Traductions FR / AR / EN — ajouter une langue = ajouter un objet ici.
 const DICT = {
   fr: {
+    cards: 'Cartes à partager', cardsHelp: 'Des images prêtes à envoyer sur WhatsApp, avec les horaires de votre ville.', shareCard: 'Partager', imsakiya: 'Imsakiya du Ramadan', iftar: 'Iftar', laylatQadr: 'Laylat al-Qadr (27)', cardJumuah: 'Joumou‘a moubaraka', cardWhite: 'Rappel : jeûne des jours blancs', cardSub: { occNewYear: 'Bonne année de l’Hégire', occAshura: 'Achoura – rappel du jeûne', occMawlid: 'Mawlid – bonne fête', occIsra: 'Isra et Mi‘raj', occNisfShaban: 'Nuit du 15 Chaabane', occRamadan: 'Ramadan moubarak', occQadr: 'Laylat al-Qadr', occFitr: 'Aïd moubarak', occArafa: 'Jour d’Arafat – rappel du jeûne', occAdha: 'Aïd al-Adha moubarak' }, inDays: 'dans {n} j', todayWord: 'aujourd’hui', tomorrowWord: 'demain',
+    shareDay: 'Partager les horaires du jour',
     share: 'Partager', shareFooter: 'Envoyé depuis SaLaTi – صلاتي : horaires de prière, Qibla et Adhan. Gratuit, sans publicité.', shareTitle: 'Horaires de prière', copied: 'Copié ! Collez-le dans WhatsApp.', shareImgOk: 'Image enregistrée',
     shortSunrise: 'Lever',
     prevDay: 'Jour précédent', nextDay: 'Jour suivant', timesOf: 'Horaires du', monthTimes: 'Horaires du mois', printPdf: 'Imprimer / PDF', colDay: 'Jour', swipeHint: 'Glissez pour changer de jour',
@@ -92,6 +94,8 @@ const DICT = {
     myAdhans: 'Mes Adhans (importés)', importAdhans: 'Importer des Adhans', noCustom: 'Aucun Adhan importé pour l’instant.', importedN: '{n} Adhan(s) importé(s) — choisissez-les dans la liste ci-dessus, pour toutes les prières ou une par une.', importHelp: 'Ajoutez un ou plusieurs fichiers audio de votre téléphone (MP3, M4A…). Ils restent uniquement sur cet appareil.', deleteQ: 'Supprimer « {name} » ?',
   },
   ar: {
+    cards: 'بطاقات للمشاركة', cardsHelp: 'صور جاهزة للإرسال عبر واتساب، مع مواقيت مدينتك.', shareCard: 'مشاركة', imsakiya: 'إمساكية رمضان', iftar: 'الإفطار', laylatQadr: 'ليلة القدر (27)', cardJumuah: '', cardWhite: '', cardSub: {}, inDays: 'بعد {n} يوم', todayWord: 'اليوم', tomorrowWord: 'غدًا',
+    shareDay: 'مشاركة مواقيت اليوم',
     share: 'مشاركة', shareFooter: 'أُرسل من تطبيق صلاتي – SaLaTi: مواقيت الصلاة، القبلة والأذان. مجاني وبدون إعلانات.', shareTitle: 'مواقيت الصلاة', copied: 'تم النسخ! الصقه في واتساب.', shareImgOk: 'تم حفظ الصورة',
     shortSunrise: 'الشروق',
     prevDay: 'اليوم السابق', nextDay: 'اليوم التالي', timesOf: 'مواقيت يوم', monthTimes: 'مواقيت الشهر', printPdf: 'طباعة / PDF', colDay: 'اليوم', swipeHint: 'اسحب لتغيير اليوم',
@@ -182,6 +186,8 @@ const DICT = {
     myAdhans: 'أذاناتي (المستوردة)', importAdhans: 'استيراد أذانات', noCustom: 'لا يوجد أذان مستورد بعد.', importedN: 'تم استيراد {n} — اخترها من القائمة أعلاه، لكل الصلوات أو لكل صلاة على حدة.', importHelp: 'أضف ملفًا صوتيًا أو أكثر من هاتفك (MP3، M4A…). تبقى الملفات على هذا الجهاز فقط.', deleteQ: 'حذف «{name}»؟',
   },
   en: {
+    cards: 'Cards to share', cardsHelp: 'Images ready to send on WhatsApp, with your city’s prayer times.', shareCard: 'Share', imsakiya: 'Ramadan timetable (Imsakiya)', iftar: 'Iftar', laylatQadr: 'Laylat al-Qadr (27)', cardJumuah: 'Jumu‘ah Mubarak', cardWhite: 'Reminder: white days fasting', cardSub: { occNewYear: 'Happy Islamic New Year', occAshura: 'Ashura – fasting reminder', occMawlid: 'Mawlid – blessed celebration', occIsra: 'Isra and Mi‘raj', occNisfShaban: 'Night of mid-Sha‘ban', occRamadan: 'Ramadan Mubarak', occQadr: 'Laylat al-Qadr', occFitr: 'Eid Mubarak', occArafa: 'Day of Arafah – fasting reminder', occAdha: 'Eid al-Adha Mubarak' }, inDays: 'in {n} d', todayWord: 'today', tomorrowWord: 'tomorrow',
+    shareDay: 'Share today’s times',
     share: 'Share', shareFooter: 'Sent from SaLaTi – صلاتي: prayer times, Qibla and Adhan. Free, no ads.', shareTitle: 'Prayer times', copied: 'Copied! Paste it in WhatsApp.', shareImgOk: 'Image saved',
     shortSunrise: 'Sunrise',
     prevDay: 'Previous day', nextDay: 'Next day', timesOf: 'Prayer times for', monthTimes: 'Monthly times', printPdf: 'Print / PDF', colDay: 'Day', swipeHint: 'Swipe to change day',

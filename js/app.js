@@ -9,7 +9,7 @@ import { formatHijri } from './hijri.js';
 import { declination as wmmDeclination } from './wmm.js';
 import { sunPosition, timesAtAzimuth } from './sun.js';
 import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, removeCustomAdhan, loadCustomAdhans, customAdhans, loadSiteAdhans, DEFAULT_ADHAN, RETIRED } from './adhan.js';
-import { hijriMonth, upcomingWhiteDays, civilNoon, hijriOf } from './calendar.js';
+import { hijriMonth, upcomingWhiteDays, civilNoon, hijriOf, OCCASIONS, isWhiteDay } from './calendar.js';
 import { PRESET_CITIES, METHOD_BY_COUNTRY, getGpsPosition, reverseGeocode, searchCity } from './location.js';
 
 const $ = sel => document.querySelector(sel);
@@ -208,7 +208,7 @@ function skyFor(t) {
   return 'maghrib';
 }
 
-function renderAll() { renderHeader(); renderHome(); renderWhite(); renderSilent(); }
+function renderAll() { renderHeader(); renderHome(); renderWhite(); renderOccChip(); renderSilent(); }
 
 // ================= Consulter d'autres jours =================
 // state.viewKey : date consultée ('YYYY-MM-DD'), null = aujourd'hui (avec compte à rebours)
@@ -404,6 +404,7 @@ function renderCalendar() {
   const gf = new Intl.DateTimeFormat(locale(), { month: 'long', year: 'numeric', timeZone: 'UTC' });
   const a = gf.format(mon.days[0].noon), b = gf.format(mon.days.at(-1).noon);
   $('#calSub').textContent = a === b ? a : `${a} – ${b}`;
+  const mb = $('#calMonthTable'); if (mb) mb.textContent = mon.m === 9 ? t('imsakiya') : t('monthTimes');
   // en-têtes : semaine du samedi au vendredi en arabe, du lundi au dimanche sinon
   const first = getLang() === 'ar' ? 6 : 1;
   const wd = new Intl.DateTimeFormat(locale(), { weekday: getLang() === 'ar' ? 'long' : 'short', timeZone: 'UTC' });
@@ -446,28 +447,45 @@ function renderCalendar() {
   }));
 }
 // ================= Horaires du mois (mois hégirien affiché dans le calendrier) =================
-async function openMonthTable() {
-  const mon = state.calMonth; if (!mon || !S().location) return;
+// Mois grégoriens couverts par un mois hégirien, en toutes lettres
+function gregSpan(mon) {
+  const gf = new Intl.DateTimeFormat(locale(), { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const a = gf.format(mon.days[0].noon), b = gf.format(mon.days.at(-1).noon);
+  return a === b ? a : `${a} – ${b}`;
+}
+const tableCols = () => (state.tableMode === 'ramadan'
+  ? ['Imsak', 'Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha']
+  : ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha']);
+const colLabel = c => (c === 'Sunrise' ? t('shortSunrise') : c === 'Maghrib' && state.tableMode === 'ramadan' ? t('iftar') : t(c));
+const tableTitle = mon => (state.tableMode === 'ramadan'
+  ? `${t('imsakiya')} ${mon.y} ${t('hijriEra')}`
+  : `${t('monthTimes')} · ${t('hijriMonths')[mon.m - 1]} ${mon.y}`);
+
+async function openMonthTable(mon = state.calMonth, mode = null) {
+  if (!mon || !S().location) return;
+  state.tableMon = mon;
+  state.tableMode = mode || (mon.m === 9 ? 'ramadan' : 'month');
   const dlg = $('#monthDialog');
-  $('#monthTitle').textContent = `${t('monthTimes')} · ${t('hijriMonths')[mon.m - 1]} ${mon.y}`;
-  $('#monthSub').textContent = `${S().location.name || ''} · ${$('#calSub').textContent}`;
+  dlg.classList.toggle('ramadan', state.tableMode === 'ramadan');
+  $('#monthTitle').textContent = tableTitle(mon);
+  $('#monthSub').textContent = `${S().location.name || ''} · ${gregSpan(mon)}`;
   renderMonthTable(mon);
   if (!dlg.open) dlg.showModal();
   const yms = [...new Set(mon.days.map(d => new Date(d.noon).toISOString().slice(0, 7)))];
   const oks = await Promise.all(yms.map(ym => ensureMonth(S(), ym)));
-  if (oks.some(Boolean) && state.calMonth === mon) renderMonthTable(mon);
+  if (oks.some(Boolean) && state.tableMon === mon) renderMonthTable(mon);
 }
 function renderMonthTable(mon) {
-  const cols = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+  const cols = tableCols(), ram = state.tableMode === 'ramadan';
   const todayNoon = civilNoon(now(), tz());
   const wd = new Intl.DateTimeFormat(locale(), { weekday: 'short', timeZone: 'UTC' });
   const dn = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'numeric', timeZone: 'UTC' });
-  const label = c => (c === 'Sunrise' ? t('shortSunrise') : t(c));
-  const head = `<thead><tr><th>${t('colDay')}</th>${cols.map(c => `<th>${label(c)}</th>`).join('')}</tr></thead>`;
+  const cc = c => (ram && c === 'Maghrib' ? ' class="iftar"' : '');
+  const head = `<thead><tr><th>${t('colDay')}</th>${cols.map(c => `<th${cc(c)}>${colLabel(c)}</th>`).join('')}</tr></thead>`;
   const rows = mon.days.map(d => {
     const day = getDay(S(), new Date(d.noon).toISOString().slice(0, 10));
-    const cls = [d.noon === todayNoon ? 'today' : '', d.white ? 'white' : '', d.dow === 5 ? 'friday' : ''].filter(Boolean).join(' ');
-    return `<tr class="${cls}"><th scope="row"><b>${d.h.d}</b> <small>${wd.format(d.noon)} ${dn.format(d.noon)}</small></th>${cols.map(c => `<td>${fmtTime(day.times[c])}</td>`).join('')}</tr>`;
+    const cls = [d.noon === todayNoon ? 'today' : '', !ram && d.white ? 'white' : '', ram && d.h.d === 27 ? 'qadr' : '', d.dow === 5 ? 'friday' : ''].filter(Boolean).join(' ');
+    return `<tr class="${cls}"><th scope="row"><b>${d.h.d}</b> <small>${wd.format(d.noon)} ${dn.format(d.noon)}</small></th>${cols.map(c => `<td${cc(c)}>${fmtTime(day.times[c])}</td>`).join('')}</tr>`;
   }).join('');
   $('#monthTable').innerHTML = head + `<tbody>${rows}</tbody>`;
 }
@@ -477,7 +495,7 @@ const PLAY_URL = 'https://play.google.com/store/apps/details?id=io.github.webnou
 async function buildMonthImage(mon) {
   try { await document.fonts.ready; } catch {}
   const rtl = document.documentElement.dir === 'rtl';
-  const cols = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+  const cols = tableCols(), ram = state.tableMode === 'ramadan';
   const W = 1080, M = 44, RH = 50, HEAD = 250, TH = 64, FOOT = 190;
   const H = HEAD + TH + mon.days.length * RH + FOOT;
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
@@ -490,29 +508,38 @@ async function buildMonthImage(mon) {
   g.fillStyle = '#F4F7F8'; g.fillRect(0, 0, W, H);
   // bandeau
   const grad = g.createLinearGradient(0, 0, 0, HEAD);
-  grad.addColorStop(0, '#0E6B58'); grad.addColorStop(1, '#138a70');
+  grad.addColorStop(0, ram ? '#1B2A4A' : '#0E6B58'); grad.addColorStop(1, ram ? '#3B2F63' : '#138a70');
   g.fillStyle = grad; g.fillRect(0, 0, W, HEAD - 20);
-  g.fillStyle = '#fff'; g.textAlign = rtl ? 'right' : 'left'; g.textBaseline = 'alphabetic';
-  g.font = font(700, 52); g.fillText(`${t('hijriMonths')[mon.m - 1]} ${mon.y} ${t('hijriEra')}`, X(M), 92);
+  if (ram) {                                              // croissant et étoiles
+    g.fillStyle = '#E9C46A'; g.beginPath(); g.arc(X(W - M - 70), 105, 52, 0, Math.PI * 2); g.fill();
+    g.fillStyle = grad; g.beginPath(); g.arc(X(W - M - 50), 90, 46, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#E9C46A'; [[W - 250, 60], [W - 190, 180], [W - 330, 150]].forEach(([x, yy]) => { g.beginPath(); g.arc(X(x), yy, 4, 0, 7); g.fill(); });
+  }
+  g.fillStyle = ram ? '#F3DDB0' : '#fff'; g.textAlign = rtl ? 'right' : 'left'; g.textBaseline = 'alphabetic';
+  g.font = font(700, 52); g.fillText(ram ? tableTitle(mon) : `${t('hijriMonths')[mon.m - 1]} ${mon.y} ${t('hijriEra')}`, X(M), 92);
+  g.fillStyle = '#fff';
   g.font = font(500, 32); g.fillText(`${t('shareTitle')} · ${S().location?.name || ''}`, X(M), 146);
-  g.font = font(400, 28); g.globalAlpha = .85; g.fillText($('#calSub').textContent, X(M), 192); g.globalAlpha = 1;
+  g.font = font(400, 28); g.globalAlpha = .85; g.fillText(gregSpan(mon), X(M), 192); g.globalAlpha = 1;
   // colonnes
   const dayW = 250, colW = (W - 2 * M - dayW) / cols.length;
   const colX = i => M + dayW + i * colW;
   let y = HEAD;
-  g.fillStyle = '#0A4F41'; g.fillRect(M, y, W - 2 * M, TH);
+  g.fillStyle = ram ? '#2A2350' : '#0A4F41'; g.fillRect(M, y, W - 2 * M, TH);
+  if (ram) { const i = cols.indexOf('Maghrib'); g.fillStyle = '#B7791F'; g.fillRect(X(colX(i), colW), y, colW, TH); }
   g.fillStyle = '#fff'; g.font = font(600, 26); g.textAlign = 'center'; g.textBaseline = 'middle';
   g.fillText(t('colDay'), X(M, dayW) + dayW / 2, y + TH / 2);
-  cols.forEach((c, i) => g.fillText(c === 'Sunrise' ? t('shortSunrise') : t(c), X(colX(i), colW) + colW / 2, y + TH / 2));
+  cols.forEach((c, i) => g.fillText(colLabel(c), X(colX(i), colW) + colW / 2, y + TH / 2));
   y += TH;
   const todayNoon = civilNoon(now(), tz());
   const wd = new Intl.DateTimeFormat(locale(), { weekday: 'short', timeZone: 'UTC' });
   const dn = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'numeric', timeZone: 'UTC' });
   mon.days.forEach((d, r) => {
     const day = getDay(S(), new Date(d.noon).toISOString().slice(0, 10));
-    g.fillStyle = d.noon === todayNoon ? '#D5EDE6' : d.white ? '#F6ECD6' : r % 2 ? '#FFFFFF' : '#FAFBFC';
+    const qadr = ram && d.h.d === 27;
+    g.fillStyle = d.noon === todayNoon ? '#D5EDE6' : qadr ? '#EDE3F7' : (!ram && d.white) ? '#F6ECD6' : r % 2 ? '#FFFFFF' : '#FAFBFC';
     g.fillRect(M, y, W - 2 * M, RH);
-    const bold = d.dow === 5 || d.noon === todayNoon;
+    if (ram) { const i = cols.indexOf('Maghrib'); g.fillStyle = 'rgba(183,121,31,.12)'; g.fillRect(X(colX(i), colW), y, colW, RH); }
+    const bold = d.dow === 5 || d.noon === todayNoon || qadr;
     g.fillStyle = '#17222B'; g.textAlign = rtl ? 'right' : 'left';
     g.font = font(700, 26); g.fillText(String(d.h.d), X(M + 14), y + RH / 2);
     g.font = font(bold ? 600 : 400, 22); g.fillStyle = '#5A6B78';
@@ -535,6 +562,13 @@ async function buildMonthImage(mon) {
 }
 
 function monthShareText(mon) {
+  if (state.tableMode === 'ramadan') {
+    const wd = new Intl.DateTimeFormat(locale(), { weekday: 'short', day: 'numeric', month: 'numeric', timeZone: 'UTC' });
+    return `🌙 ${tableTitle(mon)} · ${S().location?.name || ''}\n(${t('Imsak')} · ${t('iftar')})\n\n`
+      + mon.days.map(d => { const x = getDay(S(), new Date(d.noon).toISOString().slice(0, 10)).times;
+        return `${d.h.d} (${wd.format(d.noon)}) : ${fmtTime(x.Imsak)} · ${fmtTime(x.Maghrib)}`; }).join('\n')
+      + `\n\n📱 ${t('shareFooter')}\n${PLAY_URL}`;
+  }
   const wd = new Intl.DateTimeFormat(locale(), { weekday: 'short', day: 'numeric', month: 'numeric', timeZone: 'UTC' });
   const lines = mon.days.map(d => {
     const x = getDay(S(), new Date(d.noon).toISOString().slice(0, 10)).times;
@@ -546,13 +580,13 @@ function monthShareText(mon) {
 }
 
 async function shareMonthTable() {
-  const mon = state.calMonth; if (!mon) return;
+  const mon = state.tableMon || state.calMonth; if (!mon) return;
   const btn = $('#monthShare'); if (btn) btn.disabled = true;
   try {
     const text = `📱 ${t('shareFooter')}\n${PLAY_URL}`;
     const cv = await buildMonthImage(mon);
     const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
-    const file = blob && new File([blob], `SaLaTi-${t('hijriMonths')[mon.m - 1]}-${mon.y}.png`.replace(/\s+/g, '-'), { type: 'image/png' });
+    const file = blob && new File([blob], `SaLaTi-${state.tableMode === 'ramadan' ? 'Imsakiya' : t('hijriMonths')[mon.m - 1]}-${mon.y}.png`.replace(/\s+/g, '-'), { type: 'image/png' });
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({ files: [file], title: `SaLaTi – ${t('shareTitle')}`, text });
     } else if (navigator.share) {
@@ -571,6 +605,100 @@ async function shareMonthTable() {
   } finally { if (btn) btn.disabled = false; }
 }
 
+// ================= Partager les horaires d'un jour =================
+function svgIcon(k, color) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${PRAYER_ICONS[k]}</svg>`;
+  return new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = 'data:image/svg+xml,' + encodeURIComponent(svg); });
+}
+async function buildDayImage(day, isToday) {
+  try { await document.fonts.ready; } catch {}
+  const rtl = document.documentElement.dir === 'rtl';
+  const W = 1080, H = 1350, M = 56;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const g = cv.getContext('2d'); g.direction = rtl ? 'rtl' : 'ltr';
+  const font = (w, px) => `${w} ${px}px "IBM Plex Sans Arabic", system-ui, sans-serif`;
+  const kufi = (px) => `700 ${px}px "Reem Kufi", "IBM Plex Sans Arabic", system-ui, sans-serif`;
+  const X = (x, w = 0) => (rtl ? W - x - w : x);
+  const ts = day.times.Dhuhr || now();
+  g.fillStyle = '#F4F7F8'; g.fillRect(0, 0, W, H);
+  // en-tête
+  const grad = g.createLinearGradient(0, 0, 0, 400);
+  grad.addColorStop(0, '#0E6B58'); grad.addColorStop(1, '#16937a');
+  g.fillStyle = grad; g.beginPath(); g.roundRect(0, 0, W, 400, [0, 0, 48, 48]); g.fill();
+  g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+  g.font = font(500, 34); g.globalAlpha = .9; g.fillText(t('shareTitle'), W / 2, 90); g.globalAlpha = 1;
+  g.font = kufi(86); g.fillText(S().location?.name || '', W / 2, 200);
+  const greg = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: tz() }).format(ts);
+  g.font = font(500, 36); g.fillText(greg, W / 2, 275);
+  g.font = font(400, 32); g.globalAlpha = .9; g.fillText(fmtDates(ts).hijri, W / 2, 330); g.globalAlpha = 1;
+  // lignes
+  const next = isToday ? state.next : null;
+  let y = 436; const RH = 104, gap = 12;
+  for (const k of LIST_ROWS) {
+    const isNext = next && next.day === 'today' && next.name === k;
+    const minor = !PRAYERS.includes(k);
+    g.fillStyle = isNext ? '#E3F3EE' : '#FFFFFF';
+    g.beginPath(); g.roundRect(M, y, W - 2 * M, RH, 26); g.fill();
+    if (isNext) { g.strokeStyle = '#0E6B58'; g.lineWidth = 4; g.stroke(); }
+    const color = isNext ? '#0E6B58' : minor ? '#8FA2AF' : '#5A6B78';
+    const icon = await svgIcon(k, color);
+    if (icon) g.drawImage(icon, X(M + 34, 60), y + (RH - 60) / 2, 60, 60);
+    g.textBaseline = 'middle'; g.textAlign = rtl ? 'right' : 'left';
+    g.fillStyle = isNext ? '#0E6B58' : minor ? '#5A6B78' : '#17222B';
+    g.font = font(isNext ? 700 : minor ? 400 : 600, minor ? 38 : 44); g.fillText(t(k), X(M + 124), y + RH / 2);
+    if (isNext) {
+      g.font = font(600, 24); const tag = t('nextPrayer'); const tw = g.measureText(tag).width + 28;
+      const nx = M + 124 + g.measureText(t(k)).width * 0 + 0;
+      g.font = font(700, 44); const nw = g.measureText(t(k)).width;
+      g.font = font(600, 24);
+      g.fillStyle = '#0E6B58'; g.beginPath(); g.roundRect(X(nx + nw + 18, tw), y + RH / 2 - 20, tw, 40, 20); g.fill();
+      g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(tag, X(nx + nw + 18, tw) + tw / 2, y + RH / 2 + 1);
+    }
+    g.textAlign = rtl ? 'left' : 'right'; g.fillStyle = isNext ? '#0E6B58' : minor ? '#5A6B78' : '#17222B';
+    g.font = font(isNext ? 700 : 600, minor ? 44 : 54); g.fillText(fmtTime(day.times[k]), X(W - M - 36), y + RH / 2);
+    y += RH + gap;
+  }
+  // mention de l'application
+  y = H - 150;
+  g.fillStyle = '#E3E9ED'; g.fillRect(M, y - 26, W - 2 * M, 2);
+  const icon = await new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = 'icons/icon-192.png?v=190'; });
+  if (icon) { g.save(); g.beginPath(); g.roundRect(X(M, 96), y, 96, 96, 22); g.clip(); g.drawImage(icon, X(M, 96), y, 96, 96); g.restore(); }
+  g.textAlign = rtl ? 'right' : 'left'; g.textBaseline = 'alphabetic';
+  g.fillStyle = '#0E6B58'; g.font = font(700, 40); g.fillText('SaLaTi – صلاتي', X(M + 118), y + 44);
+  g.fillStyle = '#5A6B78'; g.font = font(400, 26);
+  g.fillText(t('shareFooter').split(':').slice(1).join(':').trim(), X(M + 118), y + 84);
+  g.font = font(400, 22); g.fillText('Google Play : SaLaTi', X(M + 118), y + 116);
+  return cv;
+}
+function dayShareText(day) {
+  const ts = day.times.Dhuhr || now();
+  const greg = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: tz() }).format(ts);
+  return `🕌 ${t('shareTitle')} — ${S().location?.name || ''}\n${greg} · ${fmtDates(ts).hijri}\n\n`
+    + LIST_ROWS.map(k => `${t(k)} : ${fmtTime(day.times[k])}`).join('\n')
+    + `\n\n📱 ${t('shareFooter')}\n${PLAY_URL}`;
+}
+async function shareDay() {
+  const day = shownDay(); if (!day) return;
+  const btn = $('#dayShare'); if (btn) btn.disabled = true;
+  const text = dayShareText(day);
+  try {
+    const cv = await buildDayImage(day, !viewing());
+    const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
+    const file = blob && new File([blob], `SaLaTi-${day.date}.png`, { type: 'image/png' });
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: `SaLaTi – ${t('shareTitle')}`, text });
+    } else if (navigator.share) {
+      await navigator.share({ title: `SaLaTi – ${t('shareTitle')}`, text });
+    } else if (file) {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name;
+      document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+      toast(t('shareImgOk'));
+    } else { await navigator.clipboard.writeText(text); toast(t('copied')); }
+  } catch (e) {
+    if (e && e.name !== 'AbortError') { try { await navigator.clipboard.writeText(text); toast(t('copied')); } catch {} }
+  } finally { if (btn) btn.disabled = false; }
+}
+
 function printMonthTable() {
   const html = `<!doctype html><html lang="${getLang()}" dir="${document.documentElement.dir}"><head><meta charset="utf-8"><title>${$('#monthTitle').textContent}</title>
 <style>body{font:12px system-ui,sans-serif;margin:16px;color:#111}h1{font-size:17px;margin:0 0 4px}p{margin:0 0 10px;color:#555}
@@ -582,6 +710,221 @@ thead th{background:#0E6B58;color:#fff}tr.friday{font-weight:700}tr.white{backgr
   document.body.append(fr);
   fr.contentDocument.open(); fr.contentDocument.write(html); fr.contentDocument.close();
   setTimeout(() => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch {} setTimeout(() => fr.remove(), 60000); }, 300);
+}
+
+// ================= Cartes à partager (Joumou'a, jours blancs, occasions, Imsakiya) =================
+const DAY_MS = 864e5;
+const JUMUAH_VERSE = 'إِنَّ اللَّهَ وَمَلَائِكَتَهُ يُصَلُّونَ عَلَى النَّبِيِّ ۚ يَا أَيُّهَا الَّذِينَ آمَنُوا صَلُّوا عَلَيْهِ وَسَلِّمُوا تَسْلِيمًا';
+const JUMUAH_REF = '[الأحزاب: 56]';
+// Titre et formule en arabe (toujours affichés sur la carte)
+const CARD_AR = {
+  jumuah: ['جمعة مباركة', ''],
+  white: ['الأيام البيض', 'تذكير بصيام الأيام البيض'],
+  occNewYear: ['سنة هجرية مباركة', 'كل عام وأنتم بخير'],
+  occAshura: ['يوم عاشوراء', 'تذكير بصيام يوم عاشوراء'],
+  occMawlid: ['المولد النبوي الشريف', 'كل عام وأنتم بخير'],
+  occIsra: ['ذكرى الإسراء والمعراج', 'كل عام وأنتم بخير'],
+  occNisfShaban: ['ليلة النصف من شعبان', 'كل عام وأنتم بخير'],
+  occRamadan: ['رمضان مبارك', 'تقبّل الله صيامكم وقيامكم'],
+  occQadr: ['ليلة القدر', 'تقبّل الله منا ومنكم'],
+  occFitr: ['عيد فطر مبارك', 'تقبّل الله منا ومنكم'],
+  occArafa: ['يوم عرفة', 'تذكير بصيام يوم عرفة'],
+  occAdha: ['عيد أضحى مبارك', 'تقبّل الله منا ومنكم'],
+};
+const CARD_THEME = {
+  green: ['#0B5D4B', '#12806A', '#E9C46A'],   // Joumou'a, Mawlid, nouvel an…
+  night: ['#141F3D', '#3B2F63', '#E9C46A'],   // Ramadan, Qadr, jours blancs
+  gold:  ['#5B2A1E', '#B5652E', '#FFE3A3'],   // Aïds
+  teal:  ['#0E4A5C', '#1F7A8C', '#F3DDB0'],   // Achoura, Arafat (jeûne)
+};
+const themeOf = key => (['occFitr', 'occAdha'].includes(key) ? 'gold'
+  : ['occRamadan', 'occQadr', 'white', 'occNisfShaban'].includes(key) ? 'night'
+  : ['occAshura', 'occArafa'].includes(key) ? 'teal' : 'green');
+const cardSubLocal = key => (getLang() === 'ar' ? ''
+  : key === 'jumuah' ? t('cardJumuah') : key === 'white' ? t('cardWhite') : (t('cardSub') || {})[key] || t(key));
+
+/** Liste des cartes disponibles à partir d'aujourd'hui */
+function cardSpecs() {
+  const off = S().hijriOffset, today = civilNoon(now(), tz());
+  const out = [];
+  // prochain vendredi (aujourd'hui si c'est vendredi)
+  let fri = today; while (new Date(fri).getUTCDay() !== 5) fri += DAY_MS;
+  out.push({ key: 'jumuah', noon: fri });
+  // prochaine série de jours blancs
+  for (let i = 0; i < 32; i++) {
+    const noon = today + i * DAY_MS;
+    if (isWhiteDay(hijriOf(noon, off))) {                // 1er jour blanc à venir, puis toute la série
+      const list = upcomingWhiteDays(noon, off, 4);
+      out.push({ key: 'white', noon: list[0].noon, list }); break;
+    }
+  }
+  // occasions à venir (≈ 1 an)
+  const seen = new Set();
+  for (let i = 0; i < 370 && seen.size < 5; i++) {
+    const noon = today + i * DAY_MS, h = hijriOf(noon, off);
+    const o = OCCASIONS.find(x => x.m === h.m && x.d === h.d);
+    if (o && !seen.has(o.key)) { seen.add(o.key); out.push({ key: o.key, noon, h }); }
+  }
+  // Imsakiya du prochain Ramadan (ou du Ramadan en cours)
+  for (let i = -30; i < 370; i++) {
+    const noon = today + i * DAY_MS, h = hijriOf(noon, off);
+    if (h.m === 9 && h.d === 1 && noon + 30 * DAY_MS >= today) { out.push({ key: 'imsakiya', noon, mon: hijriMonth(noon, off) }); break; }
+  }
+  return out.sort((a, b) => a.noon - b.noon);
+}
+
+function wrapLines(g, text, maxW) {
+  const words = text.split(/\s+/), lines = []; let cur = '';
+  for (const w of words) { const tst = cur ? cur + ' ' + w : w; if (g.measureText(tst).width > maxW && cur) { lines.push(cur); cur = w; } else cur = tst; }
+  if (cur) lines.push(cur); return lines;
+}
+function drawStars(g, W, color) {                       // motif marocain discret (étoiles à 8 branches)
+  g.save(); g.strokeStyle = color; g.globalAlpha = .10; g.lineWidth = 2;
+  for (let y = 60; y < 560; y += 120) for (let x = (y / 120) % 2 ? 60 : 0; x < W + 60; x += 120) {
+    for (const r of [0, Math.PI / 4]) { g.save(); g.translate(x, y); g.rotate(r); g.strokeRect(-26, -26, 52, 52); g.restore(); }
+  }
+  g.restore();
+}
+function drawMosque(g, W, H, color) {                  // silhouette (minaret + salle) en bas de carte
+  const p = new Path2D('M0 80V70h200v10ZM30 70V52h78v18ZM26 53h86l-7-7H33ZM112 70V14h20v56ZM114 14h16v-3h-2v-2h-3v2h-2v-2h-3v2h-2v-2h-3v2h-1ZM118 9V2h8v7ZM121 2V-4h2v6Z');
+  g.save(); g.globalAlpha = .10; g.fillStyle = color; g.translate(W / 2 - 540, H - 380); g.scale(5.4, 5.4); g.fill(p); g.restore();
+}
+
+async function buildGreetingCard(spec) {
+  try { await Promise.all([document.fonts.load('700 60px Amiri'), document.fonts.load('700 60px "Reem Kufi"'), document.fonts.ready]); } catch {}
+  const W = 1080, H = 1350, key = spec.key;
+  const [c1, c2, accent] = CARD_THEME[themeOf(key)];
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  const plex = (w, px) => `${w} ${px}px "IBM Plex Sans Arabic", system-ui, sans-serif`;
+  const amiri = (w, px) => `${w} ${px}px Amiri, "IBM Plex Sans Arabic", serif`;
+  const kufi = px => `700 ${px}px "Reem Kufi", "IBM Plex Sans Arabic", sans-serif`;
+  const grad = g.createLinearGradient(0, 0, 0, H); grad.addColorStop(0, c1); grad.addColorStop(1, c2);
+  g.fillStyle = grad; g.fillRect(0, 0, W, H);
+  drawStars(g, W, accent);
+  if (themeOf(key) === 'night') {                        // lune
+    g.fillStyle = accent; g.globalAlpha = .9; g.beginPath(); g.arc(W - 170, 170, 70, 0, 7); g.fill();
+    if (key !== 'white') { g.globalAlpha = 1; g.fillStyle = c1; g.beginPath(); g.arc(W - 140, 150, 62, 0, 7); g.fill(); }
+    g.globalAlpha = 1;
+  }
+  drawMosque(g, W, H, '#fff');
+  const [arTitle, arLine] = CARD_AR[key] || [t(key), ''];
+  g.textAlign = 'center'; g.direction = 'rtl'; g.textBaseline = 'alphabetic';
+  let y = 330;
+  g.fillStyle = accent; g.font = kufi(key === 'occMawlid' || key === 'occIsra' ? 84 : 112);
+  g.fillText(arTitle, W / 2, y);
+  y += 80;
+  if (key === 'occNewYear' && spec.h) { g.font = amiri(700, 60); g.fillStyle = '#fff'; g.fillText(`${spec.h.y} هـ`, W / 2, y); y += 70; }
+  if (arLine) { g.font = amiri(400, 56); g.fillStyle = '#fff'; g.fillText(arLine, W / 2, y); y += 70; }
+  if (key === 'jumuah') {                                // verset (Al-Ahzab 33:56)
+    g.font = amiri(700, 50);
+    const lines = wrapLines(g, `﴿ ${JUMUAH_VERSE} ﴾`, W - 200);
+    const boxH = lines.length * 76 + 90;
+    g.fillStyle = 'rgba(255,255,255,.10)'; g.beginPath(); g.roundRect(70, y - 20, W - 140, boxH, 36); g.fill();
+    g.fillStyle = '#fff'; lines.forEach((ln, i) => g.fillText(ln, W / 2, y + 50 + i * 76));
+    g.font = amiri(400, 32); g.fillStyle = accent; g.fillText(JUMUAH_REF, W / 2, y + boxH - 34);
+    y += boxH + 50;
+  }
+  const sub = cardSubLocal(key);
+  g.direction = document.documentElement.dir === 'rtl' ? 'rtl' : 'ltr';
+  if (sub) { g.font = plex(500, 36); g.fillStyle = '#fff'; g.globalAlpha = .92; g.fillText(sub, W / 2, y); g.globalAlpha = 1; y += 58; }
+  // date(s)
+  const dateFmt = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+  g.font = plex(400, 32); g.fillStyle = '#fff'; g.globalAlpha = .88;
+  if (key === 'white' && spec.list) {
+    const df = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+    spec.list.forEach(x => { g.fillText(`${df.format(x.noon)} · ${hijriLabel(x.h)}`, W / 2, y); y += 50; });
+  } else {
+    g.fillText(dateFmt.format(spec.noon), W / 2, y); y += 48;
+    g.fillText(hijriLabel(hijriOf(spec.noon, S().hijriOffset)), W / 2, y); y += 40;
+  }
+  g.globalAlpha = 1;
+  // horaires du jour (sauf jours blancs : plusieurs jours)
+  if (key !== 'white') {
+    const day = getDay(S(), new Date(spec.noon).toISOString().slice(0, 10));
+    const ks = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+    const bw = (W - 140 - 4 * 14) / 5, top = Math.max(y + 30, H - 420);
+    g.font = plex(500, 28); g.fillStyle = '#fff'; g.globalAlpha = .9;
+    g.fillText(S().location?.name || '', W / 2, top - 18); g.globalAlpha = 1;
+    const rtl = document.documentElement.dir === 'rtl';
+    ks.forEach((k, i) => {
+      const x = rtl ? W - 70 - (i + 1) * bw - i * 14 : 70 + i * (bw + 14);
+      g.fillStyle = 'rgba(255,255,255,.14)'; g.beginPath(); g.roundRect(x, top, bw, 130, 22); g.fill();
+      g.fillStyle = '#fff'; g.font = plex(500, 26); g.fillText(t(k), x + bw / 2, top + 48);
+      g.fillStyle = accent; g.font = plex(700, 40); g.fillText(fmtTime(day.times[k]), x + bw / 2, top + 102);
+    });
+  }
+  // mention SaLaTi
+  const fy = H - 150;
+  g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(0, fy - 20, W, 170);
+  const icon = await new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = 'icons/icon-192.png?v=190'; });
+  const rtl = document.documentElement.dir === 'rtl';
+  const ix = rtl ? W - 60 - 90 : 60;
+  if (icon) { g.save(); g.beginPath(); g.roundRect(ix, fy + 8, 90, 90, 20); g.clip(); g.drawImage(icon, ix, fy + 8, 90, 90); g.restore(); }
+  g.textAlign = rtl ? 'right' : 'left';
+  const tx = rtl ? W - 60 - 110 : 170;
+  g.fillStyle = '#fff'; g.font = plex(700, 38); g.fillText('SaLaTi – صلاتي', tx, fy + 50);
+  g.font = plex(400, 24); g.globalAlpha = .85; g.fillText(t('shareFooter').split(':').slice(1).join(':').trim(), tx, fy + 88);
+  g.fillText('Google Play : SaLaTi', tx, fy + 118); g.globalAlpha = 1;
+  return cv;
+}
+
+function cardText(spec) {
+  const [arTitle, arLine] = CARD_AR[spec.key] || [t(spec.key), ''];
+  const sub = cardSubLocal(spec.key);
+  let txt = `🌙 ${arTitle}${arLine ? '\n' + arLine : ''}${sub ? '\n' + sub : ''}`;
+  if (spec.key === 'jumuah') txt += `\n\n﴿ ${JUMUAH_VERSE} ﴾ ${JUMUAH_REF}`;
+  return txt + `\n\n📱 ${t('shareFooter')}\n${PLAY_URL}`;
+}
+
+async function shareCard(spec) {
+  if (spec.key === 'imsakiya') { $('#cardsDialog')?.open && $('#cardsDialog').close(); return openMonthTable(spec.mon, 'ramadan'); }
+  const text = cardText(spec);
+  try {
+    await ensureMonth(S(), new Date(spec.noon).toISOString().slice(0, 7));
+    const cv = await buildGreetingCard(spec);
+    const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
+    const file = blob && new File([blob], `SaLaTi-${spec.key}-${new Date(spec.noon).toISOString().slice(0, 10)}.png`, { type: 'image/png' });
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'SaLaTi', text });
+    else if (navigator.share) await navigator.share({ title: 'SaLaTi', text });
+    else if (file) {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name;
+      document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 30000); toast(t('shareImgOk'));
+    } else { await navigator.clipboard.writeText(text); toast(t('copied')); }
+  } catch (e) {
+    if (e && e.name !== 'AbortError') { try { await navigator.clipboard.writeText(text); toast(t('copied')); } catch {} }
+  }
+}
+
+function whenLabel(noon) {
+  const n = Math.round((noon - civilNoon(now(), tz())) / DAY_MS);
+  return n <= 0 ? t('todayWord') : n === 1 ? t('tomorrowWord') : t('inDays', { n });
+}
+function openCardsDialog() {
+  const df = new Intl.DateTimeFormat(locale(), { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+  $('#cardsList').replaceChildren(...cardSpecs().map(sp => {
+    const li = document.createElement('li');
+    const title = sp.key === 'imsakiya' ? `${t('imsakiya')} ${sp.mon.y}` : (CARD_AR[sp.key] || [t(sp.key)])[0];
+    const sub = sp.key === 'imsakiya' ? gregSpan(sp.mon) : `${df.format(sp.noon)} · ${whenLabel(sp.noon)}`;
+    li.innerHTML = '<div class="cl-txt"><b></b><small></small></div><button class="btn small btn-primary" type="button"></button>';
+    li.querySelector('b').textContent = title;
+    li.querySelector('small').textContent = sub;
+    const b = li.querySelector('button'); b.textContent = sp.key === 'imsakiya' ? t('imsakiya') : t('shareCard');
+    b.addEventListener('click', () => shareCard(sp));
+    return li;
+  }));
+  $('#cardsDialog').showModal();
+}
+
+// Pastille sur l'écran Horaires : vendredi, ou occasion aujourd'hui / demain
+function renderOccChip() {
+  const chip = $('#occChip'); if (!chip) return;
+  const today = civilNoon(now(), tz());
+  const sp = cardSpecs().find(x => x.key !== 'white' && x.key !== 'imsakiya'
+    && (x.key === 'jumuah' ? x.noon === today : x.noon - today <= DAY_MS));
+  state.chipSpec = sp || null;
+  chip.hidden = !sp || viewing();
+  if (sp) chip.textContent = `🌙 ${(CARD_AR[sp.key] || [t(sp.key)])[0]} · ${t('shareCard')}`;
 }
 
 function calShift(dir) {
@@ -1005,9 +1348,12 @@ function bind() {
   on('#calPrev', 'click', () => calShift(-1));
   on('#calNext', 'click', () => calShift(1));
   on('#calToday', 'click', () => { state.calAnchor = null; renderCalendar(); });
-  on('#calMonthTable', 'click', openMonthTable);
+  on('#calMonthTable', 'click', () => openMonthTable());
+  on('#calCards', 'click', openCardsDialog);
+  on('#occChip', 'click', () => { const sp = state.chipSpec; if (sp) shareCard(sp); });
   on('#monthPrint', 'click', printMonthTable);
   on('#monthShare', 'click', shareMonthTable);
+  on('#dayShare', 'click', shareDay);
   on('#dayPrev', 'click', () => shiftDay(-1));
   on('#dayNext', 'click', () => shiftDay(1));
   on('#dayToday', 'click', () => showDay(null));
@@ -1047,7 +1393,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.1.0';
+export const APP_VERSION = '2.3.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

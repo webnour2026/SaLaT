@@ -507,3 +507,24 @@ main, .view { overflow-x: hidden; }
 .month-table thead th { white-space: normal; overflow-wrap: anywhere; font-size: .64rem; padding: 6px 1px; text-overflow: clip; }
 .month-table thead th { overflow-wrap: normal; word-break: normal; }
 .month-table thead th { font-size: .6rem; padding-inline: 0; letter-spacing: -.01em; }
+
+.arch-share { position: absolute; top: 10px; inset-inline-end: 10px; width: 40px; height: 40px; min-width: 40px; min-height: 40px;
+  border-radius: 99px; display: grid; place-items: center; color: var(--sky-ink); background: color-mix(in srgb, #fff 30%, transparent); }
+.arch-share svg { width: 20px; height: 20px; }
+@media (max-width: 700px) { body.fit .arch-share { top: 6px; width: 36px; height: 36px; min-width: 36px; min-height: 36px; } }
+/* bouton de partage en bas de l'arche (zone droite, hors de la courbe) */
+.arch-share { top: auto; bottom: 10px; inset-inline-end: 10px; }
+@media (max-width: 700px) { body.fit .arch-share { top: auto; bottom: 8px; } }
+
+/* ===== Cartes à partager ===== */
+.occ-chip { display: block; width: 100%; margin-top: 8px; padding: 8px 14px; border: 0; border-radius: 99px; cursor: pointer;
+  background: linear-gradient(90deg, #0B5D4B, #12806A); color: #fff; font-weight: 600; text-align: center; }
+.cards-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.cards-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--rule); }
+.cards-list .cl-txt { display: grid; min-width: 0; }
+.cards-list small { color: var(--muted); }
+.month-table th.iftar, .month-table td.iftar { background: color-mix(in srgb, #B7791F 16%, transparent); font-weight: 600; }
+.month-table thead th.iftar { background: #B7791F; }
+.month-table tr.qadr { background: color-mix(in srgb, #7B5EA7 16%, transparent); font-weight: 600; }
+#monthDialog.ramadan .month-table thead th:not(.iftar) { background: #2A2350; }
+@media (max-width: 700px) { body.fit .occ-chip { flex: none; margin-top: 4px; padding: 6px 12px; font-size: .85rem; } }
