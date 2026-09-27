@@ -26,6 +26,7 @@ export const DEFAULTS = {
     vibrate: true,
     notifyAt: false,
     notifyBefore: 0,            // 0 | 5 | 10 | 15
+    short: false,               // Adhan court (20 s)
   },
 };
 

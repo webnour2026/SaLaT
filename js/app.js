@@ -124,6 +124,7 @@ function setLocation(loc) {
   if (old && Math.abs(old.lng - loc.lng) > 3) S().location.tz = loc.tz || deviceTz();
   save(); renderHeader(); refresh();
   if (!$('#view-qibla').hidden) renderQibla();
+  if (nativeActive()) localStorage.setItem('priere.nativeDirty', '1');
 }
 
 function autoMethod(country) {
@@ -997,6 +998,10 @@ async function fireEvent(ev) {
   }
   const silent = isSilent();
   const name = t(ev.p);
+  if (nativeActive() && ev.type !== 'white') {        // le module Android joue l'Adhan : pas de doublon
+    if (ev.type === 'at') toast(`${t('itsTime')} ${name}`, 6000);
+    return;
+  }
   if (ev.type === 'before') {
     notify(name, t('beforeMsg', { n: a.notifyBefore }), { tag: `before-${ev.p}`, vibrateOn: a.vibrate });
     return;
@@ -1008,9 +1013,79 @@ async function fireEvent(ev) {
   if (a.enabled && adhanFor(ev.p) !== 'none') {
     $('#adhanAlertText').textContent = msg;
     $('#adhanAlert').hidden = false;
-    const r = await playAdhan(adhanFor(ev.p), a.volume, { title: msg, ended: hideAdhanAlert });
+    const r = await playAdhan(adhanFor(ev.p), a.volume, { title: msg, ended: hideAdhanAlert, short: a.short });
     if (r === 'fallback' || r === 'beep') toast(t('adhanMissing'), 5000);
   }
+}
+
+// ================= Adhan téléphone fermé (module Android de l'application Play Store) =================
+const TWA_PKG = 'io.github.webnour2026.salat';
+const isTwa = () => localStorage.getItem('priere.twa') === '1';
+const nativeActive = () => isTwa() && !!localStorage.getItem('priere.nativeAt');
+function detectTwa() {
+  if ((document.referrer || '').startsWith(`android-app://${TWA_PKG}`)) localStorage.setItem('priere.twa', '1');
+}
+// même règle que le workflow Android pour nommer les sons intégrés (res/raw)
+const rawName = id => { let n = String(id).toLowerCase().replace(/[^a-z0-9_]/g, '_'); if (/^[0-9]/.test(n)) n = 'a_' + n; return n; };
+function nativeSound(id) {
+  if (id === 'none') return 'none';                                   // « Aucun » : notification sans son
+  if (id === 'beep') return 'aaqib_court';                            // bip → Adhan court
+  if (!id || String(id).startsWith('u:')) id = 'aaqib';               // Adhans importés → Adhan intégré
+  return rawName(id) + (S().adhan.short ? '_court' : '');
+}
+async function nativePayload() {
+  const loc = S().location; if (!loc) return null;
+  const today = state.dayKey || dateKeyInTz(now(), tz());
+  await Promise.all([today.slice(0, 7), addDays(today, 31).slice(0, 7)].map(ym => ensureMonth(S(), ym).catch(() => false)));
+  const times = [];
+  for (let i = 0; i < 31; i++) {
+    const d = getDay(S(), addDays(today, i));
+    times.push(PRAYERS.map(k => Math.round((d.times[k] || 0) / 60000)));
+  }
+  const a = S().adhan;
+  const su = S().silentUntil === -1 ? 32503680000000 : (S().silentUntil || 0);
+  return {
+    v: 1, lat: +loc.lat.toFixed(5), lng: +loc.lng.toFixed(5), tz: tz(), method: S().method, school: S().school,
+    adj: S().adjust, en: !!a.enabled, na: !!a.notifyAt, nb: a.notifyBefore || 0, vib: !!a.vibrate, su,
+    ad: Object.fromEntries(PRAYERS.map(k => [k, a.enabled ? nativeSound(adhanFor(k)) : 'none'])),
+    names: Object.fromEntries(PRAYERS.map(k => [k, t(k)])),
+    txt: { itsTime: t('itsTime'), before: t('beforeMsg'), stop: t('stop'), ok: t('nativeOk'), city: loc.name || '',
+           chAdhan: t('chAdhan'), chBefore: t('chBefore'), chSilent: t('chSilent') },
+    times,
+  };
+}
+async function syncNative({ ask = false, quiet = false } = {}) {
+  if (!isTwa()) return;
+  const payload = await nativePayload(); if (!payload) return;
+  localStorage.setItem('priere.nativeAt', String(Date.now()));
+  localStorage.removeItem('priere.nativeDirty');
+  const q = `d=${encodeURIComponent(JSON.stringify(payload))}${ask ? '&ask=1' : ''}${quiet ? '&quiet=1' : ''}`;
+  location.href = `intent://sync?${q}#Intent;scheme=salati;package=${TWA_PKG};end`;
+  renderNative();
+}
+// Android n'accepte l'ouverture du module que lors d'un geste de l'utilisateur :
+// sinon on note qu'une mise à jour est à faire, et on la fait au prochain toucher.
+function requestNativeSync() {
+  if (!nativeActive()) return;
+  if (navigator.userActivation ? navigator.userActivation.isActive : true) syncNative({ quiet: true });
+  else localStorage.setItem('priere.nativeDirty', '1');
+}
+function nativeNeedsSync() {
+  if (!nativeActive()) return false;
+  const at = +localStorage.getItem('priere.nativeAt') || 0;
+  return localStorage.getItem('priere.nativeDirty') === '1' || Date.now() - at > 5 * 864e5;
+}
+function renderNative() {
+  const g = $('#nativeGroup'); if (!g) return;
+  g.hidden = !isTwa();
+  const lim = $('#limitsBox'); if (lim) lim.hidden = nativeActive();
+  if (!isTwa()) return;
+  const at = +localStorage.getItem('priere.nativeAt') || 0;
+  $('#nativeStatus').textContent = at
+    ? t('nativeOn', { d: new Intl.DateTimeFormat(locale(), { dateStyle: 'medium', timeStyle: 'short' }).format(at) })
+    : t('nativeOff');
+  $('#nativeStatus').className = 'native-status ' + (at ? 'ok' : '');
+  $('#nativeSync').textContent = at ? t('nativeBtnUpdate') : t('nativeBtnOn');
 }
 
 // ================= Qibla =================
@@ -1180,6 +1255,8 @@ function renderSettings() {
   renderAdhanPickers();
   $('#sVolume').value = a.volume;
   $('#sVibrate').checked = a.vibrate;
+  $('#sAdhanShort').checked = !!a.short;
+  renderNative();
   $('#sWhiteDays').checked = s.whiteDays;
   renderCredits();
   renderCustomAdhan();
@@ -1264,7 +1341,7 @@ function renderAdhanPickers() {
       if (btn.dataset.playing) { stopAdhan(); delete btn.dataset.playing; btn.textContent = t('preview'); return; }
       unlockAudio();
       const reset = () => { delete btn.dataset.playing; btn.textContent = t('preview'); };
-      const r = await playAdhan(sel.value, a.volume, { title: t('adhanSound'), ended: reset });
+      const r = await playAdhan(sel.value, a.volume, { title: t('adhanSound'), ended: reset, short: a.short });
       if (r === 'fallback' || r === 'beep') toast(t('adhanMissing'), 5000);
       if (r !== 'none') { btn.dataset.playing = '1'; btn.textContent = t('stop'); }
     });
@@ -1296,6 +1373,11 @@ function bindSettings() {
   on('#sVolume', 'input', e => { S().adhan.volume = Number(e.target.value); save(); });
   on('#sWhiteDays', 'change', async e => { S().whiteDays = e.target.checked; save(); renderWhite(); if (e.target.checked) await ensureNotifPermission(); });
   on('#sVibrate', 'change', e => { S().adhan.vibrate = e.target.checked; save(); if (e.target.checked) vibrate(80); });
+  on('#sAdhanShort', 'change', e => { S().adhan.short = e.target.checked; save(); });
+  on('#nativeSync', 'click', () => syncNative({ ask: true }));
+  // tout réglage modifié (geste de l'utilisateur) → le module Android est mis à jour
+  on('#view-settings', 'change', () => requestNativeSync());
+  on('#silentDialog', 'click', () => setTimeout(requestNativeSync, 50));
   on('#sNotifyAt', 'change', async e => {
     S().adhan.notifyAt = e.target.checked; save();
     if (e.target.checked) await ensureNotifPermission(); else updateNotifWarn();
@@ -1403,7 +1485,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.4.0';
+export const APP_VERSION = '2.5.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
@@ -1418,6 +1500,8 @@ function lockHorizontal() {
 
 function init() {
   lockHorizontal();
+  detectTwa();
+  document.addEventListener('click', () => { if (nativeNeedsSync()) syncNative({ quiet: true }); }, { capture: true });
   Promise.all([loadCustomAdhans(), loadSiteAdhans()]).then(([{ migratedTo }]) => {
     const a = S().adhan;
     if (migratedTo) {       // ancien emplacement unique « custom » → nouvel identifiant

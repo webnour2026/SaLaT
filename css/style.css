@@ -535,3 +535,6 @@ main, .view { overflow-x: hidden; }
 .boot-splash img { width: 112px; height: 112px; border-radius: 26px; }
 body:not(.booting) .boot-splash { opacity: 0; visibility: hidden; pointer-events: none; }
 body.booting .topbar, body.booting main, body.booting .tabbar { visibility: hidden; }
+
+.native-status { font-weight: 600; margin: 6px 0 10px; }
+.native-status.ok { color: var(--zellige); }

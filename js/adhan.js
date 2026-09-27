@@ -203,6 +203,7 @@ export function unlockAudio() {
 }
 
 export function stopAdhan() {
+  clearTimeout(shortTimer);
   if (audio) { audio.pause(); audio.src = ''; audio = null; }
   beepNodes.forEach(n => { try { n.stop(); } catch {} });
   beepNodes = [];
@@ -233,7 +234,8 @@ function setupMediaSession(title) {
  * Joue un Adhan. Si le fichier choisi manque, essaie les autres Adhans disponibles, puis un bip.
  * Renvoie 'played' | 'fallback' | 'beep' | 'none'. `ended` est appelé à la fin ou à l'arrêt.
  */
-export async function playAdhan(id, volume = 0.8, { title = '', ended = null } = {}) {
+let shortTimer = null;
+export async function playAdhan(id, volume = 0.8, { title = '', ended = null, short = false } = {}) {
   stopAdhan();
   const item = ADHANS.find(a => a.id === id);
   if (!item || id === 'none') return 'none';
@@ -246,6 +248,16 @@ export async function playAdhan(id, volume = 0.8, { title = '', ended = null } =
     try {
       audio = await tryFile(await sourceFor(it), volume);
       audio.addEventListener('ended', () => stopAdhan(), { once: true });
+      if (short) {                                   // version courte : 20 s avec fondu de fin
+        const a0 = audio, v0 = audio.volume;
+        shortTimer = setTimeout(() => {
+          let k = 0; const f = setInterval(() => {
+            if (audio !== a0) return clearInterval(f);
+            a0.volume = Math.max(0, v0 * (1 - ++k / 15));
+            if (k >= 15) { clearInterval(f); stopAdhan(); }
+          }, 200);
+        }, 17000);
+      }
       setupMediaSession(title || 'Adhan');
       return i === 0 ? 'played' : 'fallback';
     } catch { audio = null; }

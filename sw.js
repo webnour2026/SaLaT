@@ -1,5 +1,5 @@
 // Service worker — changer VERSION à chaque déploiement pour forcer la mise à jour.
-const VERSION = 'priere-v2.4.0';
+const VERSION = 'priere-v2.5.0';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 

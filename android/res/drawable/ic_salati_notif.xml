@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Petite icône de notification (blanche) : minaret et salle de prière -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="200" android:viewportHeight="200">
+    <group android:translateY="60">
+        <path android:fillColor="#FFFFFFFF"
+            android:pathData="M0,80V70h200v10ZM30,70V52h78v18ZM26,53h86l-7,-7H33ZM112,70V14h20v56ZM114,14h16v-3h-2v-2h-3v2h-2v-2h-3v2h-2v-2h-3v2h-1ZM118,9V2h8v7ZM121,2V-4h2v6Z"/>
+    </group>
+</vector>
