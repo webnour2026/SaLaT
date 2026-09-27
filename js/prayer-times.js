@@ -87,3 +87,21 @@ export function findNext(today, tomorrow, t) {
   }
   return { name: 'Fajr', ts: tomorrow.times.Fajr, day: 'tomorrow', current: 'Isha' };
 }
+
+/** Charge (si besoin) un mois donné, pour consulter d'autres jours. Renvoie true si en cache. */
+export async function ensureMonth(settings, ym) {
+  const loc = settings.location; if (!loc) return false;
+  const key = monthKey(loc, settings.method, settings.school, ym);
+  const cached = readMonth(key);
+  if (cached && Date.now() - cached.fetchedAt < 7 * 864e5) return true;
+  const [year, month] = ym.split('-').map(Number);
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 12000);
+  try {
+    const days = await getProvider().fetchMonth({ lat: loc.lat, lng: loc.lng, year, month,
+      method: settings.method, school: settings.school, signal: ctrl.signal });
+    writeMonth(key, { fetchedAt: Date.now(), provider: getProvider().id, tz: days[0]?.tz || null,
+      days: Object.fromEntries(days.map(d => [d.date, d.times])) });
+    return true;
+  } catch { return !!cached; } finally { clearTimeout(timer); }
+}

@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Prière — horaires et Qibla</title>
-  <meta name="description" content="Horaires de prière précis par GPS, compte à rebours, direction de la Qibla et Adhan.">
+  <title>SaLaTi – صلاتي</title>
+  <meta name="description" content="SaLaTi – صلاتي : horaires de prière précis par GPS, Qibla, Adhan et calendrier hégirien.">
   <meta name="theme-color" content="#0B5B4B">
   <link rel="manifest" href="manifest.json?v=190">
   <link rel="icon" href="icons/icon.svg?v=190" type="image/svg+xml">
@@ -36,9 +36,13 @@
   <main id="main">
     <!-- ============ HORAIRES ============ -->
     <section class="view" id="view-home" aria-labelledby="nextLabel">
-      <div class="dates">
-        <p id="gregDate">&nbsp;</p>
-        <p id="hijriDate" class="hijri">&nbsp;</p>
+      <div class="dates daynav">
+        <button class="icon-btn dn-btn" id="dayPrev" type="button" data-i18n-aria="prevDay" aria-label="Jour précédent"><span aria-hidden="true">‹</span></button>
+        <div class="dn-center">
+          <p id="gregDate">&nbsp;</p>
+          <p id="hijriDate" class="hijri">&nbsp;</p>
+        </div>
+        <button class="icon-btn dn-btn" id="dayNext" type="button" data-i18n-aria="nextDay" aria-label="Jour suivant"><span aria-hidden="true">›</span></button>
       </div>
 
       <div class="noloc" id="noLoc" hidden>
@@ -54,6 +58,7 @@
         <p class="arch-in" data-i18n="in">Dans</p>
         <p class="countdown" id="countdown" role="timer" aria-live="off">--:--:--</p>
         <p class="arch-at"><span data-i18n="nextAt">Heure de la prochaine prière :</span> <strong id="nextAt">--:--</strong></p>
+        <button class="btn small day-today" id="dayToday" type="button" hidden data-i18n="backToday">Revenir à aujourd’hui</button>
       </div>
 
       <div class="white-card" id="whiteCard" hidden>
@@ -142,7 +147,10 @@
         <span class="lg white"></span><span data-i18n="whiteDays">Jours blancs</span>
         <span class="lg occ"></span><span data-i18n="occasions">Occasions</span></p>
       <ul class="cal-events" id="calEvents"></ul>
-      <button class="btn small" id="calToday" type="button" data-i18n="backToday">Revenir à aujourd’hui</button>
+      <div class="cal-actions">
+        <button class="btn small btn-primary" id="calMonthTable" type="button" data-i18n="monthTimes">Horaires du mois</button>
+        <button class="btn small" id="calToday" type="button" data-i18n="backToday">Revenir à aujourd’hui</button>
+      </div>
       <p class="note" data-i18n="calNote"></p>
     </section>
 
@@ -278,6 +286,19 @@
     <ul class="results" id="cityResults"></ul>
     <h3 class="sub" data-i18n="presetCities">Villes</h3>
     <ul class="results" id="presetList"></ul>
+  </dialog>
+
+  <!-- Horaires du mois -->
+  <dialog id="monthDialog" class="sheet month-sheet" aria-labelledby="monthTitle">
+    <div class="sheet-head">
+      <h2 id="monthTitle">—</h2>
+      <form method="dialog"><button class="icon-btn" value="close" aria-label="Fermer">✕</button></form>
+    </div>
+    <p class="note" id="monthSub"></p>
+    <div class="month-wrap"><table class="month-table" id="monthTable"></table></div>
+    <div class="row-btns">
+      <button class="btn small" id="monthPrint" type="button" data-i18n="printPdf">Imprimer / PDF</button>
+    </div>
   </dialog>
 
   <!-- Calibration -->

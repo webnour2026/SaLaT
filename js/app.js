@@ -1,7 +1,7 @@
 import { t, setLang, locale, getLang } from './i18n.js';
 import { loadSettings, saveSettings, clearMonths, PRAYERS } from './storage.js';
 import { now, syncClock, getOffset } from './clock.js';
-import { ensureMonths, getDay, findNext, dateKeyInTz, addDays, deviceTz } from './prayer-times.js';
+import { ensureMonths, ensureMonth, getDay, findNext, dateKeyInTz, addDays, deviceTz } from './prayer-times.js';
 import { Countdown, formatHMS } from './countdown.js';
 import { qiblaBearing, distanceToKaaba, cardinalIndex } from './qibla.js';
 import { Compass } from './compass.js';
@@ -210,6 +210,42 @@ function skyFor(t) {
 
 function renderAll() { renderHeader(); renderHome(); renderWhite(); renderSilent(); }
 
+// ================= Consulter d'autres jours =================
+// state.viewKey : date consultée ('YYYY-MM-DD'), null = aujourd'hui (avec compte à rebours)
+const viewing = () => !!state.viewKey && state.viewKey !== state.dayKey;
+const shownDay = () => (viewing() ? state.viewDay : state.today);
+function showDay(key) {
+  if (!key || key === state.dayKey) { state.viewKey = null; state.viewDay = null; }
+  else {
+    state.viewKey = key;
+    state.viewDay = getDay(S(), key);                 // cache ou calcul local, tout de suite
+    ensureMonth(S(), key.slice(0, 7)).then(ok => {    // puis horaires officiels si besoin
+      if (ok && state.viewKey === key) { state.viewDay = getDay(S(), key); renderHeader(); renderHome(); }
+    });
+  }
+  renderHeader(); renderHome();
+}
+function shiftDay(n) {
+  const base = state.viewKey || state.dayKey; if (!base) return;
+  const key = addDays(base, n);
+  const span = Math.abs((Date.parse(key) - Date.parse(state.dayKey)) / 864e5);
+  if (span > 400) return;                              // un peu plus d'un an dans chaque sens
+  showDay(key);
+}
+function bindSwipe() {
+  const el = $('#view-home'); if (!el) return;
+  let x0 = null, y0 = 0;
+  el.addEventListener('touchstart', e => { if (e.touches.length === 1) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; } }, { passive: true });
+  el.addEventListener('touchend', e => {
+    if (x0 == null) return;
+    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < 1.5 * Math.abs(dy)) return;
+    let dir = dx < 0 ? 1 : -1;                         // glisser vers la gauche = jour suivant
+    if (document.documentElement.dir === 'rtl') dir = -dir;
+    shiftDay(dir);
+  }, { passive: true });
+}
+
 function renderNoLoc() {
   const none = !S().location;
   const box = $('#noLoc'); if (box) box.hidden = !none;
@@ -220,7 +256,8 @@ function renderHeader() {
   renderNoLoc();
   const loc = S().location;
   $('#placeName').textContent = loc ? (loc.name || `${loc.lat.toFixed(3)}, ${loc.lng.toFixed(3)}`) : t('chooseCity');
-  const { greg, hijri } = fmtDates(now());
+  const day = shownDay();
+  const { greg, hijri } = fmtDates(viewing() && day ? (day.times.Dhuhr || now()) : now());
   $('#gregDate').textContent = greg;
   $('#hijriDate').textContent = hijri;
 }
@@ -236,13 +273,45 @@ const PRAYER_ICONS = {
 };
 const prayerIcon = k => `<svg class="pi" viewBox="0 0 24 24" aria-hidden="true">${PRAYER_ICONS[k] || ''}</svg>`;
 
+function renderOtherDay(day) {
+  const ts = day.times.Dhuhr || now();
+  $('#nextLabel').textContent = t('timesOf');
+  $('#nextName').textContent = new Intl.DateTimeFormat(locale(), { weekday: 'long', timeZone: tz() }).format(ts);
+  $('#nextTime').textContent = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'long', year: 'numeric', timeZone: tz() }).format(ts);
+  $('#arch').dataset.sky = 'day';
+  const rows = LIST_ROWS.map(k => {
+    const li = document.createElement('li');
+    li.className = PRAYERS.includes(k) ? '' : 'minor';
+    li.innerHTML = `<span class="mark">${prayerIcon(k)}</span><span class="name"></span><time class="time"></time>`;
+    li.querySelector('.name').textContent = t(k);
+    li.querySelector('.time').textContent = fmtTime(day.times[k]);
+    return li;
+  });
+  $('#prayerList').replaceChildren(...rows);
+  $('#extraTimes').replaceChildren(...EXTRA_ROWS.map(k => {
+    const div = document.createElement('div');
+    div.innerHTML = '<dt></dt><dd></dd>';
+    div.firstChild.textContent = t(k);
+    div.lastChild.textContent = fmtTime(day.times[k]);
+    return div;
+  }));
+  const st = $('#status');
+  st.textContent = day.source === 'local' ? t('localCalc') : '';
+}
+
 function renderHome() {
   if (!state.today) return;
   const tNow = now();
   const { next } = state;
+  const other = viewing() && state.viewDay;
+  const arch = $('#arch');
+  arch.classList.toggle('other-day', !!other);
+  $('#dayToday').hidden = !other;
+  if (other) return renderOtherDay(state.viewDay);
   let current = next.current;
   if (current === 'Fajr' && tNow >= state.today.times.Sunrise) current = null; // le temps du Fajr s'arrête au lever
 
+  $('#nextLabel').textContent = t('nextPrayer');
   $('#nextName').textContent = t(next.name);
   $('#nextTime').textContent = fmtTime(next.ts) + (next.day === 'tomorrow' ? ` · ${t('tomorrow')}` : '');
   $('#nextAt').textContent = fmtTime(next.ts);
@@ -351,6 +420,11 @@ function renderCalendar() {
     const el = document.createElement('div');
     el.className = 'cal-day' + (d.white ? ' white' : '') + (d.occasion ? ' occ' : '') + (d.noon === todayNoon ? ' today' : '');
     el.setAttribute('role', 'gridcell');
+    el.tabIndex = 0;
+    const key = new Date(d.noon).toISOString().slice(0, 10);
+    const open = () => { go('home'); showDay(key); };
+    el.addEventListener('click', open);
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
     el.innerHTML = '<span class="hd"></span><span class="gd"></span>';
     el.firstChild.textContent = d.h.d;
     el.lastChild.textContent = gd.format(d.noon);
@@ -371,6 +445,45 @@ function renderCalendar() {
     return li;
   }));
 }
+// ================= Horaires du mois (mois hégirien affiché dans le calendrier) =================
+async function openMonthTable() {
+  const mon = state.calMonth; if (!mon || !S().location) return;
+  const dlg = $('#monthDialog');
+  $('#monthTitle').textContent = `${t('monthTimes')} · ${t('hijriMonths')[mon.m - 1]} ${mon.y}`;
+  $('#monthSub').textContent = `${S().location.name || ''} · ${$('#calSub').textContent}`;
+  renderMonthTable(mon);
+  if (!dlg.open) dlg.showModal();
+  const yms = [...new Set(mon.days.map(d => new Date(d.noon).toISOString().slice(0, 7)))];
+  const oks = await Promise.all(yms.map(ym => ensureMonth(S(), ym)));
+  if (oks.some(Boolean) && state.calMonth === mon) renderMonthTable(mon);
+}
+function renderMonthTable(mon) {
+  const cols = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+  const todayNoon = civilNoon(now(), tz());
+  const wd = new Intl.DateTimeFormat(locale(), { weekday: 'short', timeZone: 'UTC' });
+  const dn = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'numeric', timeZone: 'UTC' });
+  const label = c => (c === 'Sunrise' ? t('shortSunrise') : t(c));
+  const head = `<thead><tr><th>${t('colDay')}</th>${cols.map(c => `<th>${label(c)}</th>`).join('')}</tr></thead>`;
+  const rows = mon.days.map(d => {
+    const day = getDay(S(), new Date(d.noon).toISOString().slice(0, 10));
+    const cls = [d.noon === todayNoon ? 'today' : '', d.white ? 'white' : '', d.dow === 5 ? 'friday' : ''].filter(Boolean).join(' ');
+    return `<tr class="${cls}"><th scope="row"><b>${d.h.d}</b> <small>${wd.format(d.noon)} ${dn.format(d.noon)}</small></th>${cols.map(c => `<td>${fmtTime(day.times[c])}</td>`).join('')}</tr>`;
+  }).join('');
+  $('#monthTable').innerHTML = head + `<tbody>${rows}</tbody>`;
+}
+function printMonthTable() {
+  const html = `<!doctype html><html lang="${getLang()}" dir="${document.documentElement.dir}"><head><meta charset="utf-8"><title>${$('#monthTitle').textContent}</title>
+<style>body{font:12px system-ui,sans-serif;margin:16px;color:#111}h1{font-size:17px;margin:0 0 4px}p{margin:0 0 10px;color:#555}
+table{border-collapse:collapse;width:100%}th,td{border:1px solid #bbb;padding:4px 6px;text-align:center;font-variant-numeric:tabular-nums}
+thead th{background:#0E6B58;color:#fff}tr.friday{font-weight:700}tr.white{background:#f6ecd6}tbody th{text-align:start;white-space:nowrap}</style></head>
+<body><h1>${$('#monthTitle').textContent}</h1><p>${$('#monthSub').textContent} — SaLaTi</p><table>${$('#monthTable').innerHTML}</table></body></html>`;
+  const fr = document.createElement('iframe');
+  fr.style.cssText = 'position:fixed;width:0;height:0;border:0;right:0;bottom:0';
+  document.body.append(fr);
+  fr.contentDocument.open(); fr.contentDocument.write(html); fr.contentDocument.close();
+  setTimeout(() => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch {} setTimeout(() => fr.remove(), 60000); }, 300);
+}
+
 function calShift(dir) {
   const mon = state.calMonth; if (!mon) return;
   state.calAnchor = dir > 0 ? mon.days.at(-1).noon + 864e5 : mon.days[0].noon - 864e5;
@@ -386,7 +499,7 @@ const countdown = new Countdown({
       document.title = `${t(state.next.name)} ${formatHMS(remaining)}`;
     }
     // changement de jour dans le fuseau du lieu
-    if (state.dayKey && dateKeyInTz(tNow, tz()) !== state.dayKey) { loadDays(); renderAll(); refresh(); }
+    if (state.dayKey && dateKeyInTz(tNow, tz()) !== state.dayKey) { loadDays(); if (state.viewKey === state.dayKey) state.viewKey = null; renderAll(); refresh(); }
     checkEvents(tNow);
     if (tNow % 60000 < 1000) { renderHome(); renderSilent(); if (!$('#view-qibla').hidden) renderSun(); } // chaque minute
   },
@@ -792,6 +905,12 @@ function bind() {
   on('#calPrev', 'click', () => calShift(-1));
   on('#calNext', 'click', () => calShift(1));
   on('#calToday', 'click', () => { state.calAnchor = null; renderCalendar(); });
+  on('#calMonthTable', 'click', openMonthTable);
+  on('#monthPrint', 'click', printMonthTable);
+  on('#dayPrev', 'click', () => shiftDay(-1));
+  on('#dayNext', 'click', () => shiftDay(1));
+  on('#dayToday', 'click', () => showDay(null));
+  bindSwipe();
   // l'audio ne peut démarrer qu'après un premier geste de l'utilisateur
   document.addEventListener('pointerdown', unlockAudio, { once: true });
   window.addEventListener('online', () => { state.online = true; refresh(); syncClock(); });
@@ -827,7 +946,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '1.9.1';
+export const APP_VERSION = '2.0.1';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

@@ -462,3 +462,48 @@ main, .view { overflow-x: hidden; }
 }
 
 @supports (overflow: clip) { html, body { overflow-x: clip; } }
+
+/* ===== Navigation jour par jour ===== */
+.daynav { display: grid; grid-template-columns: 40px 1fr 40px; align-items: center; gap: 4px; }
+.daynav .dn-center { text-align: center; min-width: 0; }
+.daynav .dn-btn { min-width: 40px; min-height: 40px; border-radius: 99px; font-size: 1.6rem; line-height: 1; color: var(--zellige); background: var(--paper); }
+[dir="rtl"] .daynav .dn-btn span { display: inline-block; transform: scaleX(-1); }
+.arch.other-day .arch-in, .arch.other-day .countdown, .arch.other-day .arch-at { display: none; }
+.arch.other-day .arch-name { text-transform: capitalize; }
+.day-today { margin-top: 10px; background: color-mix(in srgb, var(--paper) 88%, transparent); }
+.cal-day { cursor: pointer; }
+.cal-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 6px 0; }
+/* ===== Tableau du mois ===== */
+.month-sheet { max-height: 92dvh; flex-direction: column; }
+.month-sheet[open] { display: flex; }
+.month-sheet:not([open]) { display: none; }
+.month-wrap { overflow: auto; flex: 1; min-height: 0; margin: 6px 0; border-radius: var(--r-sm); }
+.month-table { border-collapse: collapse; width: 100%; font-size: .82rem; font-variant-numeric: tabular-nums; direction: ltr; }
+[dir="rtl"] .month-table { direction: rtl; }
+.month-table th, .month-table td { padding: 5px 4px; text-align: center; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.month-table thead th { position: sticky; top: 0; background: var(--zellige); color: var(--zellige-ink); font-weight: 600; font-size: .75rem; }
+.month-table tbody th { text-align: start; font-weight: 400; }
+.month-table tbody th small { color: var(--muted); }
+.month-table tr.today { background: color-mix(in srgb, var(--zellige) 16%, transparent); font-weight: 600; }
+.month-table tr.white { background: color-mix(in srgb, var(--brass) 14%, transparent); }
+.month-table tr.friday td, .month-table tr.friday th b { font-weight: 700; }
+@media (max-width: 700px) {
+  body.fit #view-home .daynav { margin: 0 0 4px; }
+  body.fit .daynav .dn-btn { min-width: 36px; min-height: 36px; font-size: 1.4rem; }
+  body.fit .daynav .dn-center p { font-size: .82rem; line-height: 1.25; }
+  body.fit .day-today { margin-top: 4px; min-height: 36px; }
+  body.fit .cal-actions { flex: none; margin: 2px 0; }
+}
+@media (max-width: 700px) { body.fit #view-home .dates.daynav { display: grid; } }
+
+.month-table { font-size: .74rem; }
+.month-table th, .month-table td { padding: 5px 2px; }
+.month-table tbody th { white-space: normal; line-height: 1.15; min-width: 64px; }
+.month-table thead th { font-size: .68rem; }
+.month-sheet { padding-inline: 10px; }
+.month-table { table-layout: fixed; }
+.month-table thead th:first-child, .month-table tbody th { width: 21%; }
+.month-table thead th { overflow: hidden; text-overflow: ellipsis; }
+.month-table thead th { white-space: normal; overflow-wrap: anywhere; font-size: .64rem; padding: 6px 1px; text-overflow: clip; }
+.month-table thead th { overflow-wrap: normal; word-break: normal; }
+.month-table thead th { font-size: .6rem; padding-inline: 0; letter-spacing: -.01em; }

@@ -222,7 +222,7 @@ function setupMediaSession(title) {
   if (!('mediaSession' in navigator)) return;
   try {
     navigator.mediaSession.metadata = new MediaMetadata({
-      title, artist: 'Prière', artwork: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+      title, artist: 'SaLaTi', artwork: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
     });
     for (const action of ['pause', 'stop']) navigator.mediaSession.setActionHandler(action, () => stopAdhan());
     navigator.mediaSession.playbackState = 'playing';

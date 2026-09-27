@@ -1,13 +1,13 @@
 {
   "id": "./",
-  "name": "SaLaTi — horaires et Qibla",
+  "name": "SaLaTi – صلاتي",
   "short_name": "SaLaTi",
-  "description": "Horaires de prière précis par GPS, compte à rebours en temps réel, direction de la Qibla, Adhan et notifications. Fonctionne hors connexion.",
+  "description": "SaLaTi : horaires de prière précis par GPS, compte à rebours, Qibla, Adhan et calendrier hégirien. Sans publicité.",
   "lang": "fr",
   "dir": "auto",
   "start_url": "./?source=pwa#home",
   "scope": "./",
-  "display": "fullscreen",
+  "display": "standalone",
   "display_override": [
     "standalone",
     "minimal-ui"

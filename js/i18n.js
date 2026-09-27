@@ -1,6 +1,8 @@
 // Traductions FR / AR / EN — ajouter une langue = ajouter un objet ici.
 const DICT = {
   fr: {
+    shortSunrise: 'Lever',
+    prevDay: 'Jour précédent', nextDay: 'Jour suivant', timesOf: 'Horaires du', monthTimes: 'Horaires du mois', printPdf: 'Imprimer / PDF', colDay: 'Jour', swipeHint: 'Glissez pour changer de jour',
     adhanAaqib: 'Voix seule — Aaqib Azeez',
     backMode: 'Visée avec le dos du téléphone', tapToEnable: 'Touchez « Activer la boussole » (autorisation demandée par l’iPhone).',
     calendar: 'Calendrier', today: 'Aujourd’hui', occasions: 'Occasions', backToday: 'Revenir à aujourd’hui',
@@ -35,7 +37,7 @@ const DICT = {
     sunDown: 'Le soleil est sous l’horizon.', sunPast: '(passé)',
     declAuto: 'Automatique (modèle magnétique mondial WMM2025)',
     heading: 'Cap du téléphone', accuracy: 'précision',
-    appName: 'Prière',
+    appName: 'SaLaTi',
     home: 'Horaires', qibla: 'Qibla', settings: 'Réglages',
     nextPrayer: 'Prochaine prière', in: 'Dans', nextAt: 'Heure de la prochaine prière :',
     timeLeft: 'Temps restant', inProgress: 'en cours', tomorrow: 'demain',
@@ -89,6 +91,8 @@ const DICT = {
     myAdhans: 'Mes Adhans (importés)', importAdhans: 'Importer des Adhans', noCustom: 'Aucun Adhan importé pour l’instant.', importedN: '{n} Adhan(s) importé(s) — choisissez-les dans la liste ci-dessus, pour toutes les prières ou une par une.', importHelp: 'Ajoutez un ou plusieurs fichiers audio de votre téléphone (MP3, M4A…). Ils restent uniquement sur cet appareil.', deleteQ: 'Supprimer « {name} » ?',
   },
   ar: {
+    shortSunrise: 'الشروق',
+    prevDay: 'اليوم السابق', nextDay: 'اليوم التالي', timesOf: 'مواقيت يوم', monthTimes: 'مواقيت الشهر', printPdf: 'طباعة / PDF', colDay: 'اليوم', swipeHint: 'اسحب لتغيير اليوم',
     adhanAaqib: 'صوت منفرد — عاقب عزيز',
     backMode: 'التصويب بظهر الهاتف', tapToEnable: 'اضغط «تشغيل البوصلة» (إذن يطلبه الآيفون).',
     calendar: 'التقويم', today: 'اليوم', occasions: 'مناسبات', backToday: 'العودة إلى اليوم',
@@ -176,6 +180,8 @@ const DICT = {
     myAdhans: 'أذاناتي (المستوردة)', importAdhans: 'استيراد أذانات', noCustom: 'لا يوجد أذان مستورد بعد.', importedN: 'تم استيراد {n} — اخترها من القائمة أعلاه، لكل الصلوات أو لكل صلاة على حدة.', importHelp: 'أضف ملفًا صوتيًا أو أكثر من هاتفك (MP3، M4A…). تبقى الملفات على هذا الجهاز فقط.', deleteQ: 'حذف «{name}»؟',
   },
   en: {
+    shortSunrise: 'Sunrise',
+    prevDay: 'Previous day', nextDay: 'Next day', timesOf: 'Prayer times for', monthTimes: 'Monthly times', printPdf: 'Print / PDF', colDay: 'Day', swipeHint: 'Swipe to change day',
     adhanAaqib: 'Solo voice — Aaqib Azeez',
     backMode: 'Aiming with the back of the phone', tapToEnable: 'Tap “Start compass” (permission required by iPhone).',
     calendar: 'Calendar', today: 'Today', occasions: 'Occasions', backToday: 'Back to today',
@@ -210,7 +216,7 @@ const DICT = {
     sunDown: 'The sun is below the horizon.', sunPast: '(passed)',
     declAuto: 'Automatic (World Magnetic Model WMM2025)',
     heading: 'Phone heading', accuracy: 'accuracy',
-    appName: 'Prayer',
+    appName: 'SaLaTi',
     home: 'Times', qibla: 'Qibla', settings: 'Settings',
     nextPrayer: 'Next prayer', in: 'In', nextAt: 'Next prayer at',
     timeLeft: 'Time left', inProgress: 'current', tomorrow: 'tomorrow',
@@ -273,6 +279,7 @@ export function setLang(l) {
   document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
   document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label', el.title); });
 }
 export const getLang = () => lang;
