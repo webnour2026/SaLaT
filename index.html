@@ -16,7 +16,11 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&family=Reem+Kufi:wght@500;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="fit booting">
+  <div class="boot-splash" id="bootSplash" aria-hidden="true">
+    <img src="icons/icon-192.png?v=190" alt="" width="112" height="112">
+    <p>SaLaTi – صلاتي</p>
+  </div>
   <a class="skip" href="#main">Aller au contenu</a>
 
   <header class="topbar">
@@ -364,7 +368,7 @@
     // Garde-fou : si le script principal ne démarre pas en 5 s, on propose de vider le cache.
     setTimeout(function () {
       if (window.__appStarted) return;
-      var box = document.getElementById('bootFail'); box.hidden = false;
+      var box = document.getElementById('bootFail'); box.hidden = false; document.body.classList.remove('booting');
       document.getElementById('bootFix').onclick = async function () {
         try {
           if ('serviceWorker' in navigator) for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();

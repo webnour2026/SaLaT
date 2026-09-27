@@ -1319,7 +1319,15 @@ function bindSettings() {
 // ================= Service worker =================
 function registerSW() {
   if (!('serviceWorker' in navigator)) return;
-  navigator.serviceWorker.register('sw.js').then(reg => {
+  // une nouvelle version activée → on recharge une seule fois pour l'utiliser en entier
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hadController && !reloaded) { reloaded = true; location.reload(); }
+  });
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+    // vérifie les mises à jour à chaque retour dans l'appli
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
     reg.addEventListener('updatefound', () => {
       const nw = reg.installing;
       nw?.addEventListener('statechange', () => {
@@ -1395,7 +1403,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.3.2';
+export const APP_VERSION = '2.4.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
@@ -1463,4 +1471,7 @@ function init() {
   syncClock().then(() => { if (state.today) computeNext(); });
 }
 
-try { init(); } finally { window.__appStarted = true; }
+try { init(); } finally {
+  window.__appStarted = true;
+  requestAnimationFrame(() => document.body.classList.remove('booting'));   // retire l'écran de démarrage
+}

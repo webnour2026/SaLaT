@@ -1,14 +1,37 @@
 // Service worker — changer VERSION à chaque déploiement pour forcer la mise à jour.
-const VERSION = 'priere-v2.3.2';
+const VERSION = 'priere-v2.4.0';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
 const APP_SHELL = [
-  './', 'index.html', 'manifest.json', 'css/style.css',
-  'js/app.js', 'js/i18n.js', 'js/storage.js', 'js/clock.js', 'js/api.js',
-  'js/prayer-calc.js', 'js/prayer-times.js', 'js/countdown.js',
-  'js/qibla.js', 'js/compass.js', 'js/wmm.js', 'js/sun.js', 'js/hijri.js', 'js/calendar.js', 'js/adhan.js', 'js/location.js',
-  'icons/icon.svg', 'icons/icon-96.png', 'icons/icon-192.png', 'icons/apple-touch-icon.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png',
+  './',
+  'index.html',
+  'manifest.json',
+  'css/style.css',
+  'js/adhan.js',
+  'js/api.js',
+  'js/app.js',
+  'js/calendar.js',
+  'js/clock.js',
+  'js/compass.js',
+  'js/countdown.js',
+  'js/hijri.js',
+  'js/i18n.js',
+  'js/location.js',
+  'js/prayer-calc.js',
+  'js/prayer-times.js',
+  'js/qibla.js',
+  'js/storage.js',
+  'js/sun.js',
+  'js/wmm.js',
+  'icons/apple-touch-icon.png',
+  'icons/icon-144.png',
+  'icons/icon-180.png',
+  'icons/icon-192.png',
+  'icons/icon-512.png',
+  'icons/icon-96.png',
+  'icons/icon-maskable-512.png',
+  'icons/icon.svg',
 ];
 
 self.addEventListener('install', event => {
@@ -58,21 +81,20 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Pages : réseau d'abord pour avoir la dernière version, cache si hors ligne
+  // Page et fichiers de l'appli : CACHE D'ABORD (ouverture instantanée, même hors ligne).
+  // Tous les fichiers d'une version sont pré-téléchargés ensemble à l'installation du service
+  // worker : pas de mélange entre versions. Une nouvelle version (VERSION changée) s'installe
+  // en arrière-plan puis l'appli se recharge une fois (voir registerSW dans app.js).
   if (req.mode === 'navigate') {
-    event.respondWith(fetch(req).then(res => {
-      const copy = res.clone(); caches.open(SHELL).then(c => c.put('index.html', copy));
-      return res;
-    }).catch(() => caches.match('index.html')));
+    event.respondWith(caches.match('index.html', { cacheName: SHELL })
+      .then(hit => hit || fetch(req).then(res => { const copy = res.clone(); caches.open(SHELL).then(c => c.put('index.html', copy)); return res; }))
+      .catch(() => caches.match('index.html')));
     return;
   }
-
-  // Fichiers de l'appli (JS, CSS, icônes) : RÉSEAU D'ABORD, cache seulement hors ligne.
-  // Évite de mélanger une nouvelle page avec d'anciens scripts après une mise à jour.
-  event.respondWith(fetch(req, { cache: 'no-cache' }).then(res => {
-    if (res.ok) { const copy = res.clone(); caches.open(SHELL).then(c => c.put(req, copy)); }
+  event.respondWith(caches.match(req, { cacheName: SHELL, ignoreSearch: true }).then(hit => hit || fetch(req).then(res => {
+    if (res.ok && res.status === 200) { const copy = res.clone(); caches.open(SHELL).then(c => c.put(req, copy)); }
     return res;
-  }).catch(() => caches.match(req, { ignoreSearch: true })));
+  })).catch(() => caches.match(req, { ignoreSearch: true })));
 });
 
 function staleWhileRevalidate(req) {

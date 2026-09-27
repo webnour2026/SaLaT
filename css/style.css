@@ -528,3 +528,10 @@ main, .view { overflow-x: hidden; }
 .month-table tr.qadr { background: color-mix(in srgb, #7B5EA7 16%, transparent); font-weight: 600; }
 #monthDialog.ramadan .month-table thead th:not(.iftar) { background: #2A2350; }
 @media (max-width: 700px) { body.fit .occ-chip { flex: none; margin-top: 4px; padding: 6px 12px; font-size: .85rem; } }
+
+/* ===== Écran de démarrage (même fond que l'écran de lancement Android) ===== */
+.boot-splash { position: fixed; inset: 0; z-index: 50; display: grid; place-content: center; justify-items: center; gap: 14px;
+  background: #0C1720; color: #F3DDB0; font: 600 1.2rem var(--font-body); transition: opacity .25s ease, visibility .25s; }
+.boot-splash img { width: 112px; height: 112px; border-radius: 26px; }
+body:not(.booting) .boot-splash { opacity: 0; visibility: hidden; pointer-events: none; }
+body.booting .topbar, body.booting main, body.booting .tabbar { visibility: hidden; }
