@@ -1,6 +1,7 @@
 // Traductions FR / AR / EN — ajouter une langue = ajouter un objet ici.
 const DICT = {
   fr: {
+    share: 'Partager', shareFooter: 'Envoyé depuis SaLaTi – صلاتي : horaires de prière, Qibla et Adhan. Gratuit, sans publicité.', shareTitle: 'Horaires de prière', copied: 'Copié ! Collez-le dans WhatsApp.', shareImgOk: 'Image enregistrée',
     shortSunrise: 'Lever',
     prevDay: 'Jour précédent', nextDay: 'Jour suivant', timesOf: 'Horaires du', monthTimes: 'Horaires du mois', printPdf: 'Imprimer / PDF', colDay: 'Jour', swipeHint: 'Glissez pour changer de jour',
     adhanAaqib: 'Voix seule — Aaqib Azeez',
@@ -91,6 +92,7 @@ const DICT = {
     myAdhans: 'Mes Adhans (importés)', importAdhans: 'Importer des Adhans', noCustom: 'Aucun Adhan importé pour l’instant.', importedN: '{n} Adhan(s) importé(s) — choisissez-les dans la liste ci-dessus, pour toutes les prières ou une par une.', importHelp: 'Ajoutez un ou plusieurs fichiers audio de votre téléphone (MP3, M4A…). Ils restent uniquement sur cet appareil.', deleteQ: 'Supprimer « {name} » ?',
   },
   ar: {
+    share: 'مشاركة', shareFooter: 'أُرسل من تطبيق صلاتي – SaLaTi: مواقيت الصلاة، القبلة والأذان. مجاني وبدون إعلانات.', shareTitle: 'مواقيت الصلاة', copied: 'تم النسخ! الصقه في واتساب.', shareImgOk: 'تم حفظ الصورة',
     shortSunrise: 'الشروق',
     prevDay: 'اليوم السابق', nextDay: 'اليوم التالي', timesOf: 'مواقيت يوم', monthTimes: 'مواقيت الشهر', printPdf: 'طباعة / PDF', colDay: 'اليوم', swipeHint: 'اسحب لتغيير اليوم',
     adhanAaqib: 'صوت منفرد — عاقب عزيز',
@@ -180,6 +182,7 @@ const DICT = {
     myAdhans: 'أذاناتي (المستوردة)', importAdhans: 'استيراد أذانات', noCustom: 'لا يوجد أذان مستورد بعد.', importedN: 'تم استيراد {n} — اخترها من القائمة أعلاه، لكل الصلوات أو لكل صلاة على حدة.', importHelp: 'أضف ملفًا صوتيًا أو أكثر من هاتفك (MP3، M4A…). تبقى الملفات على هذا الجهاز فقط.', deleteQ: 'حذف «{name}»؟',
   },
   en: {
+    share: 'Share', shareFooter: 'Sent from SaLaTi – صلاتي: prayer times, Qibla and Adhan. Free, no ads.', shareTitle: 'Prayer times', copied: 'Copied! Paste it in WhatsApp.', shareImgOk: 'Image saved',
     shortSunrise: 'Sunrise',
     prevDay: 'Previous day', nextDay: 'Next day', timesOf: 'Prayer times for', monthTimes: 'Monthly times', printPdf: 'Print / PDF', colDay: 'Day', swipeHint: 'Swipe to change day',
     adhanAaqib: 'Solo voice — Aaqib Azeez',

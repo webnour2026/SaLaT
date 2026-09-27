@@ -471,12 +471,112 @@ function renderMonthTable(mon) {
   }).join('');
   $('#monthTable').innerHTML = head + `<tbody>${rows}</tbody>`;
 }
+const PLAY_URL = 'https://play.google.com/store/apps/details?id=io.github.webnour2026.salat';
+
+// Image PNG du tableau du mois (pour WhatsApp, etc.), avec la mention de SaLaTi en bas
+async function buildMonthImage(mon) {
+  try { await document.fonts.ready; } catch {}
+  const rtl = document.documentElement.dir === 'rtl';
+  const cols = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+  const W = 1080, M = 44, RH = 50, HEAD = 250, TH = 64, FOOT = 190;
+  const H = HEAD + TH + mon.days.length * RH + FOOT;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  const F = w => `${w} FONT "IBM Plex Sans Arabic", system-ui, sans-serif`;
+  const font = (w, px) => F(w).replace('FONT', `${px}px`);
+  g.direction = rtl ? 'rtl' : 'ltr';
+  const X = (x, w = 0) => (rtl ? W - x - w : x);             // miroir pour l'arabe
+  // fond
+  g.fillStyle = '#F4F7F8'; g.fillRect(0, 0, W, H);
+  // bandeau
+  const grad = g.createLinearGradient(0, 0, 0, HEAD);
+  grad.addColorStop(0, '#0E6B58'); grad.addColorStop(1, '#138a70');
+  g.fillStyle = grad; g.fillRect(0, 0, W, HEAD - 20);
+  g.fillStyle = '#fff'; g.textAlign = rtl ? 'right' : 'left'; g.textBaseline = 'alphabetic';
+  g.font = font(700, 52); g.fillText(`${t('hijriMonths')[mon.m - 1]} ${mon.y} ${t('hijriEra')}`, X(M), 92);
+  g.font = font(500, 32); g.fillText(`${t('shareTitle')} · ${S().location?.name || ''}`, X(M), 146);
+  g.font = font(400, 28); g.globalAlpha = .85; g.fillText($('#calSub').textContent, X(M), 192); g.globalAlpha = 1;
+  // colonnes
+  const dayW = 250, colW = (W - 2 * M - dayW) / cols.length;
+  const colX = i => M + dayW + i * colW;
+  let y = HEAD;
+  g.fillStyle = '#0A4F41'; g.fillRect(M, y, W - 2 * M, TH);
+  g.fillStyle = '#fff'; g.font = font(600, 26); g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(t('colDay'), X(M, dayW) + dayW / 2, y + TH / 2);
+  cols.forEach((c, i) => g.fillText(c === 'Sunrise' ? t('shortSunrise') : t(c), X(colX(i), colW) + colW / 2, y + TH / 2));
+  y += TH;
+  const todayNoon = civilNoon(now(), tz());
+  const wd = new Intl.DateTimeFormat(locale(), { weekday: 'short', timeZone: 'UTC' });
+  const dn = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'numeric', timeZone: 'UTC' });
+  mon.days.forEach((d, r) => {
+    const day = getDay(S(), new Date(d.noon).toISOString().slice(0, 10));
+    g.fillStyle = d.noon === todayNoon ? '#D5EDE6' : d.white ? '#F6ECD6' : r % 2 ? '#FFFFFF' : '#FAFBFC';
+    g.fillRect(M, y, W - 2 * M, RH);
+    const bold = d.dow === 5 || d.noon === todayNoon;
+    g.fillStyle = '#17222B'; g.textAlign = rtl ? 'right' : 'left';
+    g.font = font(700, 26); g.fillText(String(d.h.d), X(M + 14), y + RH / 2);
+    g.font = font(bold ? 600 : 400, 22); g.fillStyle = '#5A6B78';
+    g.fillText(`${wd.format(d.noon)} ${dn.format(d.noon)}`, X(M + 62), y + RH / 2);
+    g.textAlign = 'center'; g.fillStyle = '#17222B'; g.font = font(bold ? 700 : 400, 25);
+    cols.forEach((c, i) => g.fillText(fmtTime(day.times[c]), X(colX(i), colW) + colW / 2, y + RH / 2));
+    g.fillStyle = '#E3E9ED'; g.fillRect(M, y + RH - 1, W - 2 * M, 1);
+    y += RH;
+  });
+  // mention de l'application
+  y += 30;
+  const icon = await new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = 'icons/icon-192.png?v=190'; });
+  if (icon) g.drawImage(icon, X(M, 96), y, 96, 96);
+  g.textAlign = rtl ? 'right' : 'left'; g.textBaseline = 'alphabetic'; g.fillStyle = '#0E6B58';
+  g.font = font(700, 38); g.fillText('SaLaTi – صلاتي', X(M + 116), y + 42);
+  g.fillStyle = '#5A6B78'; g.font = font(400, 24);
+  g.fillText(t('shareFooter').split(':').slice(1).join(':').trim() || '', X(M + 116), y + 80);
+  g.font = font(400, 20); g.fillText('Google Play : SaLaTi', X(M + 116), y + 112);
+  return cv;
+}
+
+function monthShareText(mon) {
+  const wd = new Intl.DateTimeFormat(locale(), { weekday: 'short', day: 'numeric', month: 'numeric', timeZone: 'UTC' });
+  const lines = mon.days.map(d => {
+    const x = getDay(S(), new Date(d.noon).toISOString().slice(0, 10)).times;
+    return `${d.h.d} (${wd.format(d.noon)}) : ${['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].map(k => fmtTime(x[k])).join(' · ')}`;
+  });
+  return `🕌 ${t('shareTitle')} — ${t('hijriMonths')[mon.m - 1]} ${mon.y} · ${S().location?.name || ''}\n`
+    + `(${['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].map(k => t(k)).join(' · ')})\n\n`
+    + lines.join('\n') + `\n\n📱 ${t('shareFooter')}\n${PLAY_URL}`;
+}
+
+async function shareMonthTable() {
+  const mon = state.calMonth; if (!mon) return;
+  const btn = $('#monthShare'); if (btn) btn.disabled = true;
+  try {
+    const text = `📱 ${t('shareFooter')}\n${PLAY_URL}`;
+    const cv = await buildMonthImage(mon);
+    const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
+    const file = blob && new File([blob], `SaLaTi-${t('hijriMonths')[mon.m - 1]}-${mon.y}.png`.replace(/\s+/g, '-'), { type: 'image/png' });
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: `SaLaTi – ${t('shareTitle')}`, text });
+    } else if (navigator.share) {
+      await navigator.share({ title: `SaLaTi – ${t('shareTitle')}`, text: monthShareText(mon) });
+    } else if (file) {                                   // ordinateur : on enregistre l'image
+      const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name;
+      document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+      toast(t('shareImgOk'));
+    } else {
+      await navigator.clipboard.writeText(monthShareText(mon)); toast(t('copied'));
+    }
+  } catch (e) {
+    if (e && e.name !== 'AbortError') {
+      try { await navigator.clipboard.writeText(monthShareText(mon)); toast(t('copied')); } catch {}
+    }
+  } finally { if (btn) btn.disabled = false; }
+}
+
 function printMonthTable() {
   const html = `<!doctype html><html lang="${getLang()}" dir="${document.documentElement.dir}"><head><meta charset="utf-8"><title>${$('#monthTitle').textContent}</title>
 <style>body{font:12px system-ui,sans-serif;margin:16px;color:#111}h1{font-size:17px;margin:0 0 4px}p{margin:0 0 10px;color:#555}
 table{border-collapse:collapse;width:100%}th,td{border:1px solid #bbb;padding:4px 6px;text-align:center;font-variant-numeric:tabular-nums}
 thead th{background:#0E6B58;color:#fff}tr.friday{font-weight:700}tr.white{background:#f6ecd6}tbody th{text-align:start;white-space:nowrap}</style></head>
-<body><h1>${$('#monthTitle').textContent}</h1><p>${$('#monthSub').textContent} — SaLaTi</p><table>${$('#monthTable').innerHTML}</table></body></html>`;
+<body><h1>${$('#monthTitle').textContent}</h1><p>${$('#monthSub').textContent}</p><table>${$('#monthTable').innerHTML}</table><p style="margin-top:10px">${t('shareFooter')} — ${PLAY_URL}</p></body></html>`;
   const fr = document.createElement('iframe');
   fr.style.cssText = 'position:fixed;width:0;height:0;border:0;right:0;bottom:0';
   document.body.append(fr);
@@ -907,6 +1007,7 @@ function bind() {
   on('#calToday', 'click', () => { state.calAnchor = null; renderCalendar(); });
   on('#calMonthTable', 'click', openMonthTable);
   on('#monthPrint', 'click', printMonthTable);
+  on('#monthShare', 'click', shareMonthTable);
   on('#dayPrev', 'click', () => shiftDay(-1));
   on('#dayNext', 'click', () => shiftDay(1));
   on('#dayToday', 'click', () => showDay(null));
@@ -946,7 +1047,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.0.1';
+export const APP_VERSION = '2.1.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
