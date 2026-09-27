@@ -489,7 +489,9 @@ function renderMonthTable(mon) {
   }).join('');
   $('#monthTable').innerHTML = head + `<tbody>${rows}</tbody>`;
 }
-const PLAY_URL = 'https://play.google.com/store/apps/details?id=io.github.webnour2026.salat';
+// Lien affiché dans les messages partagés. Mettez ici votre lien court (TinyURL, ou votre domaine).
+const SHARE_URL = 'https://tinyurl.com/salati-app';
+const PLAY_URL = SHARE_URL;
 
 // Image PNG du tableau du mois (pour WhatsApp, etc.), avec la mention de SaLaTi en bas
 async function buildMonthImage(mon) {
@@ -873,7 +875,7 @@ function cardText(spec) {
   const [arTitle, arLine] = CARD_AR[spec.key] || [t(spec.key), ''];
   const sub = cardSubLocal(spec.key);
   let txt = `🌙 ${arTitle}${arLine ? '\n' + arLine : ''}${sub ? '\n' + sub : ''}`;
-  if (spec.key === 'jumuah') txt += `\n\n﴿ ${JUMUAH_VERSE} ﴾ ${JUMUAH_REF}`;
+  if (spec.key === 'jumuah') txt += `\n\nقال الله تعالى:\n${JUMUAH_VERSE}\n${JUMUAH_REF}`;
   return txt + `\n\n📱 ${t('shareFooter')}\n${PLAY_URL}`;
 }
 
@@ -1393,7 +1395,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.3.0';
+export const APP_VERSION = '2.3.2';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
