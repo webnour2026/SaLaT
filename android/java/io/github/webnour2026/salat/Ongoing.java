@@ -72,7 +72,7 @@ final class Ongoing {
                 rv.setTextViewText(id(ctx, "og_line1"), line1);
                 rv.setTextViewText(id(ctx, "og_prayer"), prayer);
                 int count = id(ctx, "og_count");
-                rv.setChronometer(count, SystemClock.elapsedRealtime() + (next.time - now), cur != null ? "+%s" : null, true);
+                rv.setChronometer(count, SystemClock.elapsedRealtime() + (next.time - now), cur != null ? "+%s" : "-%s", true);   // −02:07 avant, +04:21 après l'heure
                 rv.setChronometerCountDown(count, cur == null);   // compte à rebours, ou temps écoulé depuis l'heure
                 b.setStyle(new Notification.DecoratedCustomViewStyle())
                  .setCustomContentView(rv)

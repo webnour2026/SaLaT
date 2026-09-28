@@ -601,7 +601,7 @@ async function shareMonthTable() {
   const mon = state.tableMon || state.calMonth; if (!mon) return;
   const btn = $('#monthShare'); if (btn) btn.disabled = true;
   try {
-    const text = `📱 ${t('shareFooter')}\n${PLAY_URL}`;
+    const text = shortShareText();
     const cv = await buildMonthImage(mon);
     const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
     const file = blob && new File([blob], `SaLaTi-${state.tableMode === 'ramadan' ? 'Imsakiya' : t('hijriMonths')[mon.m - 1]}-${mon.y}.png`.replace(/\s+/g, '-'), { type: 'image/png' });
@@ -704,7 +704,7 @@ async function shareDay() {
     const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
     const file = blob && new File([blob], `SaLaTi-${day.date}.png`, { type: 'image/png' });
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: `SaLaTi – ${t('shareTitle')}`, text });
+      await navigator.share({ files: [file], title: `SaLaTi – ${t('shareTitle')}`, text: shortShareText() });
     } else if (navigator.share) {
       await navigator.share({ title: `SaLaTi – ${t('shareTitle')}`, text });
     } else if (file) {
@@ -730,10 +730,72 @@ thead th{background:#0E6B58;color:#fff}tr.friday{font-weight:700}tr.white{backgr
   setTimeout(() => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch {} setTimeout(() => fr.remove(), 60000); }, 300);
 }
 
+// Texte joint à une image partagée : l'image dit déjà tout, on ne garde que l'invitation et le lien
+const shortShareText = () => `📲 ${t('shareShort')}\n${PLAY_URL}`;
+
 // ================= Cartes à partager (Joumou'a, jours blancs, occasions, Imsakiya) =================
 const DAY_MS = 864e5;
 const JUMUAH_VERSE = 'إِنَّ اللَّهَ وَمَلَائِكَتَهُ يُصَلُّونَ عَلَى النَّبِيِّ ۚ يَا أَيُّهَا الَّذِينَ آمَنُوا صَلُّوا عَلَيْهِ وَسَلِّمُوا تَسْلِيمًا';
 const JUMUAH_REF = '[الأحزاب: 56]';
+// Textes des cartes : uniquement Coran et hadiths authentiques, avec leur référence.
+// q = verset (entre ﴿ ﴾), sinon hadith/dhikr (entre « »).
+const CARD_TEXTS = {
+  jumuah: [   // change chaque vendredi
+    { q: true, t: JUMUAH_VERSE, r: JUMUAH_REF },
+    { t: 'مَنْ قَرَأَ سُورَةَ الْكَهْفِ فِي يَوْمِ الْجُمُعَةِ أَضَاءَ لَهُ مِنَ النُّورِ مَا بَيْنَ الْجُمُعَتَيْنِ', r: 'رواه الحاكم والبيهقي، وصححه الألباني' },
+    { t: 'إِنَّ مِنْ أَفْضَلِ أَيَّامِكُمْ يَوْمَ الْجُمُعَةِ … فَأَكْثِرُوا عَلَيَّ مِنَ الصَّلَاةِ فِيهِ', r: 'رواه أبو داود (1047)' },
+  ],
+  occRamadan: [{ q: true, t: 'شَهْرُ رَمَضَانَ الَّذِي أُنزِلَ فِيهِ الْقُرْآنُ هُدًى لِّلنَّاسِ وَبَيِّنَاتٍ مِّنَ الْهُدَىٰ وَالْفُرْقَانِ', r: '[البقرة: 185]' }],
+  occQadr: [{ q: true, t: 'لَيْلَةُ الْقَدْرِ خَيْرٌ مِّنْ أَلْفِ شَهْرٍ', r: '[القدر: 3]' },
+            { t: 'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي', r: 'رواه الترمذي (3513)' }],
+  occArafa: [{ t: 'صِيَامُ يَوْمِ عَرَفَةَ أَحْتَسِبُ عَلَى اللَّهِ أَنْ يُكَفِّرَ السَّنَةَ الَّتِي قَبْلَهُ وَالسَّنَةَ الَّتِي بَعْدَهُ', r: 'رواه مسلم (1162)' }],
+  occAshura: [{ t: 'صِيَامُ يَوْمِ عَاشُورَاءَ أَحْتَسِبُ عَلَى اللَّهِ أَنْ يُكَفِّرَ السَّنَةَ الَّتِي قَبْلَهُ', r: 'رواه مسلم (1162)' }],
+  morning: [  // change chaque jour
+    { t: 'أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ', r: 'رواه مسلم (2723)' },
+    { t: 'اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ النُّشُورُ', r: 'رواه الترمذي (3391)' },
+    { t: 'مَنْ قَالَ حِينَ يُصْبِحُ وَحِينَ يُمْسِي: سُبْحَانَ اللَّهِ وَبِحَمْدِهِ مِائَةَ مَرَّةٍ، لَمْ يَأْتِ أَحَدٌ يَوْمَ الْقِيَامَةِ بِأَفْضَلَ مِمَّا جَاءَ بِهِ إِلَّا أَحَدٌ قَالَ مِثْلَ مَا قَالَ أَوْ زَادَ عَلَيْهِ', r: 'رواه مسلم (2692)' },
+  ],
+  dua: [      // une carte par doua
+    { q: true, t: 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ', r: '[البقرة: 201]' },
+    { q: true, t: 'رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي', r: '[طه: 25-26]' },
+    { q: true, t: 'رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا وَهَبْ لَنَا مِن لَّدُنكَ رَحْمَةً إِنَّكَ أَنتَ الْوَهَّابُ', r: '[آل عمران: 8]' },
+    { q: true, t: 'رَّبِّ ارْحَمْهُمَا كَمَا رَبَّيَانِي صَغِيرًا', r: '[الإسراء: 24]' },
+    { t: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَافِيَةَ فِي الدُّنْيَا وَالْآخِرَةِ', r: 'رواه أبو داود (5074) وابن ماجه (3871)' },
+    { t: 'يَا مُقَلِّبَ الْقُلُوبِ ثَبِّتْ قَلْبِي عَلَى دِينِكَ', r: 'رواه الترمذي (2140)' },
+    { q: true, t: 'رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا قُرَّةَ أَعْيُنٍ وَاجْعَلْنَا لِلْمُتَّقِينَ إِمَامًا', r: '[الفرقان: 74]' },
+    { q: true, t: 'رَّبِّ زِدْنِي عِلْمًا', r: '[طه: 114]' },
+    { q: true, t: 'رَبَّنَا اغْفِرْ لِي وَلِوَالِدَيَّ وَلِلْمُؤْمِنِينَ يَوْمَ يَقُومُ الْحِسَابُ', r: '[إبراهيم: 41]' },
+    { q: true, t: 'حَسْبِيَ اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ ۖ عَلَيْهِ تَوَكَّلْتُ ۖ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ', r: '[التوبة: 129]' },
+    { q: true, t: 'لَّا إِلَٰهَ إِلَّا أَنتَ سُبْحَانَكَ إِنِّي كُنتُ مِنَ الظَّالِمِينَ', r: '[الأنبياء: 87]' },
+    { q: true, t: 'رَبَّنَا ظَلَمْنَا أَنفُسَنَا وَإِن لَّمْ تَغْفِرْ لَنَا وَتَرْحَمْنَا لَنَكُونَنَّ مِنَ الْخَاسِرِينَ', r: '[الأعراف: 23]' },
+    { t: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى وَالْعَفَافَ وَالْغِنَى', r: 'رواه مسلم (2721)' },
+    { t: 'اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ', r: 'رواه أبو داود (1522) والنسائي (1303)' },
+    { t: 'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي', r: 'رواه الترمذي (3513)' },
+    { t: 'اللَّهُمَّ آتِ نَفْسِي تَقْوَاهَا، وَزَكِّهَا أَنْتَ خَيْرُ مَنْ زَكَّاهَا، أَنْتَ وَلِيُّهَا وَمَوْلَاهَا', r: 'رواه مسلم (2722)' },
+    { t: 'اللَّهُمَّ اغْفِرْ لِي، وَارْحَمْنِي، وَاهْدِنِي، وَعَافِنِي، وَارْزُقْنِي', r: 'رواه مسلم (2697)' },
+  ],
+  hadith: [   // hadiths authentiques courts
+    { t: 'إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى', r: 'متفق عليه (البخاري 1، مسلم 1907)' },
+    { t: 'لَا يُؤْمِنُ أَحَدُكُمْ حَتَّى يُحِبَّ لِأَخِيهِ مَا يُحِبُّ لِنَفْسِهِ', r: 'متفق عليه (البخاري 13، مسلم 45)' },
+    { t: 'مَنْ كَانَ يُؤْمِنُ بِاللَّهِ وَالْيَوْمِ الْآخِرِ فَلْيَقُلْ خَيْرًا أَوْ لِيَصْمُتْ', r: 'متفق عليه (البخاري 6018، مسلم 47)' },
+    { t: 'الْكَلِمَةُ الطَّيِّبَةُ صَدَقَةٌ', r: 'متفق عليه (البخاري 2989، مسلم 1009)' },
+    { t: 'أَحَبُّ الْأَعْمَالِ إِلَى اللَّهِ أَدْوَمُهَا وَإِنْ قَلَّ', r: 'متفق عليه (البخاري 6464، مسلم 783)' },
+    { t: 'كَلِمَتَانِ خَفِيفَتَانِ عَلَى اللِّسَانِ، ثَقِيلَتَانِ فِي الْمِيزَانِ، حَبِيبَتَانِ إِلَى الرَّحْمَنِ: سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، سُبْحَانَ اللَّهِ الْعَظِيمِ', r: 'متفق عليه (البخاري 6682، مسلم 2694)' },
+    { t: 'خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ', r: 'رواه البخاري (5027)' },
+    { t: 'مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا سَهَّلَ اللَّهُ لَهُ بِهِ طَرِيقًا إِلَى الْجَنَّةِ', r: 'رواه مسلم (2699)' },
+    { t: 'مَا نَقَصَتْ صَدَقَةٌ مِنْ مَالٍ', r: 'رواه مسلم (2588)' },
+    { t: 'الدِّينُ النَّصِيحَةُ', r: 'رواه مسلم (55)' },
+    { t: 'تَبَسُّمُكَ فِي وَجْهِ أَخِيكَ لَكَ صَدَقَةٌ', r: 'رواه الترمذي (1956)' },
+    { t: 'اتَّقِ اللَّهَ حَيْثُمَا كُنْتَ، وَأَتْبِعِ السَّيِّئَةَ الْحَسَنَةَ تَمْحُهَا، وَخَالِقِ النَّاسَ بِخُلُقٍ حَسَنٍ', r: 'رواه الترمذي (1987)' },
+  ],
+};
+/** Texte à afficher pour une carte (rotation hebdomadaire / quotidienne, ou doua choisie) */
+function cardTextOf(spec) {
+  const list = CARD_TEXTS[spec.key]; if (!list) return null;
+  if (spec.i != null) return list[spec.i % list.length];
+  const n = Math.floor(spec.noon / DAY_MS);
+  return list[(spec.key === 'jumuah' ? Math.floor(n / 7) : n) % list.length];
+}
 // Titre et formule en arabe (toujours affichés sur la carte)
 const CARD_AR = {
   jumuah: ['جمعة مباركة', ''],
@@ -748,16 +810,20 @@ const CARD_AR = {
   occFitr: ['عيد فطر مبارك', 'تقبّل الله منا ومنكم'],
   occArafa: ['يوم عرفة', 'تذكير بصيام يوم عرفة'],
   occAdha: ['عيد أضحى مبارك', 'تقبّل الله منا ومنكم'],
+  morning: ['صباح الخير', 'صباحكم نور وبركة'],
+  dua: ['دعاء', ''],
+  hadith: ['حديث شريف', ''],
 };
 const CARD_THEME = {
   green: ['#0B5D4B', '#12806A', '#E9C46A'],   // Joumou'a, Mawlid, nouvel an…
   night: ['#141F3D', '#3B2F63', '#E9C46A'],   // Ramadan, Qadr, jours blancs
   gold:  ['#5B2A1E', '#B5652E', '#FFE3A3'],   // Aïds
   teal:  ['#0E4A5C', '#1F7A8C', '#F3DDB0'],   // Achoura, Arafat (jeûne)
+  dawn:  ['#1D4E6E', '#C9804A', '#FFE9B8'],   // Sabah el-khir (lever du jour)
 };
 const themeOf = key => (['occFitr', 'occAdha'].includes(key) ? 'gold'
   : ['occRamadan', 'occQadr', 'white', 'occNisfShaban'].includes(key) ? 'night'
-  : ['occAshura', 'occArafa'].includes(key) ? 'teal' : 'green');
+  : ['occAshura', 'occArafa', 'dua'].includes(key) ? 'teal' : key === 'morning' ? 'dawn' : 'green');   // hadith : vert
 const cardSubLocal = key => (getLang() === 'ar' ? ''
   : key === 'jumuah' ? t('cardJumuah') : key === 'white' ? t('cardWhite') : (t('cardSub') || {})[key] || t(key));
 
@@ -788,7 +854,12 @@ function cardSpecs() {
     const noon = today + i * DAY_MS, h = hijriOf(noon, off);
     if (h.m === 9 && h.d === 1 && noon + 30 * DAY_MS >= today) { out.push({ key: 'imsakiya', noon, mon: hijriMonth(noon, off) }); break; }
   }
-  return out.sort((a, b) => a.noon - b.noon);
+  out.sort((a, b) => a.noon - b.noon);
+  // cartes de tous les jours (sans date)
+  out.push({ key: 'morning', noon: today, evergreen: true });
+  const day = Math.floor(today / DAY_MS);
+  for (const k of ['dua', 'hadith']) out.push({ key: k, i: day % CARD_TEXTS[k].length, noon: today, evergreen: true, pick: true });
+  return out;
 }
 
 function wrapLines(g, text, maxW) {
@@ -813,7 +884,7 @@ async function buildGreetingCard(spec) {
   const W = 1080, H = 1350, key = spec.key;
   const [c1, c2, accent] = CARD_THEME[themeOf(key)];
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-  const g = cv.getContext('2d');
+  let g = cv.getContext('2d');
   const plex = (w, px) => `${w} ${px}px "IBM Plex Sans Arabic", system-ui, sans-serif`;
   const amiri = (w, px) => `${w} ${px}px Amiri, "IBM Plex Sans Arabic", serif`;
   const kufi = px => `700 ${px}px "Reem Kufi", "IBM Plex Sans Arabic", sans-serif`;
@@ -826,51 +897,52 @@ async function buildGreetingCard(spec) {
     g.globalAlpha = 1;
   }
   drawMosque(g, W, H, '#fff');
+  // le contenu est dessiné sur un calque, puis centré verticalement au-dessus de la dédicace
+  const base = g, layer = document.createElement('canvas'); layer.width = W; layer.height = H;
+  g = layer.getContext('2d');
   const [arTitle, arLine] = CARD_AR[key] || [t(key), ''];
   g.textAlign = 'center'; g.direction = 'rtl'; g.textBaseline = 'alphabetic';
-  let y = 330;
+  const top = 120; let y = top + 110;
   g.fillStyle = accent; g.font = kufi(key === 'occMawlid' || key === 'occIsra' ? 84 : 112);
   g.fillText(arTitle, W / 2, y);
   y += 80;
   if (key === 'occNewYear' && spec.h) { g.font = amiri(700, 60); g.fillStyle = '#fff'; g.fillText(`${spec.h.y} هـ`, W / 2, y); y += 70; }
   if (arLine) { g.font = amiri(400, 56); g.fillStyle = '#fff'; g.fillText(arLine, W / 2, y); y += 70; }
-  if (key === 'jumuah') {                                // verset (Al-Ahzab 33:56)
-    g.font = amiri(700, 50);
-    const lines = wrapLines(g, `﴿ ${JUMUAH_VERSE} ﴾`, W - 200);
-    const boxH = lines.length * 76 + 90;
-    g.fillStyle = 'rgba(255,255,255,.10)'; g.beginPath(); g.roundRect(70, y - 20, W - 140, boxH, 36); g.fill();
-    g.fillStyle = '#fff'; lines.forEach((ln, i) => g.fillText(ln, W / 2, y + 50 + i * 76));
-    g.font = amiri(400, 32); g.fillStyle = accent; g.fillText(JUMUAH_REF, W / 2, y + boxH - 34);
+  // texte sourcé (verset, hadith, dhikr ou doua)
+  const txt = cardTextOf(spec);
+  if (txt) {
+    let size = 52, lines;
+    do { g.font = amiri(700, size); lines = wrapLines(g, txt.q ? `﴿ ${txt.t} ﴾` : `« ${txt.t} »`, W - 200); size -= 4; }
+    while (lines.length > 6 && size > 36);
+    const lh = Math.round((size + 4) * 1.5), boxH = lines.length * lh + 100;
+    g.fillStyle = 'rgba(255,255,255,.10)'; g.beginPath(); g.roundRect(70, y - 10, W - 140, boxH, 36); g.fill();
+    g.fillStyle = '#fff'; lines.forEach((ln, i) => g.fillText(ln, W / 2, y + 60 + i * lh));
+    g.font = amiri(400, 32); g.fillStyle = accent; g.fillText(txt.r, W / 2, y + boxH - 34);
     y += boxH + 50;
   }
   const sub = cardSubLocal(key);
   g.direction = document.documentElement.dir === 'rtl' ? 'rtl' : 'ltr';
-  if (sub) { g.font = plex(500, 36); g.fillStyle = '#fff'; g.globalAlpha = .92; g.fillText(sub, W / 2, y); g.globalAlpha = 1; y += 58; }
-  // date(s)
+  if (sub && !spec.evergreen) { g.font = plex(500, 36); g.fillStyle = '#fff'; g.globalAlpha = .92; g.fillText(sub, W / 2, y); g.globalAlpha = 1; y += 58; }
+  // date(s) — pas de ville ni d'horaires : la carte peut être envoyée partout au Maroc
   const dateFmt = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
   g.font = plex(400, 32); g.fillStyle = '#fff'; g.globalAlpha = .88;
   if (key === 'white' && spec.list) {
     const df = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
     spec.list.forEach(x => { g.fillText(`${df.format(x.noon)} · ${hijriLabel(x.h)}`, W / 2, y); y += 50; });
-  } else {
+  } else if (!spec.evergreen) {
     g.fillText(dateFmt.format(spec.noon), W / 2, y); y += 48;
     g.fillText(hijriLabel(hijriOf(spec.noon, S().hijriOffset)), W / 2, y); y += 40;
   }
   g.globalAlpha = 1;
-  // horaires du jour (sauf jours blancs : plusieurs jours)
-  if (key !== 'white') {
-    const day = getDay(S(), new Date(spec.noon).toISOString().slice(0, 10));
-    const ks = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-    const bw = (W - 140 - 4 * 14) / 5, top = Math.max(y + 30, H - 420);
-    g.font = plex(500, 28); g.fillStyle = '#fff'; g.globalAlpha = .9;
-    g.fillText(S().location?.name || '', W / 2, top - 18); g.globalAlpha = 1;
-    const rtl = document.documentElement.dir === 'rtl';
-    ks.forEach((k, i) => {
-      const x = rtl ? W - 70 - (i + 1) * bw - i * 14 : 70 + i * (bw + 14);
-      g.fillStyle = 'rgba(255,255,255,.14)'; g.beginPath(); g.roundRect(x, top, bw, 130, 22); g.fill();
-      g.fillStyle = '#fff'; g.font = plex(500, 26); g.fillText(t(k), x + bw / 2, top + 48);
-      g.fillStyle = accent; g.font = plex(700, 40); g.fillText(fmtTime(day.times[k]), x + bw / 2, top + 102);
-    });
+  const zoneTop = 90, zoneBottom = H - 270;            // entre le haut et la dédicace
+  const dy = Math.max(zoneTop - top, Math.round((zoneTop + zoneBottom) / 2 - (top + y - 30) / 2));
+  base.drawImage(layer, 0, dy);
+  g = base; g.textAlign = 'center';
+  // dédicace (facultative) : « من: … »
+  const from = (S().cardFrom || '').trim();
+  if (from) {
+    g.direction = 'rtl'; g.font = amiri(700, 44); g.fillStyle = accent;
+    g.fillText(`من: ${from}`, W / 2, H - 215);
   }
   // mention SaLaTi
   const fy = H - 150;
@@ -891,7 +963,10 @@ function cardText(spec) {
   const [arTitle, arLine] = CARD_AR[spec.key] || [t(spec.key), ''];
   const sub = cardSubLocal(spec.key);
   let txt = `🌙 ${arTitle}${arLine ? '\n' + arLine : ''}${sub ? '\n' + sub : ''}`;
-  if (spec.key === 'jumuah') txt += `\n\nقال الله تعالى:\n${JUMUAH_VERSE}\n${JUMUAH_REF}`;
+  const body = cardTextOf(spec);
+  if (body) txt += `\n\n${body.q ? `﴿ ${body.t} ﴾` : `« ${body.t} »`}\n${body.r}`;
+  const from = (S().cardFrom || '').trim();
+  if (from) txt += `\n\nمن: ${from}`;
   return txt + `\n\n📱 ${t('shareFooter')}\n${PLAY_URL}`;
 }
 
@@ -899,11 +974,10 @@ async function shareCard(spec) {
   if (spec.key === 'imsakiya') { $('#cardsDialog')?.open && $('#cardsDialog').close(); return openMonthTable(spec.mon, 'ramadan'); }
   const text = cardText(spec);
   try {
-    await ensureMonth(S(), new Date(spec.noon).toISOString().slice(0, 7));
     const cv = await buildGreetingCard(spec);
     const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
     const file = blob && new File([blob], `SaLaTi-${spec.key}-${new Date(spec.noon).toISOString().slice(0, 10)}.png`, { type: 'image/png' });
-    if (file && navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'SaLaTi', text });
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'SaLaTi', text: shortShareText() });
     else if (navigator.share) await navigator.share({ title: 'SaLaTi', text });
     else if (file) {
       const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name;
@@ -923,14 +997,29 @@ function openCardsDialog() {
   $('#cardsList').replaceChildren(...cardSpecs().map(sp => {
     const li = document.createElement('li');
     const title = sp.key === 'imsakiya' ? `${t('imsakiya')} ${sp.mon.y}` : (CARD_AR[sp.key] || [t(sp.key)])[0];
-    const sub = sp.key === 'imsakiya' ? gregSpan(sp.mon) : `${df.format(sp.noon)} · ${whenLabel(sp.noon)}`;
-    li.innerHTML = '<div class="cl-txt"><b></b><small></small></div><button class="btn small btn-primary" type="button"></button>';
+    const words = sp.evergreen ? cardTextOf(sp).t.split(/\s+/) : [];
+    const sub = sp.key === 'imsakiya' ? gregSpan(sp.mon)
+      : sp.evergreen ? words.slice(0, 6).join(' ') + (words.length > 6 ? ' …' : '')
+      : `${df.format(sp.noon)} · ${whenLabel(sp.noon)}`;
+    li.innerHTML = '<div class="cl-txt"><b></b><small></small></div><div class="cl-btns"><button class="btn small btn-primary" type="button"></button></div>';
     li.querySelector('b').textContent = title;
     li.querySelector('small').textContent = sub;
+    if (sp.pick) {                                        // doua / hadith : bouton « autre » pour changer de texte
+      const n = CARD_TEXTS[sp.key].length, other = document.createElement('button');
+      other.className = 'btn small'; other.type = 'button'; other.textContent = '⟳';
+      other.setAttribute('aria-label', t('otherText'));
+      other.addEventListener('click', () => {
+        sp.i = (sp.i + 1) % n;
+        const w = cardTextOf(sp).t.split(/\s+/);
+        li.querySelector('small').textContent = `${sp.i + 1}/${n} · ` + w.slice(0, 6).join(' ') + (w.length > 6 ? ' …' : '');
+      });
+      li.querySelector('.cl-btns').prepend(other);
+    }
     const b = li.querySelector('button'); b.textContent = sp.key === 'imsakiya' ? t('imsakiya') : t('shareCard');
     b.addEventListener('click', () => shareCard(sp));
     return li;
   }));
+  $('#cardFrom').value = S().cardFrom || '';
   $('#cardsDialog').showModal();
 }
 
@@ -938,7 +1027,7 @@ function openCardsDialog() {
 function renderOccChip() {
   const chip = $('#occChip'); if (!chip) return;
   const today = civilNoon(now(), tz());
-  const sp = cardSpecs().find(x => x.key !== 'white' && x.key !== 'imsakiya'
+  const sp = cardSpecs().find(x => !x.evergreen && x.key !== 'white' && x.key !== 'imsakiya'
     && (x.key === 'jumuah' ? x.noon === today : x.noon - today <= DAY_MS));
   state.chipSpec = sp || null;
   chip.hidden = !sp || viewing();
@@ -1482,6 +1571,7 @@ function bind() {
   on('#occChip', 'click', () => { const sp = state.chipSpec; if (sp) shareCard(sp); });
   on('#monthPrint', 'click', printMonthTable);
   on('#monthShare', 'click', shareMonthTable);
+  on('#cardFrom', 'change', e => { S().cardFrom = e.target.value.trim().slice(0, 40); save(); });
   on('#dayShare', 'click', shareDay);
   on('#dayPrev', 'click', () => shiftDay(-1));
   on('#dayNext', 'click', () => shiftDay(1));

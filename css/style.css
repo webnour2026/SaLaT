@@ -524,6 +524,7 @@ main, .view { overflow-x: hidden; }
 .cards-list { list-style: none; margin: 8px 0 0; padding: 0; }
 .cards-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--rule); }
 .cards-list .cl-txt { display: grid; min-width: 0; }
+.cards-list .cl-btns { display: flex; gap: 6px; flex-shrink: 0; }
 .cards-list small { color: var(--muted); }
 .month-table th.iftar, .month-table td.iftar { background: color-mix(in srgb, #B7791F 16%, transparent); font-weight: 600; }
 .month-table thead th.iftar { background: #B7791F; }
