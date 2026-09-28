@@ -1084,8 +1084,10 @@ function renderOccChip() {
   const sp = cardSpecs().find(x => !x.evergreen && x.key !== 'white' && x.key !== 'imsakiya'
     && (x.key === 'jumuah' ? x.noon === today : x.noon - today <= DAY_MS));
   state.chipSpec = sp || null;
-  chip.hidden = !sp || viewing();
-  if (sp) chip.textContent = `🌙 ${(CARD_AR[sp.key] || [t(sp.key)])[0]} · ${t('shareCard')}`;
+  chip.hidden = viewing();
+  // vendredi / occasion : partage direct ; les autres jours : douas et hadiths à envoyer
+  chip.textContent = sp ? `🌙 ${(CARD_AR[sp.key] || [t(sp.key)])[0]} · ${t('shareCard')}` : `🤲 ${t('chipDaily')}`;
+  chip.classList.toggle('daily', !sp);
 }
 
 function calShift(dir) {
@@ -1622,7 +1624,7 @@ function bind() {
   on('#calToday', 'click', () => { state.calAnchor = null; renderCalendar(); });
   on('#calMonthTable', 'click', () => openMonthTable());
   on('#calCards', 'click', openCardsDialog);
-  on('#occChip', 'click', () => { const sp = state.chipSpec; if (sp) shareCard(sp); });
+  on('#occChip', 'click', () => { const sp = state.chipSpec; if (sp) shareCard(sp); else openCardsDialog(); });
   on('#monthPrint', 'click', printMonthTable);
   on('#monthShare', 'click', shareMonthTable);
   on('#cardFrom', 'change', e => { S().cardFrom = e.target.value.trim().slice(0, 40); save(); });
