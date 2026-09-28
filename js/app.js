@@ -1362,7 +1362,7 @@ function updateNotifWarn() {
   const w = $('#notifWarn');
   const p = notifPermission();
   const wants = S().adhan.notifyAt || S().adhan.notifyBefore > 0;
-  w.hidden = !(wants && (p === 'denied' || p === 'unsupported'));
+  w.hidden = nativeActive() || !(wants && (p === 'denied' || p === 'unsupported'));
   w.textContent = t('notifDenied');
 }
 
