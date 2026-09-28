@@ -137,19 +137,40 @@ final class AlarmScheduler {
         return r;
     }
 
+    /**
+     * URI d'un son intégré, par son NOM (…/raw/aaqib) et non par son identifiant numérique :
+     * les identifiants changent d'un build à l'autre dès qu'on ajoute ou retire un mp3,
+     * alors qu'un canal Android garde son son pour toujours.
+     */
+    static Uri soundUri(Context ctx, String sound) {
+        int raw = rawId(ctx, sound);
+        if (raw == 0) return null;
+        return Uri.parse("android.resource://" + ctx.getPackageName() + "/raw/"
+                + ctx.getResources().getResourceEntryName(raw));
+    }
+
+    /** Une seule fois : supprime les anciens canaux (« salati_… ») créés avec l'URI numérique. */
+    private static void migrateChannels(Context ctx, NotificationManager nm) {
+        SharedPreferences prefs = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        if (prefs.getBoolean("channels2", false)) return;
+        for (NotificationChannel c : nm.getNotificationChannels()) {
+            if (c.getId().startsWith("salati_")) nm.deleteNotificationChannel(c.getId());
+        }
+        prefs.edit().putBoolean("channels2", true).apply();
+    }
+
     /** Un canal par (son, vibration) : les réglages d'un canal Android ne peuvent plus changer. */
     static String channel(Context ctx, String sound, boolean vibrate, String label) {
-        String id = "salati_" + (sound == null ? "silent" : sound) + (vibrate ? "_v" : "_nv");
+        String id = "salati2_" + (sound == null ? "silent" : sound) + (vibrate ? "_v" : "_nv");
         if (Build.VERSION.SDK_INT >= 26) {
             NotificationManager nm = ctx.getSystemService(NotificationManager.class);
+            migrateChannels(ctx, nm);
             if (nm.getNotificationChannel(id) == null) {
                 NotificationChannel ch = new NotificationChannel(id, label,
                         sound == null ? NotificationManager.IMPORTANCE_DEFAULT : NotificationManager.IMPORTANCE_HIGH);
                 if (sound == null) ch.setSound(null, null);
                 else {
-                    int raw = rawId(ctx, sound);
-                    Uri uri = raw != 0 ? Uri.parse("android.resource://" + ctx.getPackageName() + "/" + raw) : null;
-                    ch.setSound(uri, new AudioAttributes.Builder()
+                    ch.setSound(soundUri(ctx, sound), new AudioAttributes.Builder()
                             .setUsage(AudioAttributes.USAGE_NOTIFICATION)
                             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build());
                 }
