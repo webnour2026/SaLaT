@@ -525,6 +525,16 @@ main, .view { overflow-x: hidden; }
 .cards-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--rule); }
 .cards-list .cl-txt { display: grid; min-width: 0; }
 .cards-list .cl-btns { display: flex; gap: 6px; flex-shrink: 0; }
+.cards-list li.pick-panel { display: block; padding: 0 0 10px; }
+.pick-list { list-style: none; margin: 0; padding: 0; max-height: 46vh; overflow-y: auto; overscroll-behavior: contain;
+  border: 1px solid var(--rule); border-radius: 14px; background: var(--paper); }
+.pick-list li + li { border-top: 1px solid var(--rule); }
+.pick-list button { display: grid; gap: 4px; width: 100%; padding: 12px 14px; border: 0; background: none;
+  color: var(--ink); font: inherit; text-align: start; cursor: pointer; }
+.pick-list button:active { background: color-mix(in srgb, var(--zellige) 10%, var(--paper)); }
+.pick-list .pt { font-family: Amiri, "IBM Plex Sans Arabic", serif; font-size: 1.12rem; line-height: 1.75;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.pick-list small { color: var(--muted); }
 .cards-list small { color: var(--muted); }
 .month-table th.iftar, .month-table td.iftar { background: color-mix(in srgb, #B7791F 16%, transparent); font-weight: 600; }
 .month-table thead th.iftar { background: #B7791F; }

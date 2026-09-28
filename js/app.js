@@ -773,6 +773,21 @@ const CARD_TEXTS = {
     { t: 'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي', r: 'رواه الترمذي (3513)' },
     { t: 'اللَّهُمَّ آتِ نَفْسِي تَقْوَاهَا، وَزَكِّهَا أَنْتَ خَيْرُ مَنْ زَكَّاهَا، أَنْتَ وَلِيُّهَا وَمَوْلَاهَا', r: 'رواه مسلم (2722)' },
     { t: 'اللَّهُمَّ اغْفِرْ لِي، وَارْحَمْنِي، وَاهْدِنِي، وَعَافِنِي، وَارْزُقْنِي', r: 'رواه مسلم (2697)' },
+    { q: true, t: 'رَبَّنَا تَقَبَّلْ مِنَّا ۖ إِنَّكَ أَنتَ السَّمِيعُ الْعَلِيمُ', r: '[البقرة: 127]' },
+    { q: true, t: 'رَبَّنَا لَا تُؤَاخِذْنَا إِن نَّسِينَا أَوْ أَخْطَأْنَا', r: '[البقرة: 286]' },
+    { q: true, t: 'رَبِّ اجْعَلْنِي مُقِيمَ الصَّلَاةِ وَمِن ذُرِّيَّتِي ۚ رَبَّنَا وَتَقَبَّلْ دُعَاءِ', r: '[إبراهيم: 40]' },
+    { q: true, t: 'رَبِّ أَوْزِعْنِي أَنْ أَشْكُرَ نِعْمَتَكَ الَّتِي أَنْعَمْتَ عَلَيَّ وَعَلَىٰ وَالِدَيَّ وَأَنْ أَعْمَلَ صَالِحًا تَرْضَاهُ', r: '[النمل: 19]' },
+    { q: true, t: 'رَبِّ إِنِّي لِمَا أَنزَلْتَ إِلَيَّ مِنْ خَيْرٍ فَقِيرٌ', r: '[القصص: 24]' },
+    { q: true, t: 'رَبَّنَا آتِنَا مِن لَّدُنكَ رَحْمَةً وَهَيِّئْ لَنَا مِنْ أَمْرِنَا رَشَدًا', r: '[الكهف: 10]' },
+    { q: true, t: 'رَبِّ هَبْ لِي مِن لَّدُنكَ ذُرِّيَّةً طَيِّبَةً ۖ إِنَّكَ سَمِيعُ الدُّعَاءِ', r: '[آل عمران: 38]' },
+    { q: true, t: 'رَبِّ أَدْخِلْنِي مُدْخَلَ صِدْقٍ وَأَخْرِجْنِي مُخْرَجَ صِدْقٍ وَاجْعَل لِّي مِن لَّدُنكَ سُلْطَانًا نَّصِيرًا', r: '[الإسراء: 80]' },
+    { t: 'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْهَمِّ وَالْحَزَنِ، وَالْعَجْزِ وَالْكَسَلِ، وَالْبُخْلِ وَالْجُبْنِ، وَضَلَعِ الدَّيْنِ، وَغَلَبَةِ الرِّجَالِ', r: 'رواه البخاري (6369)' },
+    { t: 'اللَّهُمَّ مُصَرِّفَ الْقُلُوبِ صَرِّفْ قُلُوبَنَا عَلَى طَاعَتِكَ', r: 'رواه مسلم (2654)' },
+    { t: 'اللَّهُمَّ إِنِّي ظَلَمْتُ نَفْسِي ظُلْمًا كَثِيرًا، وَلَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ، فَاغْفِرْ لِي مَغْفِرَةً مِنْ عِنْدِكَ، وَارْحَمْنِي، إِنَّكَ أَنْتَ الْغَفُورُ الرَّحِيمُ', r: 'متفق عليه (البخاري 834، مسلم 2705)' },
+    { t: 'اللَّهُمَّ أَصْلِحْ لِي دِينِيَ الَّذِي هُوَ عِصْمَةُ أَمْرِي، وَأَصْلِحْ لِي دُنْيَايَ الَّتِي فِيهَا مَعَاشِي، وَأَصْلِحْ لِي آخِرَتِي الَّتِي فِيهَا مَعَادِي', r: 'رواه مسلم (2720)' },
+    { t: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا، وَرِزْقًا طَيِّبًا، وَعَمَلًا مُتَقَبَّلًا', r: 'رواه ابن ماجه (925)' },
+    { t: 'لَا إِلَهَ إِلَّا اللَّهُ الْعَظِيمُ الْحَلِيمُ، لَا إِلَهَ إِلَّا اللَّهُ رَبُّ الْعَرْشِ الْعَظِيمِ، لَا إِلَهَ إِلَّا اللَّهُ رَبُّ السَّمَاوَاتِ وَرَبُّ الْأَرْضِ وَرَبُّ الْعَرْشِ الْكَرِيمِ', r: 'متفق عليه (البخاري 6346، مسلم 2730)' },
+    { t: 'اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ لَكَ بِذَنْبِي، فَاغْفِرْ لِي فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ', r: 'سيد الاستغفار – رواه البخاري (6306)' },
   ],
   hadith: [   // hadiths authentiques courts
     { t: 'إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى', r: 'متفق عليه (البخاري 1، مسلم 1907)' },
@@ -787,6 +802,19 @@ const CARD_TEXTS = {
     { t: 'الدِّينُ النَّصِيحَةُ', r: 'رواه مسلم (55)' },
     { t: 'تَبَسُّمُكَ فِي وَجْهِ أَخِيكَ لَكَ صَدَقَةٌ', r: 'رواه الترمذي (1956)' },
     { t: 'اتَّقِ اللَّهَ حَيْثُمَا كُنْتَ، وَأَتْبِعِ السَّيِّئَةَ الْحَسَنَةَ تَمْحُهَا، وَخَالِقِ النَّاسَ بِخُلُقٍ حَسَنٍ', r: 'رواه الترمذي (1987)' },
+    { t: 'مَنْ دَلَّ عَلَى خَيْرٍ فَلَهُ مِثْلُ أَجْرِ فَاعِلِهِ', r: 'رواه مسلم (1893)' },
+    { t: 'الْمُسْلِمُ مَنْ سَلِمَ الْمُسْلِمُونَ مِنْ لِسَانِهِ وَيَدِهِ', r: 'متفق عليه (البخاري 10، مسلم 41)' },
+    { t: 'لَيْسَ الشَّدِيدُ بِالصُّرَعَةِ، إِنَّمَا الشَّدِيدُ الَّذِي يَمْلِكُ نَفْسَهُ عِنْدَ الْغَضَبِ', r: 'متفق عليه (البخاري 6114، مسلم 2609)' },
+    { t: 'يَسِّرُوا وَلَا تُعَسِّرُوا، وَبَشِّرُوا وَلَا تُنَفِّرُوا', r: 'متفق عليه (البخاري 69، مسلم 1734)' },
+    { t: 'إِنَّ اللَّهَ رَفِيقٌ يُحِبُّ الرِّفْقَ فِي الْأَمْرِ كُلِّهِ', r: 'متفق عليه (البخاري 6927، مسلم 2165)' },
+    { t: 'مَنْ لَا يَرْحَمِ النَّاسَ لَا يَرْحَمْهُ اللَّهُ', r: 'متفق عليه (البخاري 7376، مسلم 2319)' },
+    { t: 'الْمُؤْمِنُ لِلْمُؤْمِنِ كَالْبُنْيَانِ يَشُدُّ بَعْضُهُ بَعْضًا', r: 'متفق عليه (البخاري 481، مسلم 2585)' },
+    { t: 'اتَّقُوا النَّارَ وَلَوْ بِشِقِّ تَمْرَةٍ', r: 'متفق عليه (البخاري 1417، مسلم 1016)' },
+    { t: 'إِنَّ اللَّهَ لَا يَنْظُرُ إِلَى صُوَرِكُمْ وَأَمْوَالِكُمْ، وَلَكِنْ يَنْظُرُ إِلَى قُلُوبِكُمْ وَأَعْمَالِكُمْ', r: 'رواه مسلم (2564)' },
+    { t: 'الطُّهُورُ شَطْرُ الْإِيمَانِ', r: 'رواه مسلم (223)' },
+    { t: 'مِنْ حُسْنِ إِسْلَامِ الْمَرْءِ تَرْكُهُ مَا لَا يَعْنِيهِ', r: 'رواه الترمذي (2317)' },
+    { t: 'أَكْمَلُ الْمُؤْمِنِينَ إِيمَانًا أَحْسَنُهُمْ خُلُقًا', r: 'رواه أبو داود (4682) والترمذي (1162)' },
+    { t: 'الرَّاحِمُونَ يَرْحَمُهُمُ الرَّحْمَنُ، ارْحَمُوا مَنْ فِي الْأَرْضِ يَرْحَمْكُمْ مَنْ فِي السَّمَاءِ', r: 'رواه أبو داود (4941) والترمذي (1924)' },
   ],
 };
 /** Texte à afficher pour une carte (rotation hebdomadaire / quotidienne, ou doua choisie) */
@@ -992,33 +1020,59 @@ function whenLabel(noon) {
   const n = Math.round((noon - civilNoon(now(), tz())) / DAY_MS);
   return n <= 0 ? t('todayWord') : n === 1 ? t('tomorrowWord') : t('inDays', { n });
 }
+// Ordre : cartes de tous les jours (doua, hadith, sabah el-khir), puis Joumou'a, puis le reste par date
+const CARD_ORDER = ['dua', 'hadith', 'morning', 'jumuah'];
+const cardRank = sp => { const i = CARD_ORDER.indexOf(sp.key); return i < 0 ? CARD_ORDER.length : i; };
+const preview = (text, n = 6) => { const w = text.split(/\s+/); return w.slice(0, n).join(' ') + (w.length > n ? ' …' : ''); };
+
+/** Liste déroulante de tous les textes d'une catégorie : un toucher = partage direct */
+function pickPanel(sp) {
+  const panel = document.createElement('li'); panel.className = 'pick-panel'; panel.hidden = true;
+  const ul = document.createElement('ul'); ul.className = 'pick-list';
+  CARD_TEXTS[sp.key].forEach((x, i) => {
+    const item = document.createElement('li'), btn = document.createElement('button');
+    btn.type = 'button';
+    btn.innerHTML = '<span class="pt"></span><small></small>';
+    btn.querySelector('.pt').textContent = x.q ? `﴿ ${x.t} ﴾` : x.t;
+    btn.querySelector('small').textContent = x.r;
+    btn.addEventListener('click', () => shareCard({ ...sp, i }));
+    item.append(btn); ul.append(item);
+  });
+  panel.append(ul);
+  return panel;
+}
+
 function openCardsDialog() {
   const df = new Intl.DateTimeFormat(locale(), { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
-  $('#cardsList').replaceChildren(...cardSpecs().map(sp => {
+  const specs = cardSpecs().map((sp, n) => ({ sp, n })).sort((a, b) => cardRank(a.sp) - cardRank(b.sp) || a.n - b.n).map(x => x.sp);
+  const rows = [];
+  for (const sp of specs) {
     const li = document.createElement('li');
     const title = sp.key === 'imsakiya' ? `${t('imsakiya')} ${sp.mon.y}` : (CARD_AR[sp.key] || [t(sp.key)])[0];
-    const words = sp.evergreen ? cardTextOf(sp).t.split(/\s+/) : [];
     const sub = sp.key === 'imsakiya' ? gregSpan(sp.mon)
-      : sp.evergreen ? words.slice(0, 6).join(' ') + (words.length > 6 ? ' …' : '')
+      : sp.pick ? `${CARD_TEXTS[sp.key].length} ${t('textsCount')}`
+      : sp.evergreen ? preview(cardTextOf(sp).t)
       : `${df.format(sp.noon)} · ${whenLabel(sp.noon)}`;
     li.innerHTML = '<div class="cl-txt"><b></b><small></small></div><div class="cl-btns"><button class="btn small btn-primary" type="button"></button></div>';
     li.querySelector('b').textContent = title;
     li.querySelector('small').textContent = sub;
-    if (sp.pick) {                                        // doua / hadith : bouton « autre » pour changer de texte
-      const n = CARD_TEXTS[sp.key].length, other = document.createElement('button');
-      other.className = 'btn small'; other.type = 'button'; other.textContent = '⟳';
-      other.setAttribute('aria-label', t('otherText'));
-      other.addEventListener('click', () => {
-        sp.i = (sp.i + 1) % n;
-        const w = cardTextOf(sp).t.split(/\s+/);
-        li.querySelector('small').textContent = `${sp.i + 1}/${n} · ` + w.slice(0, 6).join(' ') + (w.length > 6 ? ' …' : '');
+    const b = li.querySelector('button');
+    rows.push(li);
+    if (sp.pick) {                                        // doua / hadith : ouvrir la liste pour choisir
+      const panel = pickPanel(sp);
+      b.textContent = t('chooseText') + ' ▾'; b.setAttribute('aria-expanded', 'false');
+      b.addEventListener('click', () => {
+        panel.hidden = !panel.hidden;
+        b.setAttribute('aria-expanded', String(!panel.hidden));
+        b.textContent = t('chooseText') + (panel.hidden ? ' ▾' : ' ▴');
       });
-      li.querySelector('.cl-btns').prepend(other);
+      rows.push(panel);
+      continue;
     }
-    const b = li.querySelector('button'); b.textContent = sp.key === 'imsakiya' ? t('imsakiya') : t('shareCard');
+    b.textContent = sp.key === 'imsakiya' ? t('imsakiya') : t('shareCard');
     b.addEventListener('click', () => shareCard(sp));
-    return li;
-  }));
+  }
+  $('#cardsList').replaceChildren(...rows);
   $('#cardFrom').value = S().cardFrom || '';
   $('#cardsDialog').showModal();
 }
