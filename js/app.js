@@ -1020,10 +1020,16 @@ async function fireEvent(ev) {
 
 // ================= Adhan téléphone fermé (module Android de l'application Play Store) =================
 const TWA_PKG = 'io.github.webnour2026.salat';
-const isTwa = () => localStorage.getItem('priere.twa') === '1';
+// Seule l'application Android qui contient le module (version code ≥ 2) s'ouvre avec « native=1 ».
+// L'ancienne version (sans module) ne doit jamais recevoir de demande : sinon Android ouvre le Play Store.
+const isTwa = () => localStorage.getItem('priere.native') === '1';
 const nativeActive = () => isTwa() && !!localStorage.getItem('priere.nativeAt');
 function detectTwa() {
-  if ((document.referrer || '').startsWith(`android-app://${TWA_PKG}`)) localStorage.setItem('priere.twa', '1');
+  const n = new URLSearchParams(location.search).get('native');
+  if (n === '1') localStorage.setItem('priere.native', '1');
+  if (n === '0') localStorage.removeItem('priere.native');       // retour sans module : désactivé
+  if (!isTwa()) { localStorage.removeItem('priere.nativeAt'); localStorage.removeItem('priere.nativeDirty'); }
+  localStorage.removeItem('priere.twa');                     // ancien indicateur (v2.5.0)
 }
 // même règle que le workflow Android pour nommer les sons intégrés (res/raw)
 const rawName = id => { let n = String(id).toLowerCase().replace(/[^a-z0-9_]/g, '_'); if (/^[0-9]/.test(n)) n = 'a_' + n; return n; };
@@ -1060,7 +1066,9 @@ async function syncNative({ ask = false, quiet = false } = {}) {
   localStorage.setItem('priere.nativeAt', String(Date.now()));
   localStorage.removeItem('priere.nativeDirty');
   const q = `d=${encodeURIComponent(JSON.stringify(payload))}${ask ? '&ask=1' : ''}${quiet ? '&quiet=1' : ''}`;
-  location.href = `intent://sync?${q}#Intent;scheme=salati;package=${TWA_PKG};end`;
+  // si le module est absent, Android revient ici (native=0) au lieu d'ouvrir le Play Store
+  const back = encodeURIComponent(`${location.origin}${location.pathname}?native=0#settings`);
+  location.href = `intent://sync?${q}#Intent;scheme=salati;package=${TWA_PKG};S.browser_fallback_url=${back};end`;
   renderNative();
 }
 // Android n'accepte l'ouverture du module que lors d'un geste de l'utilisateur :
@@ -1485,7 +1493,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.5.0';
+export const APP_VERSION = '2.5.1';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
