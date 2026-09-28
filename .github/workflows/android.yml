@@ -16,9 +16,9 @@ on:
   workflow_dispatch:
     inputs:
       version_name:
-        description: "Version affichée (ex. 1.9.1)"
+        description: "Version affichée (ex. 2.5.1)"
         required: true
-        default: "1.9.1"
+        default: "2.5.1"
       version_code:
         description: "Version code (entier, +1 à chaque envoi sur Google Play)"
         required: true
@@ -39,7 +39,7 @@ on:
 env:
   PACKAGE_ID: io.github.webnour2026.salat
   HOST: webnour2026.github.io
-  START_URL: /SaLaT/?source=pwa
+  START_URL: /SaLaT/?source=twa&native=1
   APP_NAME: SaLaTi
   SITE: https://webnour2026.github.io/SaLaT
 
