@@ -81,6 +81,19 @@ export function getDay(settings, dateKey) {
  * Prochaine prière obligatoire après `t`, et prière en cours.
  * Après Isha, la prochaine est Fajr du lendemain.
  */
+/** Prière dont l'heure vient de passer (depuis moins de `graceMs`), sinon null.
+ *  Le temps du Fajr s'arrête au lever du soleil. */
+export function findElapsed(today, t, graceMs) {
+  for (const p of [...PRAYERS].reverse()) {
+    const ts = today.times[p];
+    if (ts > t) continue;
+    let end = ts + graceMs;
+    if (p === 'Fajr' && today.times.Sunrise) end = Math.min(end, today.times.Sunrise);
+    return t < end ? { name: p, ts, end } : null;
+  }
+  return null;
+}
+
 export function findNext(today, tomorrow, t) {
   let current = null;
   for (const p of PRAYERS) {

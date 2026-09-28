@@ -34,7 +34,9 @@ final class Ongoing {
             if (cfg == null || !cfg.optBoolean("on", false)) { nm.cancel(NOTIF_ID); return; }
 
             long now = System.currentTimeMillis();
-            AlarmScheduler.Next next = AlarmScheduler.nextPrayer(cfg, now);
+            // juste après l'heure d'une prière : on reste dessus (temps écoulé), sinon prochaine prière
+            AlarmScheduler.Next cur = AlarmScheduler.elapsedPrayer(cfg, now);
+            AlarmScheduler.Next next = cur != null ? cur : AlarmScheduler.nextPrayer(cfg, now);
             if (next == null) { nm.cancel(NOTIF_ID); return; }
 
             if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(CHANNEL) == null) {
@@ -70,8 +72,8 @@ final class Ongoing {
                 rv.setTextViewText(id(ctx, "og_line1"), line1);
                 rv.setTextViewText(id(ctx, "og_prayer"), prayer);
                 int count = id(ctx, "og_count");
-                rv.setChronometer(count, SystemClock.elapsedRealtime() + (next.time - now), null, true);
-                rv.setChronometerCountDown(count, true);
+                rv.setChronometer(count, SystemClock.elapsedRealtime() + (next.time - now), cur != null ? "+%s" : null, true);
+                rv.setChronometerCountDown(count, cur == null);   // compte à rebours, ou temps écoulé depuis l'heure
                 b.setStyle(new Notification.DecoratedCustomViewStyle())
                  .setCustomContentView(rv)
                  .setShowWhen(false);

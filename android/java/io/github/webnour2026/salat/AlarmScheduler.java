@@ -95,6 +95,23 @@ final class AlarmScheduler {
         return null;
     }
 
+    /** Prière dont l'heure est passée depuis moins de `gr` minutes (cfg), sinon null. */
+    static Next elapsedPrayer(JSONObject cfg, long now) {
+        long grace = cfg.optInt("gr", 30) * 60000L;
+        if (grace <= 0) return null;
+        String tz = cfg.optString("tz", TimeZone.getDefault().getID());
+        Calendar d = Calendar.getInstance(TimeZone.getTimeZone(tz));
+        Calendar utc = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        utc.clear();
+        utc.set(d.get(Calendar.YEAR), d.get(Calendar.MONTH), d.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+        long[] t = dayTimes(cfg, utc);
+        for (int k = 4; k >= 0; k--) {
+            if (t[k] <= 0 || t[k] > now) continue;
+            return now < t[k] + grace ? new Next(KEYS[k], t[k], dayIndex(cfg, t[k])) : null;
+        }
+        return null;
+    }
+
     /** Indice de la ligne de cfg.times qui contient cet horaire, sinon -1. */
     private static int dayIndex(JSONObject cfg, long time) {
         try {
@@ -140,6 +157,9 @@ final class AlarmScheduler {
                 if ((adhan || at || ongoing) && t[k] > now + 1000 && t[k] < bestTime) {
                     bestTime = t[k]; bestKey = KEYS[k]; bestType = (adhan || at) ? "at" : "tick";
                 }
+                // notification permanente : fin de la période « c'est l'heure » -> prière suivante
+                long end = t[k] + cfg.optInt("gr", 30) * 60000L;
+                if (ongoing && end > now + 1000 && end < bestTime) { bestTime = end; bestKey = KEYS[k]; bestType = "tick"; }
             }
         }
         if (bestKey == null) return;

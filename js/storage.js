@@ -26,7 +26,7 @@ export const DEFAULTS = {
     perPrayer: { Fajr: 'aaqib', Dhuhr: 'aaqib', Asr: 'aaqib', Maghrib: 'aaqib', Isha: 'aaqib' },
     volume: 0.8,
     vibrate: true,
-    notifyAt: false,
+    notifyAt: true,
     notifyBefore: 0,            // 0 | 5 | 10 | 15
     short: false,               // Adhan court (20 s)
   },

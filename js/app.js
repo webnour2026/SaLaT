@@ -1,7 +1,7 @@
 import { t, setLang, locale, getLang } from './i18n.js';
 import { loadSettings, saveSettings, clearMonths, PRAYERS } from './storage.js';
 import { now, syncClock, getOffset } from './clock.js';
-import { ensureMonths, ensureMonth, getDay, findNext, dateKeyInTz, addDays, deviceTz } from './prayer-times.js';
+import { ensureMonths, ensureMonth, getDay, findNext, findElapsed, dateKeyInTz, addDays, deviceTz } from './prayer-times.js';
 import { Countdown, formatHMS } from './countdown.js';
 import { qiblaBearing, distanceToKaaba, cardinalIndex } from './qibla.js';
 import { Compass } from './compass.js';
@@ -202,9 +202,14 @@ function loadDays() {
   computeNext();
 }
 
+// Après l'heure d'une prière, on reste sur elle pendant GRACE_MIN minutes (temps écoulé « +mm:ss »),
+// puis on passe au compte à rebours de la suivante.
+const GRACE_MIN = 30;
 function computeNext() {
-  state.next = findNext(state.today, state.tomorrow, now());
-  countdown.setTarget(state.next.ts);
+  const t = now();
+  state.next = findNext(state.today, state.tomorrow, t);
+  state.elapsed = findElapsed(state.today, t, GRACE_MIN * 60000);
+  countdown.setTarget(state.elapsed ? state.elapsed.end : state.next.ts);
 }
 
 function skyFor(t) {
@@ -319,18 +324,20 @@ function renderHome() {
   let current = next.current;
   if (current === 'Fajr' && tNow >= state.today.times.Sunrise) current = null; // le temps du Fajr s'arrête au lever
 
-  $('#nextLabel').textContent = t('nextPrayer');
-  $('#nextName').textContent = t(next.name);
-  $('#nextTime').textContent = fmtTime(next.ts) + (next.day === 'tomorrow' ? ` · ${t('tomorrow')}` : '');
-  $('#nextAt').textContent = fmtTime(next.ts);
+  const el = state.elapsed;   // heure de la prière tout juste arrivée : on reste dessus un moment
+  $('#nextLabel').textContent = el ? t('prayerNow') : t('nextPrayer');
+  $('#nextName').textContent = t(el ? el.name : next.name);
+  $('#nextTime').textContent = el ? fmtTime(el.ts) : fmtTime(next.ts) + (next.day === 'tomorrow' ? ` · ${t('tomorrow')}` : '');
+  $('#nextAt').textContent = fmtTime(el ? el.ts : next.ts);
+  $('#arch').classList.toggle('elapsed', !!el);
   $('#arch').dataset.sky = skyFor(tNow);
 
   const rows = LIST_ROWS.map(k => {
     const ts = state.today.times[k];
     const li = document.createElement('li');
     const isPrayer = PRAYERS.includes(k);
-    const isNext = next.day === 'today' && next.name === k;
-    const past = ts <= tNow;
+    const isNext = el ? el.name === k : next.day === 'today' && next.name === k;
+    const past = ts <= tNow && !isNext;
     li.className = [past ? 'past' : '', isNext ? 'next' : '', !isPrayer ? 'minor' : '', current === k ? 'current' : ''].filter(Boolean).join(' ');
     li.innerHTML = `<span class="mark">${prayerIcon(k)}</span><span class="name"></span><time class="time"></time>`;
     li.querySelector('.name').textContent = t(k);
@@ -947,7 +954,11 @@ function calShift(dir) {
 const countdown = new Countdown({
   onTick(remaining, tNow) {
     $('#clock').textContent = fmtTime(tNow);
-    if (remaining != null) {
+    if (state.elapsed) {
+      const txt = '+' + formatHMS(Math.max(0, tNow - state.elapsed.ts));
+      $('#countdown').textContent = txt;
+      document.title = `${t(state.elapsed.name)} ${txt}`;
+    } else if (remaining != null) {
       $('#countdown').textContent = formatHMS(remaining);
       document.title = `${t(state.next.name)} ${formatHMS(remaining)}`;
     }
@@ -957,7 +968,7 @@ const countdown = new Countdown({
     if (tNow % 60000 < 1000) { renderHome(); renderSilent(); if (!$('#view-qibla').hidden) renderSun(); } // chaque minute
   },
   onReach() {
-    // la prière est arrivée : on passe à la suivante
+    // heure de la prière arrivée : période « +mm:ss » ; fin de cette période : prière suivante
     setTimeout(() => { computeNext(); renderHome(); }, 1100);
   },
 });
@@ -1059,7 +1070,7 @@ async function nativePayload() {
   const su = S().silentUntil === -1 ? 32503680000000 : (S().silentUntil || 0);
   return {
     v: 1, lat: +loc.lat.toFixed(5), lng: +loc.lng.toFixed(5), tz: tz(), method: S().method, school: S().school,
-    adj: S().adjust, en: !!a.enabled, na: !!a.notifyAt, nb: a.notifyBefore || 0, vib: !!a.vibrate, su, on: !!S().ongoing,
+    adj: S().adjust, en: !!a.enabled, na: !!a.notifyAt, nb: a.notifyBefore || 0, vib: !!a.vibrate, su, on: !!S().ongoing, gr: GRACE_MIN,
     hj: Array.from({ length: 31 }, (_, i) => fmtDates(Date.parse(`${addDays(today, i)}T12:00:00Z`)).hijri),
     ad: Object.fromEntries(PRAYERS.map(k => [k, a.enabled ? nativeSound(adhanFor(k)) : 'none'])),
     names: Object.fromEntries(PRAYERS.map(k => [k, t(k)])),
