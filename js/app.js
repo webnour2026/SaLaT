@@ -1079,14 +1079,19 @@ function openCardsDialog() {
 
 // Pastille sur l'écran Horaires : vendredi, ou occasion aujourd'hui / demain
 function renderOccChip() {
-  const chip = $('#occChip'); if (!chip) return;
+  const chip = $('#occChip'), row = $('#occRow'); if (!chip || !row) return;
   const today = civilNoon(now(), tz());
   const sp = cardSpecs().find(x => !x.evergreen && x.key !== 'white' && x.key !== 'imsakiya'
     && (x.key === 'jumuah' ? x.noon === today : x.noon - today <= DAY_MS));
-  state.chipSpec = sp || null;
-  chip.hidden = viewing();
-  // vendredi / occasion : partage direct ; les autres jours : douas et hadiths à envoyer
-  chip.textContent = sp ? `🌙 ${(CARD_AR[sp.key] || [t(sp.key)])[0]} · ${t('shareCard')}` : `🤲 ${t('chipDaily')}`;
+  // vendredi / occasion : cette carte ; les autres jours : doua ou hadith du jour (en alternance)
+  const daily = !sp && cardSpecs().find(x => x.key === (Math.floor(today / DAY_MS) % 2 ? 'hadith' : 'dua'));
+  state.chipSpec = sp || daily || null;
+  row.hidden = viewing() || !state.chipSpec;
+  if (!state.chipSpec) return;
+  $('#occTxt').textContent = sp
+    ? `🌙 ${(CARD_AR[sp.key] || [t(sp.key)])[0]} · ${t('shareCard')}`
+    : `${daily.key === 'dua' ? '🤲' : '📖'} ${preview(cardTextOf(daily).t, 7)}`;   // début du texte : suscite la curiosité
+  chip.setAttribute('aria-label', `${t('shareCard')} : ${$('#occTxt').textContent}`);
   chip.classList.toggle('daily', !sp);
 }
 
@@ -1625,6 +1630,7 @@ function bind() {
   on('#calMonthTable', 'click', () => openMonthTable());
   on('#calCards', 'click', openCardsDialog);
   on('#occChip', 'click', () => { const sp = state.chipSpec; if (sp) shareCard(sp); else openCardsDialog(); });
+  on('#occMore', 'click', openCardsDialog);
   on('#monthPrint', 'click', printMonthTable);
   on('#monthShare', 'click', shareMonthTable);
   on('#cardFrom', 'change', e => { S().cardFrom = e.target.value.trim().slice(0, 40); save(); });

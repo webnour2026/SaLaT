@@ -68,7 +68,10 @@
         <button class="btn small day-today" id="dayToday" type="button" hidden data-i18n="backToday">Revenir à aujourd’hui</button>
       </div>
 
-      <button class="occ-chip" id="occChip" type="button" hidden></button>
+      <div class="occ-row" id="occRow" hidden>
+        <button class="occ-chip" id="occChip" type="button"><span class="occ-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16a3 3 0 0 0-2.4 1.2l-6.7-3.4a3 3 0 0 0 0-1.6l6.7-3.4A3 3 0 1 0 15 7a3 3 0 0 0 .1.8L8.4 11.2a3 3 0 1 0 0 1.6l6.7 3.4A3 3 0 1 0 18 16Z"/></svg></span><span class="occ-txt" id="occTxt"></span></button>
+        <button class="occ-more" id="occMore" type="button" data-i18n-aria="moreCards" aria-label="Plus de cartes">☰</button>
+      </div>
       <div class="white-card" id="whiteCard" hidden>
         <p class="white-title"><span aria-hidden="true">🌕</span> <span data-i18n="whiteDays">Jours blancs</span></p>
         <p id="whiteText"></p>

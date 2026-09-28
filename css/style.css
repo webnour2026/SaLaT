@@ -519,9 +519,16 @@ main, .view { overflow-x: hidden; }
 @media (max-width: 700px) { body.fit .arch-share { top: auto; bottom: 8px; } }
 
 /* ===== Cartes à partager ===== */
-.occ-chip { display: block; width: 100%; margin-top: 8px; padding: 8px 14px; border: 0; border-radius: 99px; cursor: pointer;
-  background: linear-gradient(90deg, #0B5D4B, #12806A); color: #fff; font-weight: 600; text-align: center; }
+.occ-row { display: flex; gap: 8px; margin-top: 14px; }
+.occ-row[hidden] { display: none; }
+.occ-chip { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 9px 16px; border: 0; border-radius: 99px; cursor: pointer;
+  background: linear-gradient(90deg, #0B5D4B, #12806A); color: #fff; font-weight: 600; text-align: start; }
 .occ-chip.daily { background: linear-gradient(90deg, #0E4A5C, #1F7A8C); }
+.occ-ico { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.18); }
+.occ-ico svg { width: 17px; height: 17px; fill: #fff; }
+.occ-txt { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.occ-more { flex: none; width: 46px; border: 1px solid var(--rule); border-radius: 99px; background: var(--paper); color: var(--ink);
+  font-size: 1.15rem; cursor: pointer; }
 .cards-list { list-style: none; margin: 8px 0 0; padding: 0; }
 .cards-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--rule); }
 .cards-list .cl-txt { display: grid; min-width: 0; }
@@ -541,7 +548,8 @@ main, .view { overflow-x: hidden; }
 .month-table thead th.iftar { background: #B7791F; }
 .month-table tr.qadr { background: color-mix(in srgb, #7B5EA7 16%, transparent); font-weight: 600; }
 #monthDialog.ramadan .month-table thead th:not(.iftar) { background: #2A2350; }
-@media (max-width: 700px) { body.fit .occ-chip { flex: none; margin-top: 4px; padding: 6px 12px; font-size: .85rem; } }
+@media (max-width: 700px) { body.fit .occ-row { flex: none; margin-top: 10px; } body.fit .occ-chip { padding: 6px 12px; font-size: .85rem; }
+  body.fit .occ-ico { width: 26px; height: 26px; } }
 
 /* ===== Écran de démarrage (même fond que l'écran de lancement Android) ===== */
 .boot-splash { position: fixed; inset: 0; z-index: 50; display: grid; place-content: center; justify-items: center; gap: 14px;
