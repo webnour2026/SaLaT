@@ -77,7 +77,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         }
         if (Build.VERSION.SDK_INT < 26) {
             // avant Android 8 : son et vibration portés par la notification elle-même
-            if (sound != null) b.setSound(android.net.Uri.parse("android.resource://" + ctx.getPackageName() + "/" + AlarmScheduler.rawId(ctx, sound)));
+            if (sound != null) b.setSound(AlarmScheduler.soundUri(ctx, sound));
             if (vib && !silent) b.setVibrate(new long[]{0, 400, 200, 400, 200, 800});
             b.setPriority(Notification.PRIORITY_HIGH);
         }
