@@ -60,7 +60,10 @@ export function getDay(settings, dateKey) {
   const loc = settings.location;
   const cached = readMonth(monthKey(loc, settings.method, settings.school, dateKey.slice(0, 7)));
   let raw, source, fetchedAt = null;
-  if (cached?.days?.[dateKey]) {
+  if (Number(settings.method) === 21) {
+    // Maroc : calcul identique aux horaires officiels des Habous (l'API décale le chourouq et arrondit autrement)
+    raw = computeDay(loc, dateKey, 21, settings.school); source = 'habous';
+  } else if (cached?.days?.[dateKey]) {
     raw = cached.days[dateKey]; source = 'api'; fetchedAt = cached.fetchedAt;
   } else {
     raw = computeDay(loc, dateKey, settings.method, settings.school); source = 'local';

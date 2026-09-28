@@ -118,6 +118,8 @@ main { max-width: 560px; margin: 0 auto; padding: 0 16px; }
 }
 [dir="rtl"] .prayers li.next { box-shadow: inset -4px 0 0 var(--zellige); }
 .prayers li.next .mark, .prayers li.next .name { color: var(--zellige); font-weight: 600; }
+.prayers li.next { background: color-mix(in srgb, var(--zellige) 11%, var(--paper)); }
+.prayers li.next .time { color: var(--zellige); font-weight: 700; }
 .prayers li.current .name::after {
   content: attr(data-badge); margin-inline-start: 8px; font-size: .75rem; font-weight: 500;
   color: var(--brass); border: 1px solid currentColor; border-radius: 99px; padding: 1px 8px;

@@ -21,10 +21,11 @@ public class AlarmReceiver extends BroadcastReceiver {
             long when = intent.getLongExtra(AlarmScheduler.EXTRA_TIME, 0);
             long now = System.currentTimeMillis();
             // alarme très en retard (téléphone éteint, etc.) : on ne joue pas un Adhan périmé
-            if (cfg != null && key != null && Math.abs(now - when) < 20 * 60000L) notify(ctx, cfg, key, type);
+            if (cfg != null && key != null && !"tick".equals(type) && Math.abs(now - when) < 20 * 60000L) notify(ctx, cfg, key, type);
         } catch (Exception ignored) {
         } finally {
             AlarmScheduler.scheduleNext(ctx);
+            Ongoing.update(ctx);
         }
     }
 

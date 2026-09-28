@@ -55,6 +55,7 @@ public class SyncActivity extends Activity {
     }
 
     private void finishSync() {
+        Ongoing.update(this);
         // « Tester la notification » : vraie notification native, avec l'Adhan choisi pour Asr
         if (test && cfg != null) {
             try { AlarmReceiver.notify(this, cfg, "Asr", "at"); } catch (Exception ignored) {}

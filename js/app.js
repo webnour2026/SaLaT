@@ -355,7 +355,7 @@ function renderHome() {
   const stale = state.today.fetchedAt && Date.now() - state.today.fetchedAt > 3 * 864e5;
   st.classList.add('warn-s');
   if (state.today.source === 'local') st.textContent = t('localCalc');
-  else if (offline || stale) {
+  else if (state.today.source !== 'habous' && (offline || stale)) {
     const when = new Intl.DateTimeFormat(locale(), { dateStyle: 'medium', timeStyle: 'short', timeZone: tz() }).format(state.today.fetchedAt);
     st.textContent = `${offline ? t('offline') + ' · ' : ''}${t('lastUpdate')} ${when}`;
   } else st.textContent = '';
@@ -946,7 +946,7 @@ function calShift(dir) {
 // ================= Compte à rebours + événements =================
 const countdown = new Countdown({
   onTick(remaining, tNow) {
-    $('#clock').textContent = fmtClock(tNow);
+    $('#clock').textContent = fmtTime(tNow);
     if (remaining != null) {
       $('#countdown').textContent = formatHMS(remaining);
       document.title = `${t(state.next.name)} ${formatHMS(remaining)}`;
@@ -1059,11 +1059,12 @@ async function nativePayload() {
   const su = S().silentUntil === -1 ? 32503680000000 : (S().silentUntil || 0);
   return {
     v: 1, lat: +loc.lat.toFixed(5), lng: +loc.lng.toFixed(5), tz: tz(), method: S().method, school: S().school,
-    adj: S().adjust, en: !!a.enabled, na: !!a.notifyAt, nb: a.notifyBefore || 0, vib: !!a.vibrate, su,
+    adj: S().adjust, en: !!a.enabled, na: !!a.notifyAt, nb: a.notifyBefore || 0, vib: !!a.vibrate, su, on: !!S().ongoing,
+    hj: Array.from({ length: 31 }, (_, i) => fmtDates(Date.parse(`${addDays(today, i)}T12:00:00Z`)).hijri),
     ad: Object.fromEntries(PRAYERS.map(k => [k, a.enabled ? nativeSound(adhanFor(k)) : 'none'])),
     names: Object.fromEntries(PRAYERS.map(k => [k, t(k)])),
     txt: { itsTime: t('itsTime'), before: t('beforeMsg'), stop: t('stop'), ok: t('nativeOk'), city: loc.name || '',
-           chAdhan: t('chAdhan'), chBefore: t('chBefore'), chSilent: t('chSilent') },
+           chAdhan: t('chAdhan'), chBefore: t('chBefore'), chSilent: t('chSilent'), chOngoing: t('chOngoing') },
     times,
   };
 }
@@ -1087,6 +1088,7 @@ function requestNativeSync() {
 }
 function nativeNeedsSync() {
   if (!nativeActive()) return false;
+  if (localStorage.getItem('priere.nativeV') !== '2') { localStorage.setItem('priere.nativeV', '2'); localStorage.setItem('priere.nativeDirty', '1'); }
   const at = +localStorage.getItem('priere.nativeAt') || 0;
   return localStorage.getItem('priere.nativeDirty') === '1' || Date.now() - at > 5 * 864e5;
 }
@@ -1285,6 +1287,7 @@ function renderSettings() {
   document.querySelectorAll('input[name="theme"]').forEach(r => { r.checked = r.value === s.theme; });
   $('#sHijri').value = s.hijriOffset > 0 ? `+${s.hijriOffset}` : String(s.hijriOffset);
   $('#sTz').value = s.tzMode || 'auto';
+  $('#sOngoing').checked = !!s.ongoing;
   $('#sDeclAuto').checked = s.declAuto;
   $('#sDecl').disabled = s.declAuto;
   $('#sDecl').value = s.declAuto ? fmtDeg(currentDeclination()).replace(',', '.') : s.declination;
@@ -1408,6 +1411,7 @@ function bindSettings() {
   });
   on('#sLang', 'change', e => { S().lang = e.target.value; save(); applyLang(); renderAll(); renderSettings(); renderQibla(); });
   on('#sTheme', 'change', e => { S().theme = e.target.value; save(); applyTheme(); });
+  on('#sOngoing', 'change', e => { S().ongoing = e.target.checked; save(); });   // resynchro via #view-settings
   on('#sTz', 'change', e => {
     S().tzMode = e.target.value; save();
     state.viewKey = null; loadDays(); renderAll(); refresh();   // le module Android est resynchronisé par le « change » de #view-settings

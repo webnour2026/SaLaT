@@ -9,5 +9,6 @@ public class BootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context ctx, Intent intent) {
         AlarmScheduler.scheduleNext(ctx);
+        Ongoing.update(ctx);
     }
 }

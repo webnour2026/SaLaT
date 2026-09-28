@@ -72,6 +72,42 @@ final class AlarmScheduler {
         return t;
     }
 
+    /** Prochaine prière après `now` : clé, heure (ms) et indice du jour dans cfg.times (-1 si calcul local). */
+    static final class Next {
+        final String key; final long time; final int day;
+        Next(String key, long time, int day) { this.key = key; this.time = time; this.day = day; }
+    }
+
+    static Next nextPrayer(JSONObject cfg, long now) {
+        String tz = cfg.optString("tz", TimeZone.getDefault().getID());
+        Calendar day = Calendar.getInstance(TimeZone.getTimeZone(tz));
+        for (int i = 0; i < 3; i++) {
+            Calendar d = (Calendar) day.clone();
+            d.add(Calendar.DAY_OF_MONTH, i);
+            Calendar utc = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            utc.clear();
+            utc.set(d.get(Calendar.YEAR), d.get(Calendar.MONTH), d.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+            long[] t = dayTimes(cfg, utc);
+            for (int k = 0; k < 5; k++) {
+                if (t[k] > now + 1000) return new Next(KEYS[k], t[k], dayIndex(cfg, t[k]));
+            }
+        }
+        return null;
+    }
+
+    /** Indice de la ligne de cfg.times qui contient cet horaire, sinon -1. */
+    private static int dayIndex(JSONObject cfg, long time) {
+        try {
+            JSONArray days = cfg.optJSONArray("times");
+            long min = time / 60000L;
+            if (days != null) for (int i = 0; i < days.length(); i++) {
+                JSONArray row = days.getJSONArray(i);
+                for (int k = 0; k < row.length(); k++) if (row.getLong(k) == min) return i;
+            }
+        } catch (Exception ignored) {}
+        return -1;
+    }
+
     /** Programme la prochaine alarme (ou annule s'il n'y a rien à faire). */
     static void scheduleNext(Context ctx) {
         AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
@@ -81,7 +117,8 @@ final class AlarmScheduler {
         if (cfg == null) return;
         boolean adhan = cfg.optBoolean("en", true), at = cfg.optBoolean("na", false);
         int before = cfg.optInt("nb", 0);
-        if (!adhan && !at && before <= 0) return;
+        boolean ongoing = cfg.optBoolean("on", false);   // notification permanente : à rafraîchir à chaque prière
+        if (!adhan && !at && before <= 0 && !ongoing) return;
 
         long now = System.currentTimeMillis();
         long bestTime = Long.MAX_VALUE; String bestKey = null, bestType = null;
@@ -100,7 +137,9 @@ final class AlarmScheduler {
                     long b = t[k] - before * 60000L;
                     if (b > now + 1000 && b < bestTime) { bestTime = b; bestKey = KEYS[k]; bestType = "before"; }
                 }
-                if ((adhan || at) && t[k] > now + 1000 && t[k] < bestTime) { bestTime = t[k]; bestKey = KEYS[k]; bestType = "at"; }
+                if ((adhan || at || ongoing) && t[k] > now + 1000 && t[k] < bestTime) {
+                    bestTime = t[k]; bestKey = KEYS[k]; bestType = (adhan || at) ? "at" : "tick";
+                }
             }
         }
         if (bestKey == null) return;
