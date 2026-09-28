@@ -330,6 +330,7 @@ function renderHome() {
   $('#nextTime').textContent = el ? fmtTime(el.ts) : fmtTime(next.ts) + (next.day === 'tomorrow' ? ` · ${t('tomorrow')}` : '');
   $('#nextAt').textContent = fmtTime(el ? el.ts : next.ts);
   $('#arch').classList.toggle('elapsed', !!el);
+  $('#archIn').textContent = t(el ? 'since' : 'in');   // « منذ » pendant la prière, « بعد » avant
   $('#arch').dataset.sky = skyFor(tNow);
 
   const rows = LIST_ROWS.map(k => {
@@ -955,7 +956,7 @@ const countdown = new Countdown({
   onTick(remaining, tNow) {
     $('#clock').textContent = fmtTime(tNow);
     if (state.elapsed) {
-      const txt = '+' + formatHMS(Math.max(0, tNow - state.elapsed.ts));
+      const txt = '+' + formatHMS(Math.max(0, tNow - state.elapsed.ts)).replace(/^00:/, '');   // +19:05
       $('#countdown').textContent = txt;
       document.title = `${t(state.elapsed.name)} ${txt}`;
     } else if (remaining != null) {
