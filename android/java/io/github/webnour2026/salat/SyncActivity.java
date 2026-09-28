@@ -19,7 +19,7 @@ import org.json.JSONObject;
  * Activité invisible : elle se ferme aussitôt et on revient dans SaLaTi.
  */
 public class SyncActivity extends Activity {
-    private boolean ask, quiet;
+    private boolean ask, quiet, test;
     private JSONObject cfg;
 
     @Override
@@ -30,6 +30,7 @@ public class SyncActivity extends Activity {
             String d = data != null ? data.getQueryParameter("d") : null;
             ask = data != null && "1".equals(data.getQueryParameter("ask"));
             quiet = data != null && "1".equals(data.getQueryParameter("quiet"));
+            test = data != null && "1".equals(data.getQueryParameter("test"));
             if (d != null && d.length() < 60000) {
                 cfg = new JSONObject(d);
                 AlarmScheduler.save(this, cfg);
@@ -54,6 +55,10 @@ public class SyncActivity extends Activity {
     }
 
     private void finishSync() {
+        // « Tester la notification » : vraie notification native, avec l'Adhan choisi pour Asr
+        if (test && cfg != null) {
+            try { AlarmReceiver.notify(this, cfg, "Asr", "at"); } catch (Exception ignored) {}
+        }
         if (cfg != null && !quiet) {
             Toast.makeText(this, AlarmScheduler.text(cfg, "ok", "Adhan en arrière-plan activé ✓"), Toast.LENGTH_LONG).show();
         }

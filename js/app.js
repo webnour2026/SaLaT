@@ -39,7 +39,14 @@ function effectiveTz(name) {
   if ((name === 'Africa/Casablanca' || name === 'Africa/El_Aaiun') && Date.now() >= MOROCCO_GMT_FROM) return 'UTC';
   return name;
 }
-const tz = () => effectiveTz(S().location?.tz || deviceTz());
+// Fuseau choisi à la main (décalage fixe) : prioritaire sur le fuseau de la ville.
+// Utile si la base des fuseaux du téléphone n'est pas à jour (changement d'heure légale récent).
+function fixedTz(mode) {
+  const h = Number(mode);
+  if (mode == null || mode === 'auto' || !Number.isFinite(h)) return null;
+  return h === 0 ? 'UTC' : `Etc/GMT${h > 0 ? '-' : '+'}${Math.abs(h)}`;   // Etc/GMT-1 = UTC+1
+}
+const tz = () => fixedTz(S().tzMode) || effectiveTz(S().location?.tz || deviceTz());
 
 // ================= Formatage =================
 const fmtTime = ts => ts == null ? '--:--'
@@ -349,7 +356,7 @@ function renderHome() {
   st.classList.add('warn-s');
   if (state.today.source === 'local') st.textContent = t('localCalc');
   else if (offline || stale) {
-    const when = new Intl.DateTimeFormat(locale(), { dateStyle: 'medium', timeStyle: 'short' }).format(state.today.fetchedAt);
+    const when = new Intl.DateTimeFormat(locale(), { dateStyle: 'medium', timeStyle: 'short', timeZone: tz() }).format(state.today.fetchedAt);
     st.textContent = `${offline ? t('offline') + ' · ' : ''}${t('lastUpdate')} ${when}`;
   } else st.textContent = '';
 }
@@ -1060,12 +1067,12 @@ async function nativePayload() {
     times,
   };
 }
-async function syncNative({ ask = false, quiet = false } = {}) {
+async function syncNative({ ask = false, quiet = false, test = false } = {}) {
   if (!isTwa()) return;
   const payload = await nativePayload(); if (!payload) return;
   localStorage.setItem('priere.nativeAt', String(Date.now()));
   localStorage.removeItem('priere.nativeDirty');
-  const q = `d=${encodeURIComponent(JSON.stringify(payload))}${ask ? '&ask=1' : ''}${quiet ? '&quiet=1' : ''}`;
+  const q = `d=${encodeURIComponent(JSON.stringify(payload))}${ask ? '&ask=1' : ''}${quiet ? '&quiet=1' : ''}${test ? '&test=1' : ''}`;
   // si le module est absent, Android revient ici (native=0) au lieu d'ouvrir le Play Store
   const back = encodeURIComponent(`${location.origin}${location.pathname}?native=0#settings`);
   location.href = `intent://sync?${q}#Intent;scheme=salati;package=${TWA_PKG};S.browser_fallback_url=${back};end`;
@@ -1090,7 +1097,7 @@ function renderNative() {
   if (!isTwa()) return;
   const at = +localStorage.getItem('priere.nativeAt') || 0;
   $('#nativeStatus').textContent = at
-    ? t('nativeOn', { d: new Intl.DateTimeFormat(locale(), { dateStyle: 'medium', timeStyle: 'short' }).format(at) })
+    ? t('nativeOn', { d: new Intl.DateTimeFormat(locale(), { dateStyle: 'medium', timeStyle: 'short', timeZone: tz() }).format(at) })
     : t('nativeOff');
   $('#nativeStatus').className = 'native-status ' + (at ? 'ok' : '');
   $('#nativeSync').textContent = at ? t('nativeBtnUpdate') : t('nativeBtnOn');
@@ -1277,6 +1284,7 @@ function renderSettings() {
   document.querySelectorAll('input[name="lang"]').forEach(r => { r.checked = r.value === s.lang; });
   document.querySelectorAll('input[name="theme"]').forEach(r => { r.checked = r.value === s.theme; });
   $('#sHijri').value = s.hijriOffset > 0 ? `+${s.hijriOffset}` : String(s.hijriOffset);
+  $('#sTz').value = s.tzMode || 'auto';
   $('#sDeclAuto').checked = s.declAuto;
   $('#sDecl').disabled = s.declAuto;
   $('#sDecl').value = s.declAuto ? fmtDeg(currentDeclination()).replace(',', '.') : s.declination;
@@ -1395,10 +1403,15 @@ function bindSettings() {
     if (S().adhan.notifyBefore > 0) await ensureNotifPermission(); else updateNotifWarn();
   });
   on('#testNotif', 'click', async () => {
+    if (nativeActive()) { syncNative({ quiet: true, test: true }); return; }   // test via le module Android
     if (await ensureNotifPermission()) notify(`${t('itsTime')} ${t('Asr')}`, fmtTime(now()), { tag: 'test', vibrateOn: S().adhan.vibrate });
   });
   on('#sLang', 'change', e => { S().lang = e.target.value; save(); applyLang(); renderAll(); renderSettings(); renderQibla(); });
   on('#sTheme', 'change', e => { S().theme = e.target.value; save(); applyTheme(); });
+  on('#sTz', 'change', e => {
+    S().tzMode = e.target.value; save();
+    state.viewKey = null; loadDays(); renderAll(); refresh();   // le module Android est resynchronisé par le « change » de #view-settings
+  });
   on('#sHijri', 'change', e => { S().hijriOffset = Number(e.target.value); save(); renderHeader(); });
   on('#sDecl', 'change', e => { S().declination = Math.max(-30, Math.min(30, Number(String(e.target.value).replace(',', '.')) || 0)); save(); state.decl = currentDeclination(); });
   on('#sDeclAuto', 'change', e => { S().declAuto = e.target.checked; save(); state.decl = currentDeclination(); renderSettings(); });
