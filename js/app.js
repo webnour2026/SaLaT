@@ -466,6 +466,7 @@ function renderCalendar() {
       const oneMonth = new Set(list.map(x => mf.format(x.noon))).size === 1;
       li.firstChild.textContent = `${name} — ${and.format(list.map(x => String(x.h.d)))} ${t('hijriMonths')[mon.m - 1]}`;
       const days = list.map(x => `${wdl.format(x.noon)} ${new Date(x.noon).getUTCDate()}${oneMonth ? '' : ' ' + mf.format(x.noon)}`);
+      if (getLang() === 'ar' && days[0].startsWith('ال')) days[0] = 'ل' + days[0].slice(1);   // الموافق للخميس
       li.lastChild.textContent = `${t('matching')} ${and.format(days)}${oneMonth ? ' ' + mf.format(list[0].noon) : ''}`;
     } else {
       li.firstChild.textContent = `${name} — ${d1.h.d} ${t('hijriMonths')[mon.m - 1]}`;
@@ -1060,7 +1061,9 @@ function renderCards() {
   const rows = [];
   for (const sp of specs) {
     const li = document.createElement('li');
-    const title = sp.key === 'imsakiya' ? `${t('imsakiya')} ${sp.mon.y}` : (CARD_AR[sp.key] || [t(sp.key)])[0];
+    const title = sp.key === 'imsakiya' ? `${t('imsakiya')} ${sp.mon.y}`
+      : getLang() === 'ar' ? (CARD_AR[sp.key] || [t(sp.key)])[0]
+      : t({ jumuah: 'cardJumuah', white: 'whiteDays' }[sp.key] || sp.key);
     const sub = sp.key === 'imsakiya' ? gregSpan(sp.mon)
       : sp.pick ? `${CARD_TEXTS[sp.key].length} ${t('textsCount')}`
       : sp.evergreen ? preview(cardTextOf(sp).t)
@@ -1627,6 +1630,7 @@ function bind() {
     if (!$('#view-settings').hidden) renderSettings();
     if (!$('#view-qibla').hidden) renderQibla();
     if (!$('#view-cards').hidden) renderCards();
+    if (!$('#view-calendar').hidden) renderCalendar();
   });
   on('#gpsBtn', 'click', useGps);
   on('#citySearch', 'input', onSearch);
