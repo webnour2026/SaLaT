@@ -30,6 +30,9 @@
     </button>
     <div class="top-right">
       <time class="clock" id="clock" aria-live="off">--:--:--</time>
+      <button class="lang-btn gear-btn" id="settingsBtn" type="button" data-i18n-aria="settings" aria-label="Réglages">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.14 12.94a7.07 7.07 0 0 0 .05-.94 7.07 7.07 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7 7 0 0 0-1.62-.94l-.36-2.54A.5.5 0 0 0 13.9 2h-3.84a.5.5 0 0 0-.49.42l-.36 2.54a7 7 0 0 0-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.67 8.48a.5.5 0 0 0 .12.64l2.03 1.58a7.07 7.07 0 0 0-.05.94c0 .32.02.63.05.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96a7 7 0 0 0 1.62.94l.36 2.54a.5.5 0 0 0 .49.42h3.84a.5.5 0 0 0 .49-.42l.36-2.54a7 7 0 0 0 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Z"/></svg>
+      </button>
       <button class="lang-btn silent-btn" id="silentBtn" type="button" aria-haspopup="dialog" data-i18n-title="silentMode">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path id="bellPath" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3a1.5 1.5 0 0 0-3 0v1.16A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/><path class="slash" d="M3.3 2.3 21.7 20.7l-1.4 1.4L1.9 3.7Z"/></svg>
       </button>
@@ -167,6 +170,14 @@
     </section>
 
     <!-- ============ RÉGLAGES ============ -->
+    <section class="view" id="view-cards" hidden aria-labelledby="cardsTitle">
+      <h1 class="view-title" id="cardsTitle" data-i18n="cards">Cartes à partager</h1>
+      <p class="note" data-i18n="cardsHelp"></p>
+      <label class="field"><span data-i18n="cardFrom">Votre nom sur la carte (facultatif)</span>
+        <input id="cardFrom" type="text" maxlength="40" autocomplete="name" data-i18n-ph="cardFromPh"></label>
+      <ul class="cards-list" id="cardsList"></ul>
+    </section>
+
     <section class="view" id="view-settings" hidden aria-labelledby="settingsTitle">
       <h1 class="view-title" id="settingsTitle" data-i18n="settings">Réglages</h1>
 
@@ -295,9 +306,9 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h2v2h6V2h2v2h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3V2Zm12 8H5v9h14v-9ZM15.5 11a3.5 3.5 0 1 0 2.1 6.3A3 3 0 1 1 17.6 12a3.5 3.5 0 0 0-2.1-1Z"/></svg>
       <span data-i18n="calendar">Calendrier</span>
     </button>
-    <button type="button" data-goto="settings">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h9v2H4V6Zm13 0h3v2h-3V6Zm-4-2h2v6h-2V4ZM4 16h3v2H4v-2Zm7 0h9v2h-9v-2Zm-4-2h2v6H7v-6Z"/></svg>
-      <span data-i18n="settings">Réglages</span>
+    <button type="button" data-goto="cards">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16a3 3 0 0 0-2.4 1.2l-6.7-3.4a3 3 0 0 0 0-1.6l6.7-3.4A3 3 0 1 0 15 7a3 3 0 0 0 .1.8L8.4 11.2a3 3 0 1 0 0 1.6l6.7 3.4A3 3 0 1 0 18 16Z"/></svg>
+      <span data-i18n="cardsTab">Cartes</span>
     </button>
   </nav>
 
@@ -333,16 +344,6 @@
   </dialog>
 
   <!-- Cartes à partager -->
-  <dialog id="cardsDialog" class="sheet" aria-labelledby="cardsTitle">
-    <div class="sheet-head">
-      <h2 id="cardsTitle" data-i18n="cards">Cartes à partager</h2>
-      <form method="dialog"><button class="icon-btn" value="close" aria-label="Fermer">✕</button></form>
-    </div>
-    <p class="note" data-i18n="cardsHelp"></p>
-    <label class="field"><span data-i18n="cardFrom">Votre nom sur la carte (facultatif)</span>
-      <input id="cardFrom" type="text" maxlength="40" autocomplete="name" data-i18n-ph="cardFromPh"></label>
-    <ul class="cards-list" id="cardsList"></ul>
-  </dialog>
 
   <!-- Calibration -->
   <dialog id="calDialog" class="sheet center" aria-labelledby="calTitle">

@@ -87,7 +87,8 @@ function go(view) {
   document.querySelectorAll('.tabbar button').forEach(b => {
     if (b.dataset.goto === view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
-  document.body.classList.toggle('fit', view !== 'settings');   // écran ajusté, sans défilement
+  document.body.classList.toggle('fit', view !== 'settings' && view !== 'cards');   // écran ajusté, sans défilement
+  $('#settingsBtn')?.classList.toggle('active', view === 'settings');
   requestAnimationFrame(() => document.querySelectorAll('main, .view').forEach(el => { el.scrollLeft = 0; }));
   if (view !== 'qibla') compass.stop();
   if (view === 'qibla') {
@@ -97,6 +98,7 @@ function go(view) {
     compass.start({ ask: !Compass.needsPermission() });
   }
   if (view === 'settings') renderSettings();
+  if (view === 'cards') renderCards();
   if (view === 'calendar') { state.calAnchor = null; renderCalendar(); }
   window.scrollTo({ top: 0 });
   history.replaceState(null, '', `#${view}`);
@@ -452,13 +454,23 @@ function renderCalendar() {
   const df = new Intl.DateTimeFormat(locale(), { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
   const events = mon.days.filter(d => d.occasion).map(d => [t(d.occasion.key), d]);
   const whites = mon.days.filter(d => d.white);
-  if (whites.length) events.push([t('whiteDays'), whites[0], whites.at(-1)]);
+  if (whites.length) events.push([t('whiteDays'), whites[0], null, whites]);
   events.sort((x, y) => x[1].noon - y[1].noon);
-  $('#calEvents').replaceChildren(...events.map(([name, d1, d2]) => {
+  const and = new Intl.ListFormat(locale(), { type: 'conjunction' });
+  const wdl = new Intl.DateTimeFormat(locale(), { weekday: 'long', timeZone: 'UTC' });
+  const mf = new Intl.DateTimeFormat(locale(), { month: 'long', timeZone: 'UTC' });
+  $('#calEvents').replaceChildren(...events.map(([name, d1, , list]) => {
     const li = document.createElement('li');
     li.innerHTML = '<span></span><span></span>';
-    li.firstChild.textContent = `${name} — ${d2 ? `${d1.h.d}–${d2.h.d}` : d1.h.d} ${t('hijriMonths')[mon.m - 1]}`;
-    li.lastChild.textContent = d2 ? `${df.format(d1.noon)} → ${df.format(d2.noon)}` : df.format(d1.noon);
+    if (list) {   // jours blancs : « 13، 14 و15 ربيع الآخر — الموافق للخميس 24 والجمعة 25 والسبت 26 شتنبر »
+      const oneMonth = new Set(list.map(x => mf.format(x.noon))).size === 1;
+      li.firstChild.textContent = `${name} — ${and.format(list.map(x => String(x.h.d)))} ${t('hijriMonths')[mon.m - 1]}`;
+      const days = list.map(x => `${wdl.format(x.noon)} ${new Date(x.noon).getUTCDate()}${oneMonth ? '' : ' ' + mf.format(x.noon)}`);
+      li.lastChild.textContent = `${t('matching')} ${and.format(days)}${oneMonth ? ' ' + mf.format(list[0].noon) : ''}`;
+    } else {
+      li.firstChild.textContent = `${name} — ${d1.h.d} ${t('hijriMonths')[mon.m - 1]}`;
+      li.lastChild.textContent = df.format(d1.noon);
+    }
     return li;
   }));
 }
@@ -965,7 +977,7 @@ async function buildGreetingCard(spec) {
   const zoneTop = 90, zoneBottom = H - 270;            // entre le haut et la dédicace
   const dy = Math.max(zoneTop - top, Math.round((zoneTop + zoneBottom) / 2 - (top + y - 30) / 2));
   base.drawImage(layer, 0, dy);
-  g = base; g.textAlign = 'center';
+  g = base; g.textAlign = 'center'; g.direction = 'rtl';   // le canevas hors écran est en LTR par défaut : pied de carte en arabe
   // dédicace (facultative) : « من: … »
   const from = (S().cardFrom || '').trim();
   if (from) {
@@ -999,7 +1011,7 @@ function cardText(spec) {
 }
 
 async function shareCard(spec) {
-  if (spec.key === 'imsakiya') { $('#cardsDialog')?.open && $('#cardsDialog').close(); return openMonthTable(spec.mon, 'ramadan'); }
+  if (spec.key === 'imsakiya') { return openMonthTable(spec.mon, 'ramadan'); }
   const text = cardText(spec);
   try {
     const cv = await buildGreetingCard(spec);
@@ -1042,7 +1054,7 @@ function pickPanel(sp) {
   return panel;
 }
 
-function openCardsDialog() {
+function renderCards() {
   const df = new Intl.DateTimeFormat(locale(), { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
   const specs = cardSpecs().map((sp, n) => ({ sp, n })).sort((a, b) => cardRank(a.sp) - cardRank(b.sp) || a.n - b.n).map(x => x.sp);
   const rows = [];
@@ -1074,7 +1086,6 @@ function openCardsDialog() {
   }
   $('#cardsList').replaceChildren(...rows);
   $('#cardFrom').value = S().cardFrom || '';
-  $('#cardsDialog').showModal();
 }
 
 // Pastille sur l'écran Horaires : vendredi, ou occasion aujourd'hui / demain
@@ -1615,6 +1626,7 @@ function bind() {
     save(); applyLang(); renderAll();
     if (!$('#view-settings').hidden) renderSettings();
     if (!$('#view-qibla').hidden) renderQibla();
+    if (!$('#view-cards').hidden) renderCards();
   });
   on('#gpsBtn', 'click', useGps);
   on('#citySearch', 'input', onSearch);
@@ -1628,9 +1640,10 @@ function bind() {
   on('#calNext', 'click', () => calShift(1));
   on('#calToday', 'click', () => { state.calAnchor = null; renderCalendar(); });
   on('#calMonthTable', 'click', () => openMonthTable());
-  on('#calCards', 'click', openCardsDialog);
-  on('#occChip', 'click', () => { const sp = state.chipSpec; if (sp) shareCard(sp); else openCardsDialog(); });
-  on('#occMore', 'click', openCardsDialog);
+  on('#calCards', 'click', () => go('cards'));
+  on('#occChip', 'click', () => { const sp = state.chipSpec; if (sp) shareCard(sp); else go('cards'); });
+  on('#occMore', 'click', () => go('cards'));
+  on('#settingsBtn', 'click', () => go('settings'));
   on('#monthPrint', 'click', printMonthTable);
   on('#monthShare', 'click', shareMonthTable);
   on('#cardFrom', 'change', e => { S().cardFrom = e.target.value.trim().slice(0, 40); save(); });
@@ -1723,7 +1736,7 @@ function init() {
   countdown.start();
 
   const view = (location.hash || '#home').slice(1);
-  go(['home', 'qibla', 'calendar', 'settings'].includes(view) ? view : 'home');
+  go(['home', 'qibla', 'calendar', 'cards', 'settings'].includes(view) ? view : 'home');
   renderNoLoc();
 
   if (!S().location) {

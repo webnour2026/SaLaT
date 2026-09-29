@@ -284,6 +284,8 @@ main { max-width: 560px; margin: 0 auto; padding: 0 16px; }
 /* ============ Qibla (disposition type boussole épurée) ============ */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .top-right { display: flex; align-items: center; gap: 10px; }
+#settingsBtn svg { width: 20px; height: 20px; fill: currentColor; }
+#settingsBtn.active { border-color: var(--zellige); color: var(--zellige); }
 .lang-btn { min-width: 40px; min-height: 40px; border-radius: 99px; border: 1.5px solid var(--rule); background: var(--paper); font-weight: 600; cursor: pointer; }
 .qibla-view { text-align: center; padding-top: 4px; }
 .kaaba-top { width: 64px; height: 64px; margin: 6px auto 0; }
