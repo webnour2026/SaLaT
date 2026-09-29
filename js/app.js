@@ -915,9 +915,41 @@ function drawStars(g, W, color) {                       // motif marocain discre
   }
   g.restore();
 }
-function drawMosque(g, W, H, color) {                  // silhouette (minaret + salle) en bas de carte
-  const p = new Path2D('M0 80V70h200v10ZM30 70V52h78v18ZM26 53h86l-7-7H33ZM112 70V14h20v56ZM114 14h16v-3h-2v-2h-3v2h-2v-2h-3v2h-2v-2h-3v2h-1ZM118 9V2h8v7ZM121 2V-4h2v6Z');
-  g.save(); g.globalAlpha = .10; g.fillStyle = color; g.translate(W / 2 - 540, H - 380); g.scale(5.4, 5.4); g.fill(p); g.restore();
+// Fonds marocains des cartes (silhouettes neutres, dessinées ici : aucune image externe).
+// Unité : boîte 200 × 80, agrandie ×5,4 en bas de carte.
+const CARD_SCENES = {
+  koutoubia: ['M0 80V70h200v10ZM30 70V52h78v18ZM26 53h86l-7-7H33ZM112 70V14h20v56ZM114 14h16v-3h-2v-2h-3v2h-2v-2h-3v2h-2v-2h-3v2h-1ZM118 9V2h8v7ZM121 2V-4h2v6Z'],
+  hassan2: [   // grande salle, minaret élancé à lanternon, flèche
+    'M0 80V64h200v16ZM8 64V56h124v8ZM20 56V51h100v5ZM140 64V2h15v62ZM143 2V-8h9v10ZM141.5 -8h12l-6-4ZM146.9 -12V-21h1.2v9ZM145.3 -22h4.4v1h-4.4Z',
+  ],
+  kasbah: [    // mosquée rurale en pisé, minaret carré crénelé, palmiers, montagnes
+    'M0 80V66h200v14ZM18 66V50h150v16ZM40 50V12h22v38ZM40 12V7h4v5ZM46 12V7h4v5ZM52 12V7h4v5ZM58 12V7h4v5ZM47 7V1h8v6ZM150 50V36h14v14ZM150 36V33h3v3ZM155.5 36V33h3v3ZM161 36V33h3v3Z',
+    null,
+    'M0 66L28 42L52 56L84 30L118 58L150 40L200 60V66Z',          // montagnes (plus pâles)
+  ],
+};
+const SCENE_KEYS = [...Object.keys(CARD_SCENES), 'zellige'];
+function drawMosque(g, W, H, color, scene = 'koutoubia') {  // silhouette en bas de carte
+  if (scene === 'zellige') return;
+  const [main, , far] = CARD_SCENES[scene];
+  g.save(); g.fillStyle = color; g.translate(W / 2 - 540, H - 420); g.scale(5.4, 5.4);
+  if (far) { g.globalAlpha = .06; g.fill(new Path2D(far)); }
+  g.globalAlpha = .13; g.fill(new Path2D(main));
+  g.restore();
+}
+/** Zellige de Fès : étoiles à 8 branches sur toute la carte (fond sans silhouette) */
+function drawZellige(g, W, H, color) {
+  g.save(); g.strokeStyle = color; g.lineWidth = 2;
+  const s = 108;
+  for (let y = 0; y < H + s; y += s) for (let x = 0; x < W + s; x += s) {
+    g.save(); g.translate(x, y);
+    g.globalAlpha = .10;
+    for (const r of [0, Math.PI / 4]) { g.save(); g.rotate(r); g.strokeRect(-30, -30, 60, 60); g.restore(); }
+    g.globalAlpha = .06; g.beginPath(); g.arc(0, 0, 13, 0, Math.PI * 2); g.stroke();
+    g.globalAlpha = .05; g.beginPath(); g.moveTo(30, 0); g.lineTo(s - 30, 0); g.moveTo(0, 30); g.lineTo(0, s - 30); g.stroke();
+    g.restore();
+  }
+  g.restore();
 }
 
 async function buildGreetingCard(spec) {
@@ -931,13 +963,15 @@ async function buildGreetingCard(spec) {
   const kufi = px => `700 ${px}px "Reem Kufi", "IBM Plex Sans Arabic", sans-serif`;
   const grad = g.createLinearGradient(0, 0, 0, H); grad.addColorStop(0, c1); grad.addColorStop(1, c2);
   g.fillStyle = grad; g.fillRect(0, 0, W, H);
-  drawStars(g, W, accent);
+  // fond : Koutoubia, Hassan II, mosquée rurale ou zellige — change à chaque carte, le contenu ne bouge pas
+  const scene = spec.scene || SCENE_KEYS[Math.floor(Math.random() * SCENE_KEYS.length)];
+  if (scene === 'zellige') drawZellige(g, W, H, accent); else drawStars(g, W, accent);
   if (themeOf(key) === 'night') {                        // lune
     g.fillStyle = accent; g.globalAlpha = .9; g.beginPath(); g.arc(W - 170, 170, 70, 0, 7); g.fill();
     if (key !== 'white') { g.globalAlpha = 1; g.fillStyle = c1; g.beginPath(); g.arc(W - 140, 150, 62, 0, 7); g.fill(); }
     g.globalAlpha = 1;
   }
-  drawMosque(g, W, H, '#fff');
+  drawMosque(g, W, H, '#fff', scene);
   // le contenu est dessiné sur un calque, puis centré verticalement au-dessus de la dédicace
   const base = g, layer = document.createElement('canvas'); layer.width = W; layer.height = H;
   g = layer.getContext('2d');
@@ -1042,7 +1076,9 @@ const preview = (text, n = 6) => { const w = text.split(/\s+/); return w.slice(0
 function pickPanel(sp) {
   const panel = document.createElement('li'); panel.className = 'pick-panel'; panel.hidden = true;
   const ul = document.createElement('ul'); ul.className = 'pick-list';
-  CARD_TEXTS[sp.key].forEach((x, i) => {
+  const order = CARD_TEXTS[sp.key].map((_, i) => i);
+  for (let k = order.length - 1; k > 0; k--) { const r = Math.floor(Math.random() * (k + 1)); [order[k], order[r]] = [order[r], order[k]]; }
+  order.forEach(i => { const x = CARD_TEXTS[sp.key][i];   // ordre différent à chaque ouverture
     const item = document.createElement('li'), btn = document.createElement('button');
     btn.type = 'button';
     btn.innerHTML = '<span class="pt"></span><small></small>';
