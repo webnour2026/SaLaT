@@ -366,6 +366,16 @@
   </div>
 
   <!-- Mode silencieux -->
+  <dialog id="notifDialog" class="sheet" aria-labelledby="notifTitle">
+    <div class="sheet-head"><h2 id="notifTitle" data-i18n="notifAskTitle">Recevoir l’Adhan</h2></div>
+    <p class="notif-ask-ico" aria-hidden="true">🔔</p>
+    <p class="note" data-i18n="notifAskText"></p>
+    <div class="silent-opts">
+      <button class="btn wide btn-primary" type="button" id="notifYes" data-i18n="notifAskYes">Autoriser</button>
+      <button class="btn wide" type="button" id="notifLater" data-i18n="notifAskLater">Plus tard</button>
+    </div>
+  </dialog>
+
   <dialog id="silentDialog" class="sheet" aria-labelledby="silentTitle">
     <form method="dialog" class="sheet-head">
       <h2 id="silentTitle" data-i18n="silentMode">Mode silencieux</h2>

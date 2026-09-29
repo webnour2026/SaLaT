@@ -1606,6 +1606,8 @@ function bindSettings() {
   on('#sVibrate', 'change', e => { S().adhan.vibrate = e.target.checked; save(); if (e.target.checked) vibrate(80); });
   on('#sAdhanShort', 'change', e => { S().adhan.short = e.target.checked; save(); });
   on('#nativeSync', 'click', () => syncNative({ ask: true }));
+  on('#notifYes', 'click', () => { localStorage.setItem('priere.notifAsked', '1'); $('#notifDialog').close(); syncNative({ ask: true }); });
+  on('#notifLater', 'click', () => { localStorage.setItem('priere.notifAsked', '1'); $('#notifDialog').close(); });
   // tout réglage modifié (geste de l'utilisateur) → le module Android est mis à jour
   on('#view-settings', 'change', () => requestNativeSync());
   on('#silentDialog', 'click', () => setTimeout(requestNativeSync, 50));
@@ -1795,6 +1797,15 @@ function init() {
     }
   }
   syncClock().then(() => { if (state.today) computeNext(); });
+  setTimeout(askNotifFirstRun, 2500);
+}
+
+// Premier lancement de l'appli Android : proposer tout de suite l'autorisation des notifications
+// (Android exige un geste de l'utilisateur, d'où la fenêtre avec un bouton).
+function askNotifFirstRun(tries = 0) {
+  if (!isTwa() || nativeActive() || localStorage.getItem('priere.notifAsked')) return;
+  if (document.querySelector('dialog[open]')) { if (tries < 10) setTimeout(() => askNotifFirstRun(tries + 1), 3000); return; }
+  $('#notifDialog').showModal();
 }
 
 try { init(); } finally {
