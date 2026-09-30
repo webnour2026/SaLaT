@@ -88,6 +88,7 @@ function go(view) {
     if (b.dataset.goto === view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
   document.body.classList.toggle('fit', view !== 'settings' && view !== 'cards');   // écran ajusté, sans défilement
+  document.body.classList.toggle('no-top', view !== 'home' && view !== 'settings');  // barre du haut (ville, langue, cloche, réglages) : seulement sur Horaires et Réglages
   $('#settingsBtn')?.classList.toggle('active', view === 'settings');
   requestAnimationFrame(() => document.querySelectorAll('main, .view').forEach(el => { el.scrollLeft = 0; }));
   if (view !== 'qibla') compass.stop();
@@ -1393,7 +1394,7 @@ function calShift(dir) {
 // ================= Compte à rebours + événements =================
 const countdown = new Countdown({
   onTick(remaining, tNow) {
-    $('#clock').textContent = fmtTime(tNow);
+    const ck = $('#clock'); if (ck) ck.textContent = fmtTime(tNow);
     if (state.elapsed) {
       const txt = '+' + formatHMS(Math.max(0, tNow - state.elapsed.ts)).replace(/^00:/, '');   // +19:05
       $('#countdown').textContent = txt;
