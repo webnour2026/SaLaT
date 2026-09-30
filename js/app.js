@@ -1056,13 +1056,14 @@ async function buildGreetingCard(spec) {
   // texte sourcé (verset, hadith, dhikr ou doua)
   const txt = cardTextOf(spec);
   if (txt) {
-    let size = 52, lines;
-    do { g.font = amiri(700, size); lines = wrapLines(g, txt.q ? `﴿ ${txt.t} ﴾` : `« ${txt.t} »`, W - 200); size -= 4; }
-    while (lines.length > 6 && size > 36);
-    const lh = Math.round((size + 4) * 1.5), boxH = lines.length * lh + 100;
+    let size = 72, lines, lh, boxH;
+    do {
+      g.font = amiri(700, size); lines = wrapLines(g, txt.q ? `﴿ ${txt.t} ﴾` : `« ${txt.t} »`, W - 200);
+      lh = Math.round((size + 4) * 1.5); boxH = lines.length * lh + 100; size -= 4;
+    } while ((lines.length > 6 || boxH > 620) && size > 36);
     g.fillStyle = 'rgba(255,255,255,.10)'; g.beginPath(); g.roundRect(70, y - 10, W - 140, boxH, 36); g.fill();
     g.fillStyle = '#fff'; lines.forEach((ln, i) => g.fillText(ln, W / 2, y + 60 + i * lh));
-    g.font = amiri(400, 32); g.fillStyle = accent; g.fillText(txt.r, W / 2, y + boxH - 34);
+    g.font = amiri(400, 40); g.fillStyle = accent; g.fillText(txt.r, W / 2, y + boxH - 34);
     y += boxH + 50;
   }
   const sub = cardSubLocal(key);
