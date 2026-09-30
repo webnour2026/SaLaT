@@ -1,0 +1,44 @@
+# Calendrier hégirien du Maroc : met à jour data/habous.json dès que le Ministère des Habous annonce
+# le début d'un mois (communiqué du soir du 29). L'appli lit ce fichier à chaque ouverture.
+# Rien à configurer. Si l'annonce n'est pas trouvée automatiquement :
+#   onglet Actions → « Habous » → Run workflow → saisir le 1er jour du mois (AAAA-MM-JJ).
+name: Habous
+on:
+  schedule:
+    - cron: '20 19-23 * * *'   # chaque soir (l'annonce tombe vers 20-22 h, heure du Maroc)
+    - cron: '40 6 * * *'       # rattrapage le lendemain matin
+  workflow_dispatch:
+    inputs:
+      start:
+        description: "Saisie manuelle : 1er jour du mois suivant (AAAA-MM-JJ)"
+        required: false
+permissions:
+  contents: write
+concurrency:
+  group: habous
+  cancel-in-progress: false
+jobs:
+  habous:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Tests de l'analyse des communiqués
+        run: node scripts/test-habous.mjs
+      - name: Chercher l'annonce du ministère
+        run: node scripts/update-habous.mjs
+        env:
+          MANUAL_START: ${{ github.event.inputs.start }}
+      - name: Publier si le calendrier a changé
+        run: |
+          if [ -n "$(git status --porcelain data/habous.json)" ]; then
+            git config user.name "github-actions"
+            git config user.email "github-actions@users.noreply.github.com"
+            git add data/habous.json
+            git commit -m "Habous : nouveau début de mois annoncé"
+            git push
+          else
+            echo "Rien de nouveau"
+          fi
