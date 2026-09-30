@@ -5,7 +5,7 @@
 name: Habous
 on:
   schedule:
-    - cron: '20 19-23 * * *'   # chaque soir (l'annonce tombe vers 20-22 h, heure du Maroc)
+    - cron: '*/15 18-22 * * *' # toutes les 15 min le soir (l'annonce tombe vers 19-22 h) : la veille d'un Aïd, pas d'attente
     - cron: '40 6 * * *'       # rattrapage le lendemain matin
   workflow_dispatch:
     inputs:
