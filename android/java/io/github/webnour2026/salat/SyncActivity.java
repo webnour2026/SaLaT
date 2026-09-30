@@ -35,6 +35,7 @@ public class SyncActivity extends Activity {
                 cfg = new JSONObject(d);
                 AlarmScheduler.save(this, cfg);
                 AlarmScheduler.scheduleNext(this);
+                Reminders.schedule(this);
             }
         } catch (Exception e) {
             cfg = null;

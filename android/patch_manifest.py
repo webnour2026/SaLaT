@@ -15,7 +15,7 @@ m = mod / 'src/main/AndroidManifest.xml'
 s = m.read_text(encoding='utf-8')
 if 'SyncActivity' in s:
     print('déjà modifié'); sys.exit(0)
-wanted = ['SCHEDULE_EXACT_ALARM', 'RECEIVE_BOOT_COMPLETED', 'VIBRATE', 'POST_NOTIFICATIONS']
+wanted = ['SCHEDULE_EXACT_ALARM', 'RECEIVE_BOOT_COMPLETED', 'VIBRATE', 'POST_NOTIFICATIONS', 'INTERNET']   # INTERNET : lire le calendrier des Habous le soir de l'annonce
 perms = '\n' + ''.join(f'    <uses-permission android:name="android.permission.{p}"/>\n'
                        for p in wanted if f'android.permission.{p}"' not in s)
 s = re.sub(r'(<manifest[^>]*>)', lambda x: x.group(1) + perms, s, count=1)
@@ -35,6 +35,7 @@ comps = '''
         </activity>
         <receiver android:name="io.github.webnour2026.salat.AlarmReceiver" android:exported="false"/>
         <receiver android:name="io.github.webnour2026.salat.StopReceiver" android:exported="false"/>
+        <receiver android:name="io.github.webnour2026.salat.ReminderReceiver" android:exported="false"/>
         <receiver android:name="io.github.webnour2026.salat.BootReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>

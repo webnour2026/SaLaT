@@ -1,5 +1,5 @@
 // Service worker — changer VERSION à chaque déploiement pour forcer la mise à jour.
-const VERSION = 'salati-v2.8.17';
+const VERSION = 'salati-v2.9.0';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
@@ -16,6 +16,7 @@ const APP_SHELL = [
   'js/compass.js',
   'js/countdown.js',
   'js/habous.js',
+  'js/reminders.js',
   'js/hijri.js',
   'js/i18n.js',
   'js/location.js',

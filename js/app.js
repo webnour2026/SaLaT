@@ -7,6 +7,7 @@ import { qiblaBearing, distanceToKaaba, cardinalIndex } from './qibla.js';
 import { Compass } from './compass.js';
 import { formatHijri, useHabous, habousActive, habousInfo } from './hijri.js';
 import { initHabous, refreshHabous } from './habous.js';
+import { planNativeReminders, reminderText } from './reminders.js';
 import { declination as wmmDeclination } from './wmm.js';
 import { sunPosition, timesAtAzimuth } from './sun.js';
 import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, removeCustomAdhan, loadCustomAdhans, customAdhans, loadSiteAdhans, DEFAULT_ADHAN, RETIRED } from './adhan.js';
@@ -144,7 +145,7 @@ function rerenderHijri() {
   if ($('#view-calendar') && !$('#view-calendar').hidden) renderCalendar();
 }
 function checkHabous(force = false, every) {
-  refreshHabous({ force, every }).then(changed => { if (changed) { rerenderHijri(); if (!$('#view-settings').hidden) renderSettings(); } });
+  refreshHabous({ force, every }).then(changed => { if (changed) { rerenderHijri(); if (!$('#view-settings').hidden) renderSettings(); requestNativeSync(); } });
 }
 
 function setLocation(loc) {
@@ -1486,21 +1487,11 @@ function checkEvents(tNow) {
 
 async function fireEvent(ev) {
   const a = S().adhan;
-  if (ev.type === 'eid') {
-    const fitr = ev.kind === 'fitr', title = t(fitr ? 'fitrNotifTitle' : 'adhaNotifTitle');
-    notify(title, [t('takbir'), t('eidGreeting'), fitr ? t('fitrZakat') : ''].filter(Boolean).join('\n'), { tag: 'eid', vibrateOn: !isSilent() && a.vibrate });
+  if (ev.type === 'eid' || ev.type === 'month' || ev.type === 'white') {
+    const { title, body } = reminderText(t, ev);
+    // avec le module Android récent, c'est lui qui envoie ces rappels (même appli fermée) : pas de doublon
+    if (!nativeRem()) notify(title, body, { tag: ev.type, vibrateOn: !isSilent() && a.vibrate });
     toast(title, 6000);
-    return;
-  }
-  if (ev.type === 'month') {
-    const title = ev.h.m === 9 ? t('ramadanNotifTitle') : t('monthNotifTitle', { m: t('hijriMonths')[ev.h.m - 1] });
-    notify(title, [t('monthDua'), t('monthDuaTr')].filter(Boolean).join('\n'), { tag: 'month', vibrateOn: !isSilent() && a.vibrate });
-    toast(title, 6000);
-    return;
-  }
-  if (ev.type === 'white') {
-    notify(t('whiteNotifTitle'), t('whiteNotifBody', { d: ev.h.d, m: t('hijriMonths')[ev.h.m - 1] }), { tag: 'white', vibrateOn: !isSilent() && a.vibrate });
-    toast(t('whiteNotifTitle'), 6000);
     return;
   }
   const silent = isSilent();
@@ -1531,11 +1522,13 @@ const TWA_PKG = 'io.github.webnour2026.salat';
 // L'ancienne version (sans module) ne doit jamais recevoir de demande : sinon Android ouvre le Play Store.
 const isTwa = () => localStorage.getItem('priere.native') === '1';
 const nativeActive = () => isTwa() && !!localStorage.getItem('priere.nativeAt');
+const nativeRem = () => nativeActive() && localStorage.getItem('priere.nativeRem') === '1';   // le module envoie lui-même les rappels
 function detectTwa() {
   const n = new URLSearchParams(location.search).get('native');
   if (n === '1') localStorage.setItem('priere.native', '1');
-  if (n === '0') localStorage.removeItem('priere.native');       // retour sans module : désactivé
-  if (!isTwa()) { localStorage.removeItem('priere.nativeAt'); localStorage.removeItem('priere.nativeDirty'); }
+  if (n === '2') { localStorage.setItem('priere.native', '1'); localStorage.setItem('priere.nativeRem', '1'); }   // module ≥ v10 : rappels appli fermée
+  if (n === '0') { localStorage.removeItem('priere.native'); localStorage.removeItem('priere.nativeRem'); }       // retour sans module : désactivé
+  if (!isTwa()) { localStorage.removeItem('priere.nativeAt'); localStorage.removeItem('priere.nativeDirty'); localStorage.removeItem('priere.nativeRem'); }
   localStorage.removeItem('priere.twa');                     // ancien indicateur (v2.5.0)
 }
 // même règle que le workflow Android pour nommer les sons intégrés (res/raw)
@@ -1549,7 +1542,7 @@ function nativeSound(id) {
 async function nativePayload() {
   const loc = S().location; if (!loc) return null;
   const today = state.dayKey || dateKeyInTz(now(), tz());
-  await Promise.all([today.slice(0, 7), addDays(today, 31).slice(0, 7)].map(ym => ensureMonth(S(), ym).catch(() => false)));
+  await Promise.all([...new Set([today.slice(0, 7), addDays(today, 31).slice(0, 7), addDays(today, 42).slice(0, 7)])].map(ym => ensureMonth(S(), ym).catch(() => false)));
   const times = [];
   for (let i = 0; i < 31; i++) {
     const d = getDay(S(), addDays(today, i));
@@ -1557,14 +1550,19 @@ async function nativePayload() {
   }
   const a = S().adhan;
   const su = S().silentUntil === -1 ? 32503680000000 : (S().silentUntil || 0);
+  const rem = planNativeReminders({
+    today, offset: S().hijriOffset, t,
+    prefs: { eid: S().eidReminder !== false, month: S().monthReminder !== false, white: !!S().whiteDays },
+    addDays, dayInfo: key => { const d = getDay(S(), key); return d && d.times ? { Maghrib: d.times.Maghrib, Isha: d.times.Isha } : null; },
+  });
   return {
-    v: 1, lat: +loc.lat.toFixed(5), lng: +loc.lng.toFixed(5), tz: tz(), method: S().method, school: S().school,
+    v: 2, base: new URL('.', location.href).href, rem, lat: +loc.lat.toFixed(5), lng: +loc.lng.toFixed(5), tz: tz(), method: S().method, school: S().school,
     adj: S().adjust, en: !!a.enabled, na: !!a.notifyAt, nb: a.notifyBefore || 0, vib: !!a.vibrate, su, on: !!S().ongoing, gr: GRACE_MIN,
     hj: Array.from({ length: 31 }, (_, i) => fmtDates(Date.parse(`${addDays(today, i)}T12:00:00Z`)).hijri),
     ad: Object.fromEntries(PRAYERS.map(k => [k, a.enabled ? nativeSound(adhanFor(k)) : 'none'])),
     names: Object.fromEntries(PRAYERS.map(k => [k, t(k)])),
     txt: { itsTime: t('itsTime'), before: t('beforeMsg'), stop: t('stop'), ok: t('nativeOk'), city: loc.name || '',
-           chAdhan: t('chAdhan'), chBefore: t('chBefore'), chSilent: t('chSilent'), chOngoing: t('chOngoing') },
+           chAdhan: t('chAdhan'), chBefore: t('chBefore'), chSilent: t('chSilent'), chOngoing: t('chOngoing'), chReminder: t('chReminder') },
     times,
   };
 }
@@ -1588,7 +1586,7 @@ function requestNativeSync() {
 }
 function nativeNeedsSync() {
   if (!nativeActive()) return false;
-  if (localStorage.getItem('priere.nativeV') !== '2') { localStorage.setItem('priere.nativeV', '2'); localStorage.setItem('priere.nativeDirty', '1'); }
+  if (localStorage.getItem('priere.nativeV') !== '3') { localStorage.setItem('priere.nativeV', '3'); localStorage.setItem('priere.nativeDirty', '1'); }
   const at = +localStorage.getItem('priere.nativeAt') || 0;
   return localStorage.getItem('priere.nativeDirty') === '1' || Date.now() - at > 5 * 864e5;
 }

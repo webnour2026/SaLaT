@@ -73,6 +73,13 @@ export function eidEve(noon, offsetDays = 0) {
   return null;
 }
 
+/** Le début du mois hégirien qui contient ce jour est-il officiel ? (toujours vrai hors calendrier des Habous) */
+export function monthConfirmed(noon, offsetDays = 0) {
+  if (!habousActive()) return true;
+  const h = hijriOf(noon, offsetDays);
+  return isConfirmedStart(noon + offsetDays * DAY - (h.d - 1) * DAY);
+}
+
 /** Quel rappel envoyer ce soir pour demain ? Un Aïd remplace le rappel de début de mois (pas de doublon). */
 export function reminderFor(tomorrowNoon, offsetDays = 0, prefs = { eid: true, month: true }) {
   const eve = eidEve(tomorrowNoon, offsetDays);
