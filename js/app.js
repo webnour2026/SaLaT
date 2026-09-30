@@ -1137,8 +1137,8 @@ function whenLabel(noon) {
   const n = Math.round((noon - civilNoon(now(), tz())) / DAY_MS);
   return n <= 0 ? t('todayWord') : n === 1 ? t('tomorrowWord') : t('inDays', { n });
 }
-// Ordre : cartes de tous les jours (doua, hadith, sabah el-khir), puis Joumou'a, puis le reste par date
-const CARD_ORDER = ['dua', 'hadith', 'morning', 'jumuah'];
+// Ordre : cartes de tous les jours (sabah el-khir, doua, hadith), puis Joumou'a, puis le reste par date
+const CARD_ORDER = ['morning', 'dua', 'hadith', 'jumuah'];
 const cardRank = sp => { const i = CARD_ORDER.indexOf(sp.key); return i < 0 ? CARD_ORDER.length : i; };
 const preview = (text, n = 6) => { const w = text.split(/\s+/); return w.slice(0, n).join(' ') + (w.length > n ? ' …' : ''); };
 
