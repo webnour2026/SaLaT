@@ -1217,17 +1217,19 @@ async function buildGreetingCard(spec) {
   // texte sourcé (verset, hadith, dhikr ou doua)
   const txt = cardTextOf(spec);
   if (txt) {
-    let size = 72, lines, lh, boxH;
+    let size = 72, lines, lh, boxH, b0;
     do {
       g.font = amiri(700, size); lines = wrapLines(g, txt.q ? `﴿ ${txt.t} ﴾` : `« ${txt.t} »`, W - 200);
-      lh = Math.round((size + 4) * 1.5); boxH = lines.length * lh + 100; size -= 4;
-    } while ((lines.length > 6 || boxH > 620) && size > 36);
+      // b0 = distance haut de boîte → 1re ligne (marge haute confortable) ; 50 = reste sous la référence
+      lh = Math.round((size + 4) * 1.5); b0 = 46 + Math.round(size * .95); boxH = b0 + lines.length * lh + 50; size -= 4;
+    } while ((lines.length > 6 || boxH > 640) && size > 36);
     // cartes du jour : le texte sourcé est centré entre l'en-tête (titre) et le pied de carte
-    if (spec.evergreen) y = Math.max(y, Math.round((340 + (H - 260)) / 2 - boxH / 2));
-    g.fillStyle = isSky ? 'rgba(255,255,255,.58)' : 'rgba(255,255,255,.10)'; g.beginPath(); g.roundRect(70, y - 10, W - 140, boxH, 36); g.fill();
+    if (spec.evergreen) y = Math.max(y, Math.round((340 + (H - 260)) / 2 - boxH / 2) + 10);
+    const bt = y - 10;   // haut de la boîte
+    g.fillStyle = isSky ? 'rgba(255,255,255,.58)' : 'rgba(255,255,255,.10)'; g.beginPath(); g.roundRect(70, bt, W - 140, boxH, 36); g.fill();
     if (isSky) { g.strokeStyle = 'rgba(15,44,69,.14)'; g.lineWidth = 2; g.stroke(); }
-    g.fillStyle = ink; lines.forEach((ln, i) => g.fillText(ln, W / 2, y + 60 + i * lh));
-    g.font = amiri(400, 40); g.fillStyle = isSky ? '#1B6E80' : accent; g.fillText(txt.r, W / 2, y + boxH - 34);
+    g.fillStyle = ink; lines.forEach((ln, i) => g.fillText(ln, W / 2, bt + b0 + i * lh));
+    g.font = amiri(400, 40); g.fillStyle = isSky ? '#1B6E80' : accent; g.fillText(txt.r, W / 2, bt + boxH - 44);
     y += boxH + 50;
   }
   const sub = cardSubLocal(key);
