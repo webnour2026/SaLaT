@@ -33,9 +33,62 @@ function tabular(ts, timeZone) {
   return { d: l - Math.floor((709 * m) / 24), m, y: 30 * n + j - 30 };
 }
 
-export function hijriParts(ts, timeZone) {
+// Calcul « astronomique » (Umm al-Qura, ou tabulaire si le téléphone ne l'a pas)
+function calcParts(ts, timeZone) {
   try { const r = viaIntl(ts, timeZone); if (r) return r; } catch {}
   return tabular(ts, timeZone);
+}
+
+// ---- Calendrier officiel du Maroc (Ministère des Habous et des Affaires islamiques) ----
+// Le ministère annonce chaque mois, le soir du 29, le début du mois suivant (observation du croissant).
+// On garde la liste des 1ers jours annoncés ; après le dernier annoncé, on prolonge le calcul en
+// l'alignant sur ce dernier début de mois (l'annonce suivante corrigera d'un jour si besoin).
+const DAYMS = 864e5;
+let HB = null;          // { starts: [{ y, m, day }], updated }
+let HB_ON = false;
+
+const civilDay = (ts, timeZone) => {
+  const [Y, M, D] = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' })
+    .format(ts).split('-').map(Number);
+  return Date.UTC(Y, M - 1, D) / DAYMS;
+};
+const calcAt = day => calcParts(day * DAYMS + 12 * 36e5, 'UTC');
+
+/** table = { updated, months: [{ y, m, start: 'AAAA-MM-JJ' }] } */
+export function setHabous(table) {
+  const list = (table && table.months || [])
+    .filter(x => x && x.start && /^\d{4}-\d{2}-\d{2}$/.test(x.start) && x.m >= 1 && x.m <= 12)
+    .map(x => ({ y: x.y, m: x.m, day: Date.parse(x.start + 'T00:00:00Z') / DAYMS }))
+    .sort((a, b) => a.day - b.day);
+  HB = list.length ? { starts: list, updated: table.updated || '' } : null;
+}
+export const useHabous = on => { HB_ON = !!on; };
+export const habousActive = () => HB_ON && !!HB;
+export const habousInfo = () => HB && { updated: HB.updated, last: HB.starts.at(-1), count: HB.starts.length };
+
+function alignedCalc(day, s) {
+  if (s.a === undefined) {
+    s.a = 0;
+    for (const c of [0, -1, 1, -2, 2]) {
+      const p = calcAt(s.day + c);
+      if (p.d === 1 && p.m === s.m && p.y === s.y) { s.a = c; break; }
+    }
+  }
+  return calcAt(day + s.a);
+}
+
+function viaHabous(day) {
+  const S = HB.starts; let i = -1;
+  for (let k = 0; k < S.length; k++) { if (S[k].day <= day) i = k; else break; }
+  if (i < 0) return alignedCalc(day, S[0]);                                  // avant la table
+  const s = S[i], next = S[i + 1];
+  if (next) return { d: day - s.day + 1, m: s.m, y: s.y };                   // mois annoncé en entier
+  return alignedCalc(day, s);                                                // après le dernier annoncé
+}
+
+export function hijriParts(ts, timeZone) {
+  if (HB_ON && HB) { try { return viaHabous(civilDay(ts, timeZone)); } catch {} }
+  return calcParts(ts, timeZone);
 }
 
 export function formatHijri(ts, timeZone, lang) {

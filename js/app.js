@@ -5,7 +5,8 @@ import { ensureMonths, ensureMonth, getDay, findNext, findElapsed, dateKeyInTz, 
 import { Countdown, formatHMS } from './countdown.js';
 import { qiblaBearing, distanceToKaaba, cardinalIndex } from './qibla.js';
 import { Compass } from './compass.js';
-import { formatHijri } from './hijri.js';
+import { formatHijri, useHabous, habousActive, habousInfo } from './hijri.js';
+import { initHabous, refreshHabous } from './habous.js';
 import { declination as wmmDeclination } from './wmm.js';
 import { sunPosition, timesAtAzimuth } from './sun.js';
 import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, removeCustomAdhan, loadCustomAdhans, customAdhans, loadSiteAdhans, DEFAULT_ADHAN, RETIRED } from './adhan.js';
@@ -127,12 +128,31 @@ async function useGps() {
   }
 }
 
+// Calendrier hégirien : dates officielles du Maroc (Habous) au Maroc, calcul + correction manuelle ailleurs
+const inMorocco = () => {
+  const l = S().location;
+  if (l && l.country) return String(l.country).toLowerCase() === 'ma';
+  return /^Africa\/(Casablanca|El_Aaiun)$/.test((l && l.tz) || deviceTz() || '');
+};
+function applyHijriSource() {
+  const src = S().hijriSource || 'auto';
+  useHabous(src === 'habous' || (src === 'auto' && inMorocco()));
+}
+function rerenderHijri() {
+  applyHijriSource();
+  renderAll();
+  if ($('#view-calendar') && !$('#view-calendar').hidden) renderCalendar();
+}
+function checkHabous(force = false) {
+  refreshHabous({ force }).then(changed => { if (changed) { rerenderHijri(); if (!$('#view-settings').hidden) renderSettings(); } });
+}
+
 function setLocation(loc) {
   const old = S().location;
   S().location = { ...loc, ts: Date.now() };
   // un changement de lieu important invalide le fuseau connu
   if (old && Math.abs(old.lng - loc.lng) > 3) S().location.tz = loc.tz || deviceTz();
-  save(); renderHeader(); refresh();
+  save(); applyHijriSource(); renderHeader(); refresh();
   if (!$('#view-qibla').hidden) renderQibla();
   if (nativeActive()) localStorage.setItem('priere.nativeDirty', '1');
 }
@@ -1738,6 +1758,13 @@ function renderSettings() {
   document.querySelectorAll('input[name="lang"]').forEach(r => { r.checked = r.value === s.lang; });
   document.querySelectorAll('input[name="theme"]').forEach(r => { r.checked = r.value === s.theme; });
   $('#sHijri').value = s.hijriOffset > 0 ? `+${s.hijriOffset}` : String(s.hijriOffset);
+  $('#sHijriSrc').value = s.hijriSource || 'auto';
+  const hi = habousInfo(), info = $('#hijriSrcInfo');
+  if (info) {
+    info.textContent = habousActive() && hi
+      ? t('hijriInfoHabous', { d: new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(hi.last.day * 864e5 + 12 * 36e5) })
+      : t('hijriInfoCalc');
+  }
   $('#sTz').value = s.tzMode || 'auto';
   $('#sOngoing').checked = !!s.ongoing;
   $('#sDeclAuto').checked = s.declAuto;
@@ -1870,7 +1897,8 @@ function bindSettings() {
     S().tzMode = e.target.value; save();
     state.viewKey = null; loadDays(); renderAll(); refresh();   // le module Android est resynchronisé par le « change » de #view-settings
   });
-  on('#sHijri', 'change', e => { S().hijriOffset = Number(e.target.value); save(); renderHeader(); });
+  on('#sHijri', 'change', e => { S().hijriOffset = Number(e.target.value); save(); rerenderHijri(); });
+  on('#sHijriSrc', 'change', e => { S().hijriSource = e.target.value; save(); rerenderHijri(); renderSettings(); });
   on('#sDecl', 'change', e => { S().declination = Math.max(-30, Math.min(30, Number(String(e.target.value).replace(',', '.')) || 0)); save(); state.decl = currentDeclination(); });
   on('#sDeclAuto', 'change', e => { S().declAuto = e.target.checked; save(); state.decl = currentDeclination(); renderSettings(); });
   on('#syncBtn', 'click', async () => { await syncClock(); computeNext(); renderSettings(); });
@@ -2010,6 +2038,7 @@ function init() {
   S().adhan.global = fix(S().adhan.global);
   for (const k of Object.keys(S().adhan.perPrayer)) S().adhan.perPrayer[k] = fix(S().adhan.perPrayer[k]);
   save();
+  initHabous(); applyHijriSource();      // calendrier officiel du Maroc (liste intégrée + copie locale)
   applyTheme();
   applyLang();
   buildDial();
@@ -2037,6 +2066,8 @@ function init() {
     }
   }
   syncClock().then(() => { if (state.today) computeNext(); });
+  checkHabous();       // nouveau début de mois annoncé ? (au plus une vérification toutes les 3 h)
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkHabous(); });
   setTimeout(askNotifFirstRun, 2500);
 }
 

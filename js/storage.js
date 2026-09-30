@@ -12,7 +12,8 @@ export const DEFAULTS = {
   methodAuto: true,             // choisit la méthode selon le pays tant que l'utilisateur n'a rien changé
   school: 0,                    // 0 = Shafi/standard, 1 = Hanafi
   adjust: { Fajr: 0, Sunrise: 0, Dhuhr: 0, Asr: 0, Maghrib: 0, Isha: 0 },
-  hijriOffset: 0,               // -2 … +2
+  hijriOffset: 0,               // -2 … +2 (correction manuelle, surtout utile hors du Maroc)
+  hijriSource: 'auto',          // auto (Maroc → Habous, ailleurs → calcul) | habous | calc
   cardFrom: '',                 // nom affiché « من: … » sur les cartes partagées
   ongoing: true,                // notification permanente (prochaine prière + compte à rebours), module Android
   tzMode: 'auto',               // 'auto' (selon la ville) ou décalage fixe en heures : '0', '1', '-5'…

@@ -1,5 +1,5 @@
 // Service worker — changer VERSION à chaque déploiement pour forcer la mise à jour.
-const VERSION = 'salati-v2.8.13';
+const VERSION = 'salati-v2.8.14';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
@@ -15,6 +15,7 @@ const APP_SHELL = [
   'js/clock.js',
   'js/compass.js',
   'js/countdown.js',
+  'js/habous.js',
   'js/hijri.js',
   'js/i18n.js',
   'js/location.js',
@@ -71,6 +72,15 @@ self.addEventListener('fetch', event => {
   }
 
   if (url.origin !== self.location.origin) return;
+
+  // Calendrier des Habous : réseau d'abord (mis à jour chaque mois), copie en cas de coupure
+  if (url.pathname.endsWith('/data/habous.json')) {
+    event.respondWith(fetch(req, { cache: 'no-cache' }).then(res => {
+      if (res.ok) { const copy = res.clone(); caches.open(RUNTIME).then(c => c.put(req, copy)); }
+      return res;
+    }).catch(() => caches.match(req)));
+    return;
+  }
 
   // Audio : mis en cache au premier usage
   if (url.pathname.includes('/audio/')) {

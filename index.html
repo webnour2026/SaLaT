@@ -263,6 +263,14 @@
 
       <fieldset class="group">
         <legend data-i18n="sHijri">Date hégirienne</legend>
+        <label class="field"><span data-i18n="hijriSource">Calendrier</span>
+          <select id="sHijriSrc">
+            <option value="auto" data-i18n="hijriSrcAuto">Automatique (Maroc : Habous)</option>
+            <option value="habous" data-i18n="hijriSrcHabous">Maroc — Ministère des Habous</option>
+            <option value="calc" data-i18n="hijriSrcCalc">Calculé (Umm al-Qura)</option>
+          </select>
+        </label>
+        <p class="note" id="hijriSrcInfo"></p>
         <label class="field"><span data-i18n="hijriCorrection">Correction (jours)</span>
           <select id="sHijri"><option>-2</option><option>-1</option><option>0</option><option>+1</option><option>+2</option></select>
         </label>
