@@ -1072,11 +1072,12 @@ const CARD_THEME = {
   night: ['#141F3D', '#3B2F63', '#E9C46A'],   // Ramadan, Qadr, jours blancs
   gold:  ['#5B2A1E', '#B5652E', '#FFE3A3'],   // Aïds
   teal:  ['#0E4A5C', '#1F7A8C', '#F3DDB0'],   // Achoura, Arafat (jeûne)
-  dawn:  ['#1D4E6E', '#C9804A', '#FFE9B8'],   // Sabah el-khir (lever du jour)
+  dawn:  ['#1D4E6E', '#C9804A', '#FFE9B8'],   // (inutilisé)
+  sky:   ['#5E9FD3', '#D9EAF4', '#0F2C45'],   // cartes du jour : ciel bleu clair + texte bleu nuit (comme l'écran des horaires)
 };
 const themeOf = key => (['occFitr', 'occAdha'].includes(key) ? 'gold'
   : ['occRamadan', 'occQadr', 'white', 'occNisfShaban'].includes(key) ? 'night'
-  : ['occAshura', 'occArafa', 'dua'].includes(key) ? 'teal' : key === 'morning' ? 'dawn' : 'green');   // hadith : vert
+  : ['occAshura', 'occArafa'].includes(key) ? 'teal' : ['morning', 'dua', 'hadith'].includes(key) ? 'sky' : 'green');
 const cardSubLocal = key => (getLang() === 'ar' ? ''
   : key === 'jumuah' ? t('cardJumuah') : key === 'white' ? t('cardWhite') : (t('cardSub') || {})[key] || t(key));
 
@@ -1115,9 +1116,26 @@ function cardSpecs() {
 }
 
 function wrapLines(g, text, maxW) {
-  const words = text.split(/\s+/), lines = []; let cur = '';
-  for (const w of words) { const tst = cur ? cur + ' ' + w : w; if (g.measureText(tst).width > maxW && cur) { lines.push(cur); cur = w; } else cur = tst; }
-  if (cur) lines.push(cur); return lines;
+  // les signes ﴿ ﴾ « » restent collés à leur mot (jamais seuls en début ou en fin de ligne)
+  const words = [];
+  for (const w of text.split(/\s+/).filter(Boolean)) {
+    if (/^[﴾»]$/.test(w) && words.length) words[words.length - 1] += ' ' + w;
+    else if (words.length && /^[﴿«]$/.test(words[words.length - 1])) words[words.length - 1] += ' ' + w;
+    else words.push(w);
+  }
+  const wd = a => g.measureText(a.join(' ')).width, rows = []; let cur = [];
+  for (const w of words) {
+    if (cur.length && wd([...cur, w]) > maxW) { rows.push(cur); cur = [w]; } else cur.push(w);
+  }
+  if (cur.length) rows.push(cur);
+  // équilibrer les deux dernières lignes : pas de mot seul sur la dernière
+  while (rows.length > 1) {
+    const a = rows[rows.length - 2], b = rows[rows.length - 1];
+    if (a.length < 2) break;
+    const a2 = a.slice(0, -1), b2 = [a[a.length - 1], ...b];
+    if (wd(b2) <= maxW && (b.length < 2 || Math.abs(wd(b2) - wd(a2)) < Math.abs(wd(b) - wd(a)))) { rows[rows.length - 2] = a2; rows[rows.length - 1] = b2; } else break;
+  }
+  return rows.map(r => r.join(' '));
 }
 function drawStars(g, W, color) {                       // motif marocain discret (étoiles à 8 branches)
   g.save(); g.strokeStyle = color; g.globalAlpha = .10; g.lineWidth = 2;
@@ -1140,12 +1158,12 @@ const CARD_SCENES = {
   ],
 };
 const SCENE_KEYS = [...Object.keys(CARD_SCENES), 'zellige'];
-function drawMosque(g, W, H, color, scene = 'koutoubia') {  // silhouette en bas de carte
+function drawMosque(g, W, H, color, scene = 'koutoubia', k = 1) {  // silhouette en bas de carte
   if (scene === 'zellige') return;
   const [main, , far] = CARD_SCENES[scene];
   g.save(); g.fillStyle = color; g.translate(W / 2 - 540, H - 420); g.scale(5.4, 5.4);
-  if (far) { g.globalAlpha = .06; g.fill(new Path2D(far)); }
-  g.globalAlpha = .13; g.fill(new Path2D(main));
+  if (far) { g.globalAlpha = .06 * k; g.fill(new Path2D(far)); }
+  g.globalAlpha = .13 * k; g.fill(new Path2D(main));
   g.restore();
 }
 /** Zellige de Fès : étoiles à 8 branches sur toute la carte (fond sans silhouette) */
@@ -1167,6 +1185,7 @@ async function buildGreetingCard(spec) {
   try { await Promise.all([document.fonts.load('700 60px Amiri'), document.fonts.load('700 60px "Reem Kufi"'), document.fonts.ready]); } catch {}
   const W = 1080, H = 1350, key = spec.key;
   const [c1, c2, accent] = CARD_THEME[themeOf(key)];
+  const isSky = themeOf(key) === 'sky', ink = isSky ? accent : '#fff';   // ciel clair : texte bleu nuit
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   let g = cv.getContext('2d');
   const plex = (w, px) => `${w} ${px}px "IBM Plex Sans Arabic", system-ui, sans-serif`;
@@ -1176,24 +1195,25 @@ async function buildGreetingCard(spec) {
   g.fillStyle = grad; g.fillRect(0, 0, W, H);
   // fond : Koutoubia, Hassan II, mosquée rurale ou zellige — change à chaque carte, le contenu ne bouge pas
   const scene = spec.scene || SCENE_KEYS[Math.floor(Math.random() * SCENE_KEYS.length)];
-  if (scene === 'zellige') drawZellige(g, W, H, accent); else drawStars(g, W, accent);
+  const pat = isSky ? '#fff' : accent;
+  if (scene === 'zellige') drawZellige(g, W, H, pat); else drawStars(g, W, pat);
   if (themeOf(key) === 'night') {                        // lune
     g.fillStyle = accent; g.globalAlpha = .9; g.beginPath(); g.arc(W - 170, 170, 70, 0, 7); g.fill();
     if (key !== 'white') { g.globalAlpha = 1; g.fillStyle = c1; g.beginPath(); g.arc(W - 140, 150, 62, 0, 7); g.fill(); }
     g.globalAlpha = 1;
   }
-  drawMosque(g, W, H, '#fff', scene);
+  if (isSky) drawMosque(g, W, H, '#5E9FD3', scene, 2.2); else drawMosque(g, W, H, '#fff', scene);
   // le contenu est dessiné sur un calque, puis centré verticalement au-dessus de la dédicace
   const base = g, layer = document.createElement('canvas'); layer.width = W; layer.height = H;
   g = layer.getContext('2d');
   const [arTitle, arLine] = CARD_AR[key] || [t(key), ''];
   g.textAlign = 'center'; g.direction = 'rtl'; g.textBaseline = 'alphabetic';
   const top = 120; let y = top + (spec.evergreen ? 90 : 110);   // cartes du jour : titre plus haut
-  g.fillStyle = accent; g.font = kufi(key === 'occMawlid' || key === 'occIsra' ? 84 : 112);
+  g.fillStyle = isSky ? ink : accent; g.font = kufi(key === 'occMawlid' || key === 'occIsra' ? 84 : 112);
   g.fillText(arTitle, W / 2, y);
   y += 80;
-  if (key === 'occNewYear' && spec.h) { g.font = amiri(700, 60); g.fillStyle = '#fff'; g.fillText(`${spec.h.y} هـ`, W / 2, y); y += 70; }
-  if (arLine) { g.font = amiri(400, 56); g.fillStyle = '#fff'; g.fillText(arLine, W / 2, y); y += 70; }
+  if (key === 'occNewYear' && spec.h) { g.font = amiri(700, 60); g.fillStyle = ink; g.fillText(`${spec.h.y} هـ`, W / 2, y); y += 70; }
+  if (arLine) { g.font = amiri(400, 56); g.fillStyle = ink; g.fillText(arLine, W / 2, y); y += 70; }
   // texte sourcé (verset, hadith, dhikr ou doua)
   const txt = cardTextOf(spec);
   if (txt) {
@@ -1204,17 +1224,18 @@ async function buildGreetingCard(spec) {
     } while ((lines.length > 6 || boxH > 620) && size > 36);
     // cartes du jour : le texte sourcé est centré entre l'en-tête (titre) et le pied de carte
     if (spec.evergreen) y = Math.max(y, Math.round((340 + (H - 260)) / 2 - boxH / 2));
-    g.fillStyle = 'rgba(255,255,255,.10)'; g.beginPath(); g.roundRect(70, y - 10, W - 140, boxH, 36); g.fill();
-    g.fillStyle = '#fff'; lines.forEach((ln, i) => g.fillText(ln, W / 2, y + 60 + i * lh));
-    g.font = amiri(400, 40); g.fillStyle = accent; g.fillText(txt.r, W / 2, y + boxH - 34);
+    g.fillStyle = isSky ? 'rgba(255,255,255,.58)' : 'rgba(255,255,255,.10)'; g.beginPath(); g.roundRect(70, y - 10, W - 140, boxH, 36); g.fill();
+    if (isSky) { g.strokeStyle = 'rgba(15,44,69,.14)'; g.lineWidth = 2; g.stroke(); }
+    g.fillStyle = ink; lines.forEach((ln, i) => g.fillText(ln, W / 2, y + 60 + i * lh));
+    g.font = amiri(400, 40); g.fillStyle = isSky ? '#1B6E80' : accent; g.fillText(txt.r, W / 2, y + boxH - 34);
     y += boxH + 50;
   }
   const sub = cardSubLocal(key);
   g.direction = document.documentElement.dir === 'rtl' ? 'rtl' : 'ltr';
-  if (sub && !spec.evergreen) { g.font = plex(500, 36); g.fillStyle = '#fff'; g.globalAlpha = .92; g.fillText(sub, W / 2, y); g.globalAlpha = 1; y += 58; }
+  if (sub && !spec.evergreen) { g.font = plex(500, 36); g.fillStyle = ink; g.globalAlpha = .92; g.fillText(sub, W / 2, y); g.globalAlpha = 1; y += 58; }
   // date(s) — pas de ville ni d'horaires : la carte peut être envoyée partout au Maroc
   const dateFmt = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-  g.font = plex(400, 32); g.fillStyle = '#fff'; g.globalAlpha = .88;
+  g.font = plex(400, 32); g.fillStyle = ink; g.globalAlpha = .88;
   if (key === 'white' && spec.list) {
     const df = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
     spec.list.forEach(x => { g.fillText(`${df.format(x.noon)} · ${hijriLabel(x.h)}`, W / 2, y); y += 50; });
@@ -1230,12 +1251,14 @@ async function buildGreetingCard(spec) {
   // dédicace (facultative) : « من: … »
   const from = (S().cardFrom || '').trim();
   if (from) {
-    g.direction = 'rtl'; g.font = amiri(700, 44); g.fillStyle = accent;
+    g.direction = 'rtl'; g.font = amiri(700, 44); g.fillStyle = isSky ? ink : accent;
     g.fillText(`من: ${from}`, W / 2, H - 215);
   }
   // mention SaLaTi
   const fy = H - 150;
-  g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(0, fy - 20, W, 170);
+  if (isSky) { const bg = g.createLinearGradient(0, 0, W, 0); bg.addColorStop(0, '#0F4C5F'); bg.addColorStop(1, '#2A8497'); g.fillStyle = bg; }   // même bandeau que le bouton du doua
+  else g.fillStyle = 'rgba(0,0,0,.22)';
+  g.fillRect(0, fy - 20, W, 170);
   const icon = await new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = 'icons/icon-192.png?v=190'; });
   const rtl = document.documentElement.dir === 'rtl';
   const ix = rtl ? W - 60 - 90 : 60;
