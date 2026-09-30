@@ -18,6 +18,8 @@ export const DEFAULTS = {
   ongoing: true,                // notification permanente (prochaine prière + compte à rebours), module Android
   tzMode: 'auto',               // 'auto' (selon la ville) ou décalage fixe en heures : '0', '1', '-5'…
   whiteDays: true,              // rappel des jours blancs
+  monthReminder: true,          // rappel « demain : 1er du mois » avec le doua de la nouvelle lune
+  eidReminder: true,            // rappel de la veille des Aïds (takbir)
   silentUntil: 0,               // mode silencieux : timestamp de fin (Infinity = jusqu'à désactivation)
   declAuto: true,               // déclinaison calculée par WMM2025
   declination: 0,               // valeur manuelle (degrés, Est positif)

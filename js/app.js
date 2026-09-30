@@ -10,7 +10,7 @@ import { initHabous, refreshHabous } from './habous.js';
 import { declination as wmmDeclination } from './wmm.js';
 import { sunPosition, timesAtAzimuth } from './sun.js';
 import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, removeCustomAdhan, loadCustomAdhans, customAdhans, loadSiteAdhans, DEFAULT_ADHAN, RETIRED } from './adhan.js';
-import { hijriMonth, upcomingWhiteDays, civilNoon, hijriOf, OCCASIONS, isWhiteDay } from './calendar.js';
+import { hijriMonth, upcomingWhiteDays, civilNoon, hijriOf, OCCASIONS, isWhiteDay, reminderFor } from './calendar.js';
 import { PRESET_CITIES, METHOD_BY_COUNTRY, getGpsPosition, reverseGeocode, searchCity } from './location.js';
 
 const $ = sel => document.querySelector(sel);
@@ -143,8 +143,8 @@ function rerenderHijri() {
   renderAll();
   if ($('#view-calendar') && !$('#view-calendar').hidden) renderCalendar();
 }
-function checkHabous(force = false) {
-  refreshHabous({ force }).then(changed => { if (changed) { rerenderHijri(); if (!$('#view-settings').hidden) renderSettings(); } });
+function checkHabous(force = false, every) {
+  refreshHabous({ force, every }).then(changed => { if (changed) { rerenderHijri(); if (!$('#view-settings').hidden) renderSettings(); } });
 }
 
 function setLocation(loc) {
@@ -1439,6 +1439,10 @@ function adhanFor(prayer) {
   return a.mode === 'perPrayer' ? a.perPrayer[prayer] : a.global;
 }
 
+const REM_KEY = 'priere.remFired';
+function remAlreadyFired(id) { try { return JSON.parse(localStorage.getItem(REM_KEY) || '[]').includes(id); } catch { return false; } }
+function remMarkFired(id) { try { const a = JSON.parse(localStorage.getItem(REM_KEY) || '[]'); a.push(id); localStorage.setItem(REM_KEY, JSON.stringify(a.slice(-30))); } catch { /* stockage indisponible */ } }
+
 function checkEvents(tNow) {
   if (!state.today) return;
   const a = S().adhan;
@@ -1456,12 +1460,24 @@ function checkEvents(tNow) {
     const tomorrowNoon = civilNoon(now(), tz()) + 864e5;
     const h = hijriOf(tomorrowNoon, S().hijriOffset);
     if ([13, 14, 15].includes(h.d) && !(h.m === 12 && h.d === 13)) {
-      events.push({ id: `${state.today.date}-white`, ts: state.today.times.Isha + 30 * 60000, type: 'white', h });
+      events.push({ id: `${state.today.date}-white`, ts: state.today.times.Isha + 30 * 60000, type: 'white', h, win: 6 * 3600e3 });
     }
+  }
+  // rappels de la veille au soir (20 min après le Maghrib) : début de mois avec le doua, ou Aïd avec le takbir.
+  // Au Maroc, seulement quand la date est officielle (annonce du ministère). Fenêtre de 6 h : l'annonce peut tomber tard.
+  if (state.today.times.Maghrib) {
+    const todayNoon = civilNoon(tNow, tz());
+    const rem = reminderFor(todayNoon + 864e5, S().hijriOffset, { eid: S().eidReminder !== false, month: S().monthReminder !== false });
+    if (rem) events.push({ id: `${state.today.date}-${rem.type}`, ts: state.today.times.Maghrib + 20 * 60000, win: 6 * 3600e3, ...rem });
+    // soirée du 29 ou du 30 : on interroge le calendrier des Habous toutes les 10 min pour capter l'annonce
+    else if (habousActive() && tNow >= state.today.times.Maghrib && hijriOf(todayNoon, S().hijriOffset).d >= 29) checkHabous(false, 10 * 60000);
   }
   for (const ev of events) {
     // fenêtre de 90 s : si l'appli s'est réveillée bien après, on ne rejoue pas un Adhan périmé
-    if (tNow < ev.ts || tNow - ev.ts > 90000 || state.fired.has(ev.id)) continue;
+    if (tNow < ev.ts || tNow - ev.ts > (ev.win || 90000) || state.fired.has(ev.id)) continue;
+    const once = ev.type === 'month' || ev.type === 'eid' || ev.type === 'white';     // un seul envoi, même si l'appli est relancée
+    if (once && remAlreadyFired(ev.id)) continue;
+    if (once) remMarkFired(ev.id);
     state.fired.add(ev.id);
     sessionStorage.setItem('priere.fired', JSON.stringify([...state.fired].slice(-40)));
     fireEvent(ev);
@@ -1470,6 +1486,18 @@ function checkEvents(tNow) {
 
 async function fireEvent(ev) {
   const a = S().adhan;
+  if (ev.type === 'eid') {
+    const fitr = ev.kind === 'fitr', title = t(fitr ? 'fitrNotifTitle' : 'adhaNotifTitle');
+    notify(title, [t('takbir'), t('eidGreeting'), fitr ? t('fitrZakat') : ''].filter(Boolean).join('\n'), { tag: 'eid', vibrateOn: !isSilent() && a.vibrate });
+    toast(title, 6000);
+    return;
+  }
+  if (ev.type === 'month') {
+    const title = ev.h.m === 9 ? t('ramadanNotifTitle') : t('monthNotifTitle', { m: t('hijriMonths')[ev.h.m - 1] });
+    notify(title, [t('monthDua'), t('monthDuaTr')].filter(Boolean).join('\n'), { tag: 'month', vibrateOn: !isSilent() && a.vibrate });
+    toast(title, 6000);
+    return;
+  }
   if (ev.type === 'white') {
     notify(t('whiteNotifTitle'), t('whiteNotifBody', { d: ev.h.d, m: t('hijriMonths')[ev.h.m - 1] }), { tag: 'white', vibrateOn: !isSilent() && a.vibrate });
     toast(t('whiteNotifTitle'), 6000);
@@ -1747,6 +1775,8 @@ function renderSettings() {
   $('#sAdhanShort').checked = !!a.short;
   renderNative();
   $('#sWhiteDays').checked = s.whiteDays;
+  $('#sMonthReminder').checked = s.monthReminder !== false;
+  $('#sEidReminder').checked = s.eidReminder !== false;
   renderCredits();
   renderCustomAdhan();
   const ver = $('#appVersion'); if (ver) ver.textContent = `Version ${APP_VERSION}`;
@@ -1869,6 +1899,8 @@ function bindSettings() {
   on('#sAdhanOn', 'change', e => { S().adhan.enabled = e.target.checked; save(); if (e.target.checked) unlockAudio(); });
   on('#sAdhanMode', 'change', e => { S().adhan.mode = e.target.value; save(); renderAdhanPickers(); });
   on('#sVolume', 'input', e => { S().adhan.volume = Number(e.target.value); save(); });
+  on('#sEidReminder', 'change', async e => { S().eidReminder = e.target.checked; save(); if (e.target.checked) await ensureNotifPermission(); });
+  on('#sMonthReminder', 'change', async e => { S().monthReminder = e.target.checked; save(); if (e.target.checked) await ensureNotifPermission(); });
   on('#sWhiteDays', 'change', async e => { S().whiteDays = e.target.checked; save(); renderWhite(); if (e.target.checked) await ensureNotifPermission(); });
   on('#sVibrate', 'change', e => { S().adhan.vibrate = e.target.checked; save(); if (e.target.checked) vibrate(80); });
   on('#sAdhanShort', 'change', e => { S().adhan.short = e.target.checked; save(); });

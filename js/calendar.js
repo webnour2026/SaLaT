@@ -1,5 +1,5 @@
 // Calendrier hégirien : mois complets, occasions et « jours blancs » (13, 14, 15).
-import { hijriParts } from './hijri.js';
+import { hijriParts, habousActive, isConfirmedStart } from './hijri.js';
 
 const DAY = 864e5;
 // Occasions (mois, jour) → clé de traduction
@@ -43,6 +43,43 @@ export function hijriMonth(anchorNoon, offsetDays = 0) {
     days.push({ noon: t, h, dow: new Date(t).getUTCDay(), white: isWhiteDay(h), occasion: occasionOf(h) });
   }
   return { y: h0.y, m: h0.m, days };
+}
+
+/**
+ * Rappel de début de mois : demain est le 1er d'un mois hégirien.
+ * Avec le calendrier du Maroc, on n'annonce qu'un début de mois DÉJÀ proclamé par le ministère
+ * (avant le communiqué du soir du 29, « demain = 1er » ne serait qu'une prévision).
+ * Renvoie { y, m } ou null.
+ */
+export function monthStartOn(noon, offsetDays = 0) {
+  const h = hijriOf(noon, offsetDays);
+  if (h.d !== 1) return null;
+  if (habousActive() && !isConfirmedStart(noon + offsetDays * DAY)) return null;
+  return h;
+}
+
+/**
+ * Veille d'un Aïd : demain = 1er Chawwal (Aïd al-Fitr) ou 10 Dhou al-Hijja (Aïd al-Adha).
+ * Au Maroc, le 1er Chawwal n'est retenu qu'une fois proclamé par le ministère ; pour l'Aïd al-Adha, il faut
+ * que le début de Dhou al-Hijja soit proclamé (c'est le cas ~10 jours avant).
+ */
+export function eidEve(noon, offsetDays = 0) {
+  const h = hijriOf(noon, offsetDays);
+  if (h.m === 10 && h.d === 1) return monthStartOn(noon, offsetDays) ? { kind: 'fitr', h } : null;
+  if (h.m === 12 && h.d === 10) {
+    if (habousActive() && !isConfirmedStart(noon + offsetDays * DAY - 9 * DAY)) return null;
+    return { kind: 'adha', h };
+  }
+  return null;
+}
+
+/** Quel rappel envoyer ce soir pour demain ? Un Aïd remplace le rappel de début de mois (pas de doublon). */
+export function reminderFor(tomorrowNoon, offsetDays = 0, prefs = { eid: true, month: true }) {
+  const eve = eidEve(tomorrowNoon, offsetDays);
+  if (eve && prefs.eid) return { type: 'eid', kind: eve.kind, h: eve.h };
+  const start = monthStartOn(tomorrowNoon, offsetDays);
+  if (start && prefs.month) return { type: 'month', h: start };
+  return null;
 }
 
 /** Prochains jours blancs à partir d'aujourd'hui (jusqu'à `horizon` jours). */

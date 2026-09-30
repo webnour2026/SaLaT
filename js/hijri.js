@@ -86,6 +86,9 @@ function viaHabous(day) {
   return alignedCalc(day, s);                                                // après le dernier annoncé
 }
 
+/** Ce jour civil (midi UTC) est-il un début de mois officiellement annoncé par le ministère ? */
+export const isConfirmedStart = noonTs => !!HB && HB.starts.some(s => s.day === Math.floor(noonTs / DAYMS));
+
 export function hijriParts(ts, timeZone) {
   if (HB_ON && HB) { try { return viaHabous(civilDay(ts, timeZone)); } catch {} }
   return calcParts(ts, timeZone);

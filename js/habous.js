@@ -33,19 +33,22 @@ const readCache = () => { try { return JSON.parse(localStorage.getItem(KEY) || '
 export function initHabous() { setHabous(mergeTables(HABOUS_BUILTIN, readCache())); }
 
 /** Récupère data/habous.json. Renvoie true si la liste a changé. */
-export async function refreshHabous({ force = false } = {}) {
+let busy = false;
+export async function refreshHabous({ force = false, every = THROTTLE } = {}) {
+  if (busy) return false;
   try {
     const at = Number(localStorage.getItem(KEY + '.at') || 0);
-    if (!force && Date.now() - at < THROTTLE) return false;
+    if (!force && Date.now() - at < every) return false;
+    busy = true;
+    localStorage.setItem(KEY + '.at', String(Date.now()));      // même une tentative ratée patiente avant de recommencer
     const res = await fetch('data/habous.json', { cache: 'no-cache' });
     if (!res.ok) return false;
     const fresh = await res.json();
     if (!fresh || !Array.isArray(fresh.months) || !fresh.months.length) return false;
-    localStorage.setItem(KEY + '.at', String(Date.now()));
     const before = JSON.stringify(mergeTables(HABOUS_BUILTIN, readCache()));
     const merged = mergeTables(HABOUS_BUILTIN, readCache(), fresh);
     localStorage.setItem(KEY, JSON.stringify(merged));
     setHabous(merged);
     return JSON.stringify(merged) !== before;
-  } catch { return false; }
+  } catch { return false; } finally { busy = false; }
 }
