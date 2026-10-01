@@ -1239,17 +1239,20 @@ async function buildGreetingCard(spec) {
   // texte sourcé (verset, hadith, dhikr ou doua)
   const txt = cardTextOf(spec);
   if (txt) {
+    const lead = key === 'hadith' ? t('hadithLead') : '';   // « قال رسول الله ﷺ » : on voit tout de suite que c'est un hadith
+    const leadH = lead ? 76 : 0;
     let size = 72, lines, lh, boxH, b0;
     do {
       g.font = amiri(700, size); lines = wrapLines(g, txt.q ? `﴿ ${txt.t} ﴾` : `« ${txt.t} »`, W - 200);
       // b0 = distance haut de boîte → 1re ligne (marge haute confortable) ; 50 = reste sous la référence
-      lh = Math.round((size + 4) * 1.5); b0 = 46 + Math.round(size * .95); boxH = b0 + lines.length * lh + 50; size -= 4;
+      lh = Math.round((size + 4) * 1.5); b0 = 46 + leadH + Math.round(size * .95); boxH = b0 + lines.length * lh + 50; size -= 4;
     } while ((lines.length > 6 || boxH > 640) && size > 36);
     // cartes du jour : le texte sourcé est centré entre l'en-tête (titre) et le pied de carte
     if (spec.evergreen) y = Math.max(y, Math.round((340 + (H - 260)) / 2 - boxH / 2) + 10);
     const bt = y - 10;   // haut de la boîte
     g.fillStyle = isSky ? 'rgba(255,255,255,.58)' : 'rgba(255,255,255,.10)'; g.beginPath(); g.roundRect(70, bt, W - 140, boxH, 36); g.fill();
     if (isSky) { g.strokeStyle = 'rgba(15,44,69,.14)'; g.lineWidth = 2; g.stroke(); }
+    if (lead) { g.save(); g.font = amiri(400, 44); g.fillStyle = isSky ? '#1B6E80' : accent; g.fillText(lead, W / 2, bt + 74); g.restore(); }
     g.fillStyle = ink; lines.forEach((ln, i) => g.fillText(ln, W / 2, bt + b0 + i * lh));
     g.font = amiri(400, 40); g.fillStyle = isSky ? '#1B6E80' : accent; g.fillText(txt.r, W / 2, bt + boxH - 44);
     y += boxH + 50;
@@ -1300,7 +1303,7 @@ function cardText(spec) {
   const sub = cardSubLocal(spec.key);
   let txt = `🌙 ${arTitle}${arLine ? '\n' + arLine : ''}${sub ? '\n' + sub : ''}`;
   const body = cardTextOf(spec);
-  if (body) txt += `\n\n${body.q ? `﴿ ${body.t} ﴾` : `« ${body.t} »`}\n${body.r}`;
+  if (body) txt += `\n\n${spec.key === 'hadith' ? t('hadithLead') + '\n' : ''}${body.q ? `﴿ ${body.t} ﴾` : `« ${body.t} »`}\n${body.r}`;
   const from = (S().cardFrom || '').trim();
   if (from) txt += `\n\nمن: ${from}`;
   return txt + `\n\n📱 ${t('shareFooter')}\n${PLAY_URL}`;
