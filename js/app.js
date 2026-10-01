@@ -544,9 +544,23 @@ function renderMonthTable(mon) {
 const SHARE_URL = 'https://tinyurl.com/salati-app';
 const PLAY_URL = SHARE_URL;
 
+// Les polices Google sont découpées en sous-ensembles (latin, arabe) : sans texte d'exemple, document.fonts.load()
+// n'amène que le latin, et la 1re image dessinée peut utiliser une police de secours (tashkeel décalé, graisse différente).
+const FONT_SAMPLE = 'Aa ابتثجحخدذرزسشصضطظعغفقكلمنهويءآأؤإئةىﷺ َُِّْ';
+async function ensureCardFonts() {
+  try {
+    await Promise.all([
+      document.fonts.load('700 60px Amiri', FONT_SAMPLE), document.fonts.load('400 40px Amiri', FONT_SAMPLE),
+      document.fonts.load('700 60px "Reem Kufi"', FONT_SAMPLE),
+      document.fonts.load('400 32px "IBM Plex Sans Arabic"', FONT_SAMPLE), document.fonts.load('500 36px "IBM Plex Sans Arabic"', FONT_SAMPLE),
+    ]);
+    await document.fonts.ready;
+  } catch { /* on dessine quand même */ }
+}
+
 // Image PNG du tableau du mois (pour WhatsApp, etc.), avec la mention de SaLaTi en bas
 async function buildMonthImage(mon) {
-  try { await document.fonts.ready; } catch {}
+  await ensureCardFonts();
   const rtl = document.documentElement.dir === 'rtl';
   const cols = tableCols(), ram = state.tableMode === 'ramadan';
   const W = 1080, M = 44, RH = 50, HEAD = 250, TH = 64, FOOT = 190;
@@ -664,7 +678,7 @@ function svgIcon(k, color) {
   return new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = 'data:image/svg+xml,' + encodeURIComponent(svg); });
 }
 async function buildDayImage(day, isToday) {
-  try { await document.fonts.ready; } catch {}
+  await ensureCardFonts();
   const rtl = document.documentElement.dir === 'rtl';
   const W = 1080, H = 1350, M = 56;
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
@@ -1037,11 +1051,11 @@ const CARD_TEXTS = {
     { t: 'اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ لَكَ بِذَنْبِي، فَاغْفِرْ لِي فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ', r: 'سيد الاستغفار – رواه البخاري (6306)' },
   ],
   hadith: [   // hadiths authentiques courts
-    { t: 'إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى', r: 'متفق عليه (البخاري 1، مسلم 1907)' },
-    { t: 'لَا يُؤْمِنُ أَحَدُكُمْ حَتَّى يُحِبَّ لِأَخِيهِ مَا يُحِبُّ لِنَفْسِهِ', r: 'متفق عليه (البخاري 13، مسلم 45)' },
+    { t: 'إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى', r: 'متفق عليه (البخاري 1، مسلم 1907) واللفظ للبخاري' },
+    { t: 'لَا يُؤْمِنُ أَحَدُكُمْ حَتَّى يُحِبَّ لِأَخِيهِ مَا يُحِبُّ لِنَفْسِهِ', r: 'متفق عليه (البخاري 13، مسلم 45) واللفظ للبخاري' },
     { t: 'مَنْ كَانَ يُؤْمِنُ بِاللَّهِ وَالْيَوْمِ الْآخِرِ فَلْيَقُلْ خَيْرًا أَوْ لِيَصْمُتْ', r: 'متفق عليه (البخاري 6018، مسلم 47)' },
     { t: 'الْكَلِمَةُ الطَّيِّبَةُ صَدَقَةٌ', r: 'متفق عليه (البخاري 2989، مسلم 1009)' },
-    { t: 'أَحَبُّ الْأَعْمَالِ إِلَى اللَّهِ أَدْوَمُهَا وَإِنْ قَلَّ', r: 'متفق عليه (البخاري 6464، مسلم 783)' },
+    { t: 'أَحَبُّ الْأَعْمَالِ إِلَى اللَّهِ تَعَالَى أَدْوَمُهَا وَإِنْ قَلَّ', r: 'رواه مسلم (783) واللفظ له، وبمعناه البخاري (6465)' },
     { t: 'كَلِمَتَانِ خَفِيفَتَانِ عَلَى اللِّسَانِ، ثَقِيلَتَانِ فِي الْمِيزَانِ، حَبِيبَتَانِ إِلَى الرَّحْمَنِ: سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، سُبْحَانَ اللَّهِ الْعَظِيمِ', r: 'متفق عليه (البخاري 6682، مسلم 2694)' },
     { t: 'خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ', r: 'رواه البخاري (5027)' },
     { t: 'مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا سَهَّلَ اللَّهُ لَهُ بِهِ طَرِيقًا إِلَى الْجَنَّةِ', r: 'رواه مسلم (2699)' },
@@ -1052,16 +1066,16 @@ const CARD_TEXTS = {
     { t: 'مَنْ دَلَّ عَلَى خَيْرٍ فَلَهُ مِثْلُ أَجْرِ فَاعِلِهِ', r: 'رواه مسلم (1893)' },
     { t: 'الْمُسْلِمُ مَنْ سَلِمَ الْمُسْلِمُونَ مِنْ لِسَانِهِ وَيَدِهِ', r: 'متفق عليه (البخاري 10، مسلم 41)' },
     { t: 'لَيْسَ الشَّدِيدُ بِالصُّرَعَةِ، إِنَّمَا الشَّدِيدُ الَّذِي يَمْلِكُ نَفْسَهُ عِنْدَ الْغَضَبِ', r: 'متفق عليه (البخاري 6114، مسلم 2609)' },
-    { t: 'يَسِّرُوا وَلَا تُعَسِّرُوا، وَبَشِّرُوا وَلَا تُنَفِّرُوا', r: 'متفق عليه (البخاري 69، مسلم 1734)' },
-    { t: 'إِنَّ اللَّهَ رَفِيقٌ يُحِبُّ الرِّفْقَ فِي الْأَمْرِ كُلِّهِ', r: 'متفق عليه (البخاري 6927، مسلم 2165)' },
-    { t: 'مَنْ لَا يَرْحَمِ النَّاسَ لَا يَرْحَمْهُ اللَّهُ', r: 'متفق عليه (البخاري 7376، مسلم 2319)' },
-    { t: 'الْمُؤْمِنُ لِلْمُؤْمِنِ كَالْبُنْيَانِ يَشُدُّ بَعْضُهُ بَعْضًا', r: 'متفق عليه (البخاري 481، مسلم 2585)' },
+    { t: 'يَسِّرُوا وَلَا تُعَسِّرُوا، وَبَشِّرُوا وَلَا تُنَفِّرُوا', r: 'متفق عليه (البخاري 69، مسلم 1734) واللفظ للبخاري' },
+    { t: 'إِنَّ اللَّهَ رَفِيقٌ يُحِبُّ الرِّفْقَ فِي الْأَمْرِ كُلِّهِ', r: 'متفق عليه (البخاري 6927، مسلم 2165) واللفظ للبخاري' },
+    { t: 'مَنْ لَا يَرْحَمِ النَّاسَ لَا يَرْحَمْهُ اللَّهُ', r: 'رواه مسلم (2319) واللفظ له' },
+    { t: 'الْمُؤْمِنُ لِلْمُؤْمِنِ كَالْبُنْيَانِ يَشُدُّ بَعْضُهُ بَعْضًا', r: 'متفق عليه (البخاري 481، مسلم 2585) واللفظ لمسلم' },
     { t: 'اتَّقُوا النَّارَ وَلَوْ بِشِقِّ تَمْرَةٍ', r: 'متفق عليه (البخاري 1417، مسلم 1016)' },
     { t: 'إِنَّ اللَّهَ لَا يَنْظُرُ إِلَى صُوَرِكُمْ وَأَمْوَالِكُمْ، وَلَكِنْ يَنْظُرُ إِلَى قُلُوبِكُمْ وَأَعْمَالِكُمْ', r: 'رواه مسلم (2564)' },
     { t: 'الطُّهُورُ شَطْرُ الْإِيمَانِ', r: 'رواه مسلم (223)' },
     { t: 'مِنْ حُسْنِ إِسْلَامِ الْمَرْءِ تَرْكُهُ مَا لَا يَعْنِيهِ', r: 'رواه الترمذي (2317)' },
     { t: 'أَكْمَلُ الْمُؤْمِنِينَ إِيمَانًا أَحْسَنُهُمْ خُلُقًا', r: 'رواه أبو داود (4682) والترمذي (1162)' },
-    { t: 'الرَّاحِمُونَ يَرْحَمُهُمُ الرَّحْمَنُ، ارْحَمُوا مَنْ فِي الْأَرْضِ يَرْحَمْكُمْ مَنْ فِي السَّمَاءِ', r: 'رواه أبو داود (4941) والترمذي (1924)' },
+    { t: 'الرَّاحِمُونَ يَرْحَمُهُمُ الرَّحْمَنُ، ارْحَمُوا مَنْ فِي الْأَرْضِ يَرْحَمْكُمْ مَنْ فِي السَّمَاءِ', r: 'رواه الترمذي (1924) واللفظ له، وأبو داود (4941)' },
   ],
 };
 /** Texte à afficher pour une carte (rotation hebdomadaire / quotidienne, ou doua choisie) */
@@ -1204,7 +1218,7 @@ function drawZellige(g, W, H, color) {
 }
 
 async function buildGreetingCard(spec) {
-  try { await Promise.all([document.fonts.load('700 60px Amiri'), document.fonts.load('700 60px "Reem Kufi"'), document.fonts.ready]); } catch {}
+  await ensureCardFonts();
   const W = 1080, H = 1350, key = spec.key;
   const [c1, c2, accent] = CARD_THEME[themeOf(key)];
   const isSky = themeOf(key) === 'sky', ink = isSky ? accent : '#fff';   // ciel clair : texte bleu nuit
@@ -1254,7 +1268,9 @@ async function buildGreetingCard(spec) {
     if (isSky) { g.strokeStyle = 'rgba(15,44,69,.14)'; g.lineWidth = 2; g.stroke(); }
     if (lead) { g.save(); g.font = amiri(400, 44); g.fillStyle = isSky ? '#1B6E80' : accent; g.fillText(lead, W / 2, bt + 74); g.restore(); }
     g.fillStyle = ink; lines.forEach((ln, i) => g.fillText(ln, W / 2, bt + b0 + i * lh));
-    g.font = amiri(400, 40); g.fillStyle = isSky ? '#1B6E80' : accent; g.fillText(txt.r, W / 2, bt + boxH - 44);
+    let rs = 40; g.font = amiri(400, rs);
+    while (rs > 26 && g.measureText(txt.r).width > W - 240) { rs -= 2; g.font = amiri(400, rs); }   // « … واللفظ للبخاري » : tient sur une ligne
+    g.fillStyle = isSky ? '#1B6E80' : accent; g.fillText(txt.r, W / 2, bt + boxH - 44);
     y += boxH + 50;
   }
   const sub = cardSubLocal(key);
