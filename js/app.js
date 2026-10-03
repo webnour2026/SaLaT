@@ -7,9 +7,10 @@ import { qiblaBearing, distanceToKaaba, cardinalIndex } from './qibla.js';
 import { Compass } from './compass.js';
 import { formatHijri, useHabous, habousActive, habousInfo } from './hijri.js';
 import { initHabous, refreshHabous } from './habous.js';
+import { refreshOfficiel } from './officiel.js';
 import { planNativeReminders, reminderText } from './reminders.js';
 import { hasWaqf, drawArabicLine } from './waqf.js';
-import { nearestLocality, localityName, allLocalities, localityByCode, sameLocalityName, SNAP_KM } from './localites.js';
+import { nearestLocality, moroccoReference, localityName, allLocalities, localityByCode, sameLocalityName, SNAP_KM } from './localites.js';
 import { declination as wmmDeclination } from './wmm.js';
 import { sunPosition, timesAtAzimuth } from './sun.js';
 import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, removeCustomAdhan, loadCustomAdhans, customAdhans, loadSiteAdhans, DEFAULT_ADHAN, RETIRED } from './adhan.js';
@@ -153,12 +154,20 @@ function checkHabous(force = false, every) {
   refreshHabous({ force, every }).then(changed => { if (changed) { rerenderHijri(); if (!$('#view-settings').hidden) renderSettings(); requestNativeSync(); } });
 }
 
+// horaires officiels de la localité (Maroc) : un petit fichier par localité, mis à jour chaque mois par le workflow « Officiel »
+function checkOfficiel(force = false) {
+  const s = S(); if (Number(s.method) !== 21 || !s.location) return;
+  const ref = moroccoReference(s.location.lat, s.location.lng, s.officialLocality !== false, s.officialLocalityCode ?? null);
+  if (!ref.locality) return;
+  refreshOfficiel(ref.locality.code, { force }).then(changed => { if (changed) { refresh(); requestNativeSync(); } });
+}
+
 function setLocation(loc) {
   const old = S().location;
   S().location = { ...loc, ts: Date.now() };
   // un changement de lieu important invalide le fuseau connu
   if (old && Math.abs(old.lng - loc.lng) > 3) S().location.tz = loc.tz || deviceTz();
-  save(); applyHijriSource(); renderHeader(); refresh();
+  save(); applyHijriSource(); renderHeader(); refresh(); checkOfficiel(true);
   if (!$('#view-qibla').hidden) renderQibla();
   if (nativeActive()) localStorage.setItem('priere.nativeDirty', '1');
 }
@@ -1947,9 +1956,9 @@ async function ensureNotifPermission() {
 
 function bindSettings() {
   on('#changeLoc', 'click', openLocationDialog);
-  on('#sMethod', 'change', e => { S().method = Number(e.target.value); S().methodAuto = false; save(); renderOfficialLocality(); refresh(); });
-  on('#sOfficialLocality', 'change', e => { S().officialLocality = e.target.checked; save(); renderOfficialLocality(); refresh(); });
-  on('#sLocalityPick', 'change', e => { S().officialLocalityCode = e.target.value ? Number(e.target.value) : null; save(); renderOfficialLocality(); refresh(); });
+  on('#sMethod', 'change', e => { S().method = Number(e.target.value); S().methodAuto = false; save(); renderOfficialLocality(); refresh(); checkOfficiel(true); });
+  on('#sOfficialLocality', 'change', e => { S().officialLocality = e.target.checked; save(); renderOfficialLocality(); refresh(); checkOfficiel(true); });
+  on('#sLocalityPick', 'change', e => { S().officialLocalityCode = e.target.value ? Number(e.target.value) : null; save(); renderOfficialLocality(); refresh(); checkOfficiel(true); });
   on('#sSchool', 'change', e => { S().school = Number(e.target.value); save(); refresh(); });
   on('#sAdhanOn', 'change', e => { S().adhan.enabled = e.target.checked; save(); if (e.target.checked) unlockAudio(); });
   on('#sAdhanMode', 'change', e => { S().adhan.mode = e.target.value; save(); renderAdhanPickers(); });
@@ -2155,7 +2164,8 @@ function init() {
   }
   syncClock().then(() => { if (state.today) computeNext(); });
   checkHabous();       // nouveau début de mois annoncé ? (au plus une vérification toutes les 3 h)
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkHabous(); });
+  checkOfficiel();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkHabous(); checkOfficiel(); } });
   setTimeout(askNotifFirstRun, 2500);
 }
 

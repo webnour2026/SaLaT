@@ -1,6 +1,8 @@
 // Récupère, met en cache et sert les horaires d'un jour donné.
 import { getProvider } from './api.js';
 import { computeDay } from './prayer-calc.js';
+import { moroccoReference } from './localites.js';
+import { officialDay } from './officiel.js';
 import { monthKey, readMonth, writeMonth, clearMonths, PRAYERS } from './storage.js';
 
 export { PRAYERS };
@@ -63,6 +65,10 @@ export function getDay(settings, dateKey) {
   if (Number(settings.method) === 21) {
     // Maroc : calcul identique aux horaires officiels des Habous (l'API décale le chourouq et arrondit autrement)
     raw = computeDay({ lat: loc.lat, lng: loc.lng, snap: settings.officialLocality !== false, code: settings.officialLocalityCode ?? null }, dateKey, 21, settings.school); source = 'habous';
+    // horaires publiés par le ministère pour cette localité (copiés par le workflow « Officiel »), si disponibles et cohérents
+    const ref = moroccoReference(loc.lat, loc.lng, settings.officialLocality !== false, settings.officialLocalityCode ?? null);
+    const off = ref.locality && officialDay(ref.locality.code, dateKey, raw);
+    if (off) raw = { ...raw, ...off, Imsak: off.Fajr - 10 * 60000 };
   } else if (cached?.days?.[dateKey]) {
     raw = cached.days[dateKey]; source = 'api'; fetchedAt = cached.fetchedAt;
   } else {
