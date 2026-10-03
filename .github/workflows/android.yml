@@ -16,13 +16,13 @@ on:
   workflow_dispatch:
     inputs:
       version_name:
-        description: "Version affichée (ex. 2.5.1)"
+        description: "Version affichée (ex. 2.9.0)"
         required: true
-        default: "2.5.1"
+        default: "2.9.0"
       version_code:
         description: "Version code (entier, +1 à chaque envoi sur Google Play)"
         required: true
-        default: "2"
+        default: "10"
       play_track:
         description: "Envoyer sur Google Play (none = non)"
         required: true
@@ -39,7 +39,7 @@ on:
 env:
   PACKAGE_ID: io.github.webnour2026.salat
   HOST: webnour2026.github.io
-  START_URL: /SaLaT/?source=twa&native=1
+  START_URL: /SaLaT/?source=twa&native=2   # native=2 : module avec rappels (mois, Aïds, jours blancs) même appli fermée
   APP_NAME: SaLaTi
   SITE: https://webnour2026.github.io/SaLaT
 
