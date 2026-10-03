@@ -46,3 +46,13 @@ export function moroccoReference(lat, lng, snap = true, code = null) {
   if (snap && near) return { lat: n.lat, lng: n.lng, alt: n.alt, locality: n };
   return { lat, lng, alt: near ? n.alt : 0, locality: null };
 }
+
+const norm = t => String(t || '').normalize('NFD').replace(/[\u064B-\u065F\u0670\u0300-\u036F]/g, '')
+  .replace(/[إأآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').toLowerCase().replace(/[^a-z\u0621-\u064A]/g, '');
+
+/** Le lieu de l'utilisateur porte-t-il déjà le nom de cette localité officielle ? (Rabat ↔ Rabat-Salé, مراكش ↔ Marrakech…) */
+export function sameLocalityName(name, loc) {
+  const a = norm(name);
+  if (!a || !loc) return false;
+  return [loc.ar, loc.fr].some(v => { const b = norm(v); return !!b && (a === b || (a.length >= 4 && (b.startsWith(a) || a.startsWith(b)))); });
+}

@@ -9,7 +9,7 @@ import { formatHijri, useHabous, habousActive, habousInfo } from './hijri.js';
 import { initHabous, refreshHabous } from './habous.js';
 import { planNativeReminders, reminderText } from './reminders.js';
 import { hasWaqf, drawArabicLine } from './waqf.js';
-import { nearestLocality, localityName, allLocalities, localityByCode, SNAP_KM } from './localites.js';
+import { nearestLocality, localityName, allLocalities, localityByCode, sameLocalityName, SNAP_KM } from './localites.js';
 import { declination as wmmDeclination } from './wmm.js';
 import { sunPosition, timesAtAzimuth } from './sun.js';
 import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, removeCustomAdhan, loadCustomAdhans, customAdhans, loadSiteAdhans, DEFAULT_ADHAN, RETIRED } from './adhan.js';
@@ -1786,10 +1786,11 @@ function renderOfficialLocality() {
   const names = allLocalities().map(l => [localityName(l, lang), l.code]).sort((a, b) => a[0].localeCompare(b[0], lang === 'ar' ? 'ar' : 'fr'));
   $('#sLocalityPick').replaceChildren(new Option(t('officialLocalityAuto'), ''), ...names.map(([n, c]) => new Option(n, c)));
   $('#sLocalityPick').value = chosen ? String(chosen.code) : '';
+  // une seule ligne, et seulement si elle apprend quelque chose : on s'est collé à une AUTRE localité que le lieu de l'utilisateur
   const loc = s.location, n = loc && nearestLocality(loc.lat, loc.lng);
-  if (chosen) { $('#officialLocalityInfo').textContent = t('officialLocalityChosen', { name: localityName(chosen, lang) }); return; }
-  $('#officialLocalityInfo').textContent = !n || n.km > SNAP_KM ? '' : t(s.officialLocality !== false && n.km <= SNAP_KM ? 'officialLocalityNear' : 'officialLocalityFar',
-    { name: localityName(n, getLang()), km: n.km < 1 ? '< 1' : Math.round(n.km) });
+  const show = !chosen && s.officialLocality !== false && !!n && n.km <= SNAP_KM && !sameLocalityName(loc.name, n);
+  $('#officialLocalityInfo').hidden = !show;
+  $('#officialLocalityInfo').textContent = show ? t('officialLocalityNear', { name: localityName(n, lang) }) : '';
 }
 
 function renderSettings() {
