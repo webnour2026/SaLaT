@@ -1,0 +1,58 @@
+# Horaires officiels du ministère : copie, localité par localité, les tableaux du mois publiés par le widget de la
+# Fondation Mohammed VI des Ouléma Africains (fm6oa.org) dans data/officiel/<numéro>.json. L'appli les préfère au calcul.
+#   · chaque jour : une seule page lue (Rabat-Salé) ; si rien de nouveau, le travail s'arrête là ;
+#   · quand un nouveau tableau apparaît (début de mois) : les 163 localités sont relues, 1 page toutes les 2,5 s ;
+#   · garde-fous : lignes écartées si elles diffèrent de plus de 2 min du calcul ; rien n'est écrit si plus de 15 % des
+#     localités échouent ; robots.txt vérifié avant toute lecture.
+# Premier essai : Actions → « Officiel » → Run workflow → essai coché, « only » = 1 31 100 → lire le résumé du travail.
+name: Officiel
+on:
+  schedule:
+    - cron: '20 5 * * *'
+  workflow_dispatch:
+    inputs:
+      essai:
+        description: "Essai : lire et contrôler sans rien écrire"
+        type: boolean
+        default: true
+      force:
+        description: "Tout relire même s'il n'y a rien de nouveau"
+        type: boolean
+        default: false
+      only:
+        description: "Seulement ces numéros de localités de l'appli (ex. 1 31 100), vide = toutes"
+        required: false
+        default: ""
+permissions:
+  contents: write
+concurrency:
+  group: officiel
+  cancel-in-progress: false
+jobs:
+  officiel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Tests
+        run: node scripts/test-officiel.mjs
+      - name: Lire les tableaux officiels
+        run: node scripts/update-officiel.mjs
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.essai || 'false' }}
+          FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force || 'false' }}
+          ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.only || '' }}
+      - name: Publier si les horaires ont changé
+        run: |
+          git add data/officiel
+          if git diff --cached --quiet; then
+            echo "Rien de nouveau"
+          else
+            git config user.name "github-actions"
+            git config user.email "github-actions@users.noreply.github.com"
+            git commit -m "Horaires officiels : mise à jour"
+            git push
+          fi
