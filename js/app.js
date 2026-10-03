@@ -1800,7 +1800,9 @@ function renderSettings() {
     ? `${loc.source === 'gps' ? t('gpsAuto') : t('manualCity')} — ${loc.name || ''} (${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)})${loc.accuracy ? ` · ${t('gpsAccuracy')} ±${loc.accuracy} m` : ''}`
     : t('chooseCity');
 
-  $('#sMethod').replaceChildren(...METHOD_IDS.map(id => new Option(t('methods')[id], id, false, id === s.method)));
+  // « Moonsighting Committee » (id 15) : méthode britannique / nord-américaine, nom trompeur en arabe et calcul hors ligne approximatif :
+  // retirée de la liste, sauf pour celui qui l'a déjà choisie
+  $('#sMethod').replaceChildren(...METHOD_IDS.filter(id => id !== 15 || Number(s.method) === 15).map(id => new Option(t('methods')[id], id, false, id === s.method)));
   $('#sSchool').value = String(s.school);
   renderOfficialLocality();
 
