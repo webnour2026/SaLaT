@@ -184,9 +184,9 @@ final class AlarmScheduler {
         JSONObject txt = cfg == null ? null : cfg.optJSONObject("txt");
         return txt == null ? def : txt.optString(name, def);
     }
-    static String prayerName(JSONObject cfg, String key) {
-        JSONObject n = cfg == null ? null : cfg.optJSONObject("names");
-        return n == null ? key : n.optString(key, key);
+    /** Nom affiché de la prière à l'instant `when` (le Dhuhr s'appelle « Joumou'a » le vendredi). */
+    static String prayerName(JSONObject cfg, String key, long when) {
+        return PrayerNames.of(cfg, key, when);
     }
 
     /** Identifiant d'un fichier audio intégré (res/raw), sinon l'Adhan par défaut, sinon 0. */

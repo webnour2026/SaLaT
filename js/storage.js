@@ -20,6 +20,9 @@ export const DEFAULTS = {
   whiteDays: true,              // rappel des jours blancs
   monthReminder: true,          // rappel « demain : 1er du mois » avec le doua de la nouvelle lune
   eidReminder: true,            // rappel de la veille des Aïds (takbir)
+  officialLocality: true,       // Maroc : horaire de la localité officielle la plus proche (≤ 25 km), comme le tableau de la mosquée
+  officialLocalityCode: null,   // Maroc : localité officielle choisie à la main (null = automatique)
+  fridayReminder: true,         // vendredi matin : « أكثروا من الصلاة على النبي ﷺ »
   silentUntil: 0,               // mode silencieux : timestamp de fin (Infinity = jusqu'à désactivation)
   declAuto: true,               // déclinaison calculée par WMM2025
   declination: 0,               // valeur manuelle (degrés, Est positif)

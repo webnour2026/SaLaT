@@ -62,7 +62,7 @@ export function getDay(settings, dateKey) {
   let raw, source, fetchedAt = null;
   if (Number(settings.method) === 21) {
     // Maroc : calcul identique aux horaires officiels des Habous (l'API décale le chourouq et arrondit autrement)
-    raw = computeDay(loc, dateKey, 21, settings.school); source = 'habous';
+    raw = computeDay({ lat: loc.lat, lng: loc.lng, snap: settings.officialLocality !== false, code: settings.officialLocalityCode ?? null }, dateKey, 21, settings.school); source = 'habous';
   } else if (cached?.days?.[dateKey]) {
     raw = cached.days[dateKey]; source = 'api'; fetchedAt = cached.fetchedAt;
   } else {

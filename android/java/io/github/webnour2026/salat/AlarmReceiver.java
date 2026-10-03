@@ -21,7 +21,7 @@ public class AlarmReceiver extends BroadcastReceiver {
             long when = intent.getLongExtra(AlarmScheduler.EXTRA_TIME, 0);
             long now = System.currentTimeMillis();
             // alarme très en retard (téléphone éteint, etc.) : on ne joue pas un Adhan périmé
-            if (cfg != null && key != null && !"tick".equals(type) && Math.abs(now - when) < 20 * 60000L) notify(ctx, cfg, key, type);
+            if (cfg != null && key != null && !"tick".equals(type) && Math.abs(now - when) < 20 * 60000L) notify(ctx, cfg, key, type, when);
         } catch (Exception ignored) {
         } finally {
             AlarmScheduler.scheduleNext(ctx);
@@ -30,8 +30,12 @@ public class AlarmReceiver extends BroadcastReceiver {
     }
 
     static void notify(Context ctx, JSONObject cfg, String key, String type) {
+        notify(ctx, cfg, key, type, System.currentTimeMillis());
+    }
+
+    static void notify(Context ctx, JSONObject cfg, String key, String type, long when) {
         NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
-        String name = AlarmScheduler.prayerName(cfg, key);
+        String name = AlarmScheduler.prayerName(cfg, key, when);
         boolean vib = cfg.optBoolean("vib", true);
         boolean silent = cfg.optLong("su", 0) > System.currentTimeMillis();
 

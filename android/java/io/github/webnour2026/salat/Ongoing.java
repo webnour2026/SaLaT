@@ -51,7 +51,7 @@ final class Ongoing {
             String tz = cfg.optString("tz", TimeZone.getDefault().getID());
             SimpleDateFormat hm = new SimpleDateFormat("HH:mm", Locale.US);
             hm.setTimeZone(TimeZone.getTimeZone(tz));
-            String prayer = AlarmScheduler.prayerName(cfg, next.key) + "  " + hm.format(new Date(next.time));
+            String prayer = AlarmScheduler.prayerName(cfg, next.key, next.time) + "  " + hm.format(new Date(next.time));
 
             String city = AlarmScheduler.text(cfg, "city", "");
             String hijri = "";

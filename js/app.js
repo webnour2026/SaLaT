@@ -8,6 +8,8 @@ import { Compass } from './compass.js';
 import { formatHijri, useHabous, habousActive, habousInfo } from './hijri.js';
 import { initHabous, refreshHabous } from './habous.js';
 import { planNativeReminders, reminderText } from './reminders.js';
+import { hasWaqf, drawArabicLine } from './waqf.js';
+import { nearestLocality, localityName, allLocalities, localityByCode, SNAP_KM } from './localites.js';
 import { declination as wmmDeclination } from './wmm.js';
 import { sunPosition, timesAtAzimuth } from './sun.js';
 import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, removeCustomAdhan, loadCustomAdhans, customAdhans, loadSiteAdhans, DEFAULT_ADHAN, RETIRED } from './adhan.js';
@@ -22,6 +24,9 @@ function on(sel, ev, fn, opts) {
 }
 const METHOD_IDS = [21, 3, 5, 4, 1, 2, 13, 12, 19, 18, 8, 16, 15];
 const LIST_ROWS = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+// Le vendredi, la prière du Dhuhr est la prière de la Joumou'a
+const isFridayKey = dateKey => new Date(`${dateKey}T12:00:00Z`).getUTCDay() === 5;
+const prayerLabel = (k, dateKey) => (k === 'Dhuhr' && dateKey && isFridayKey(dateKey) ? t('Jumuah') : t(k));
 const EXTRA_ROWS = ['Imsak', 'Sunset', 'Midnight'];
 
 const state = {
@@ -320,7 +325,7 @@ function renderOtherDay(day) {
     const li = document.createElement('li');
     li.className = PRAYERS.includes(k) ? '' : 'minor';
     li.innerHTML = `<span class="mark">${prayerIcon(k)}</span><span class="name"></span><time class="time"></time>`;
-    li.querySelector('.name').textContent = t(k);
+    li.querySelector('.name').textContent = prayerLabel(k, day.date);
     li.querySelector('.time').textContent = fmtTime(day.times[k]);
     return li;
   });
@@ -350,7 +355,8 @@ function renderHome() {
 
   const el = state.elapsed;   // heure de la prière tout juste arrivée : on reste dessus un moment
   $('#nextLabel').textContent = el ? t('prayerNow') : t('nextPrayer');
-  $('#nextName').textContent = t(el ? el.name : next.name);
+  const nextDate = el || next.day === 'today' ? state.today.date : addDays(state.today.date, 1);
+  $('#nextName').textContent = prayerLabel(el ? el.name : next.name, nextDate);
   $('#nextTime').textContent = el ? fmtTime(el.ts) : fmtTime(next.ts) + (next.day === 'tomorrow' ? ` · ${t('tomorrow')}` : '');
   $('#nextAt').textContent = fmtTime(el ? el.ts : next.ts);
   $('#arch').classList.toggle('elapsed', !!el);
@@ -365,7 +371,7 @@ function renderHome() {
     const past = ts <= tNow && !isNext;
     li.className = [past ? 'past' : '', isNext ? 'next' : '', !isPrayer ? 'minor' : '', current === k ? 'current' : ''].filter(Boolean).join(' ');
     li.innerHTML = `<span class="mark">${prayerIcon(k)}</span><span class="name"></span><time class="time"></time>`;
-    li.querySelector('.name').textContent = t(k);
+    li.querySelector('.name').textContent = prayerLabel(k, state.today.date);
     if (current === k) li.querySelector('.name').dataset.badge = t('inProgress');
     li.querySelector('.time').textContent = fmtTime(ts);
     if (isNext) li.setAttribute('aria-current', 'time');
@@ -712,7 +718,7 @@ async function buildDayImage(day, isToday) {
     if (icon) g.drawImage(icon, X(M + 34, 60), y + (RH - 60) / 2, 60, 60);
     g.textBaseline = 'middle'; g.textAlign = rtl ? 'right' : 'left';
     g.fillStyle = isNext ? '#0E6B58' : minor ? '#5A6B78' : '#17222B';
-    g.font = font(isNext ? 700 : minor ? 400 : 600, minor ? 38 : 44); g.fillText(t(k), X(M + 124), y + RH / 2);
+    g.font = font(isNext ? 700 : minor ? 400 : 600, minor ? 38 : 44); g.fillText(prayerLabel(k, day.date), X(M + 124), y + RH / 2);
     if (isNext) {
       g.font = font(600, 24); const tag = t('nextPrayer'); const tw = g.measureText(tag).width + 28;
       const nx = M + 124 + g.measureText(t(k)).width * 0 + 0;
@@ -741,7 +747,7 @@ function dayShareText(day) {
   const ts = day.times.Dhuhr || now();
   const greg = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: tz() }).format(ts);
   return `🕌 ${t('shareTitle')} — ${S().location?.name || ''}\n${greg} · ${fmtDates(ts).hijri}\n\n`
-    + LIST_ROWS.map(k => `${t(k)} : ${fmtTime(day.times[k])}`).join('\n')
+    + LIST_ROWS.map(k => `${prayerLabel(k, day.date)} : ${fmtTime(day.times[k])}`).join('\n')
     + `\n\n📱 ${t('shareFooter')}\n${PLAY_URL}`;
 }
 async function shareDay() {
@@ -794,8 +800,8 @@ const CARD_TEXTS = {
     { t: 'مَنْ قَرَأَ سُورَةَ الْكَهْفِ فِي يَوْمِ الْجُمُعَةِ أَضَاءَ لَهُ مِنَ النُّورِ مَا بَيْنَ الْجُمُعَتَيْنِ', r: 'رواه الحاكم والبيهقي، وصححه الألباني' },
     { t: 'إِنَّ مِنْ أَفْضَلِ أَيَّامِكُمْ يَوْمَ الْجُمُعَةِ … فَأَكْثِرُوا عَلَيَّ مِنَ الصَّلَاةِ فِيهِ', r: 'رواه أبو داود (1047)' },
   ],
-  occRamadan: [{ q: true, t: 'شَهْرُ رَمَضَانَ الَّذِي أُنزِلَ فِيهِ الْقُرْآنُ هُدًى لِّلنَّاسِ وَبَيِّنَاتٍ مِّنَ الْهُدَىٰ وَالْفُرْقَانِ', r: '[البقرة: 185]' }],
-  occQadr: [{ q: true, t: 'لَيْلَةُ الْقَدْرِ خَيْرٌ مِّنْ أَلْفِ شَهْرٍ', r: '[القدر: 3]' },
+  occRamadan: [{ q: true, t: 'شَهۡرُ رَمَضَانَ ٱلَّذِيٓ أُنزِلَ فِيهِ ٱلۡقُرۡءَانُ هُدٗى لِّلنَّاسِ وَبَيِّنَٰتٖ مِّنَ ٱلۡهُدَىٰ وَٱلۡفُرۡقَانِ', r: '[البقرة: 185]' }],
+  occQadr: [{ q: true, t: 'لَيۡلَةُ ٱلۡقَدۡرِ خَيۡرٞ مِّنۡ أَلۡفِ شَهۡرٖ', r: '[القدر: 3]' },
             { t: 'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي', r: 'رواه الترمذي (3513)' }],
   occArafa: [{ t: 'صِيَامُ يَوْمِ عَرَفَةَ أَحْتَسِبُ عَلَى اللَّهِ أَنْ يُكَفِّرَ السَّنَةَ الَّتِي قَبْلَهُ وَالسَّنَةَ الَّتِي بَعْدَهُ', r: 'رواه مسلم (1162)' }],
   occAshura: [{ t: 'صِيَامُ يَوْمِ عَاشُورَاءَ أَحْتَسِبُ عَلَى اللَّهِ أَنْ يُكَفِّرَ السَّنَةَ الَّتِي قَبْلَهُ', r: 'رواه مسلم (1162)' }],
@@ -1017,31 +1023,31 @@ const CARD_TEXTS = {
     { q: true, t: 'وَسَبِّحۡ بِحَمۡدِ رَبِّكَ قَبۡلَ طُلُوعِ ٱلشَّمۡسِ وَقَبۡلَ غُرُوبِهَا', r: '[طه: 130]' },
   ],
   dua: [      // une carte par doua
-    { q: true, t: 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ', r: '[البقرة: 201]' },
-    { q: true, t: 'رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي', r: '[طه: 25-26]' },
-    { q: true, t: 'رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا وَهَبْ لَنَا مِن لَّدُنكَ رَحْمَةً إِنَّكَ أَنتَ الْوَهَّابُ', r: '[آل عمران: 8]' },
-    { q: true, t: 'رَّبِّ ارْحَمْهُمَا كَمَا رَبَّيَانِي صَغِيرًا', r: '[الإسراء: 24]' },
+    { q: true, t: 'رَبَّنَآ ءَاتِنَا فِي ٱلدُّنۡيَا حَسَنَةٗ وَفِي ٱلۡأٓخِرَةِ حَسَنَةٗ وَقِنَا عَذَابَ ٱلنَّارِ', r: '[البقرة: 201]' },
+    { q: true, t: 'رَبِّ ٱشۡرَحۡ لِي صَدۡرِي وَيَسِّرۡ لِيٓ أَمۡرِي', r: '[طه: 25-26]' },
+    { q: true, t: 'رَبَّنَا لَا تُزِغۡ قُلُوبَنَا بَعۡدَ إِذۡ هَدَيۡتَنَا وَهَبۡ لَنَا مِن لَّدُنكَ رَحۡمَةًۚ إِنَّكَ أَنتَ ٱلۡوَهَّابُ', r: '[آل عمران: 8]' },
+    { q: true, t: 'رَّبِّ ٱرۡحَمۡهُمَا كَمَا رَبَّيَانِي صَغِيرٗا', r: '[الإسراء: 24]' },
     { t: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَافِيَةَ فِي الدُّنْيَا وَالْآخِرَةِ', r: 'رواه أبو داود (5074) وابن ماجه (3871)' },
     { t: 'يَا مُقَلِّبَ الْقُلُوبِ ثَبِّتْ قَلْبِي عَلَى دِينِكَ', r: 'رواه الترمذي (2140)' },
-    { q: true, t: 'رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا قُرَّةَ أَعْيُنٍ وَاجْعَلْنَا لِلْمُتَّقِينَ إِمَامًا', r: '[الفرقان: 74]' },
-    { q: true, t: 'رَّبِّ زِدْنِي عِلْمًا', r: '[طه: 114]' },
-    { q: true, t: 'رَبَّنَا اغْفِرْ لِي وَلِوَالِدَيَّ وَلِلْمُؤْمِنِينَ يَوْمَ يَقُومُ الْحِسَابُ', r: '[إبراهيم: 41]' },
-    { q: true, t: 'حَسْبِيَ اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ ۖ عَلَيْهِ تَوَكَّلْتُ ۖ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ', r: '[التوبة: 129]' },
-    { q: true, t: 'لَّا إِلَٰهَ إِلَّا أَنتَ سُبْحَانَكَ إِنِّي كُنتُ مِنَ الظَّالِمِينَ', r: '[الأنبياء: 87]' },
-    { q: true, t: 'رَبَّنَا ظَلَمْنَا أَنفُسَنَا وَإِن لَّمْ تَغْفِرْ لَنَا وَتَرْحَمْنَا لَنَكُونَنَّ مِنَ الْخَاسِرِينَ', r: '[الأعراف: 23]' },
+    { q: true, t: 'رَبَّنَا هَبۡ لَنَا مِنۡ أَزۡوَٰجِنَا وَذُرِّيَّـٰتِنَا قُرَّةَ أَعۡيُنٖ وَٱجۡعَلۡنَا لِلۡمُتَّقِينَ إِمَامًا', r: '[الفرقان: 74]' },
+    { q: true, t: 'رَّبِّ زِدۡنِي عِلۡمٗا', r: '[طه: 114]' },
+    { q: true, t: 'رَبَّنَا ٱغۡفِرۡ لِي وَلِوَٰلِدَيَّ وَلِلۡمُؤۡمِنِينَ يَوۡمَ يَقُومُ ٱلۡحِسَابُ', r: '[إبراهيم: 41]' },
+    { q: true, t: 'حَسۡبِيَ ٱللَّهُ لَآ إِلَٰهَ إِلَّا هُوَۖ عَلَيۡهِ تَوَكَّلۡتُۖ وَهُوَ رَبُّ ٱلۡعَرۡشِ ٱلۡعَظِيمِ', r: '[التوبة: 129]' },
+    { q: true, t: 'لَّآ إِلَٰهَ إِلَّآ أَنتَ سُبۡحَٰنَكَ إِنِّي كُنتُ مِنَ ٱلظَّـٰلِمِينَ', r: '[الأنبياء: 87]' },
+    { q: true, t: 'رَبَّنَا ظَلَمۡنَآ أَنفُسَنَا وَإِن لَّمۡ تَغۡفِرۡ لَنَا وَتَرۡحَمۡنَا لَنَكُونَنَّ مِنَ ٱلۡخَٰسِرِينَ', r: '[الأعراف: 23]' },
     { t: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى وَالْعَفَافَ وَالْغِنَى', r: 'رواه مسلم (2721)' },
     { t: 'اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ', r: 'رواه أبو داود (1522) والنسائي (1303)' },
     { t: 'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي', r: 'رواه الترمذي (3513)' },
     { t: 'اللَّهُمَّ آتِ نَفْسِي تَقْوَاهَا، وَزَكِّهَا أَنْتَ خَيْرُ مَنْ زَكَّاهَا، أَنْتَ وَلِيُّهَا وَمَوْلَاهَا', r: 'رواه مسلم (2722)' },
     { t: 'اللَّهُمَّ اغْفِرْ لِي، وَارْحَمْنِي، وَاهْدِنِي، وَعَافِنِي، وَارْزُقْنِي', r: 'رواه مسلم (2697)' },
-    { q: true, t: 'رَبَّنَا تَقَبَّلْ مِنَّا ۖ إِنَّكَ أَنتَ السَّمِيعُ الْعَلِيمُ', r: '[البقرة: 127]' },
-    { q: true, t: 'رَبَّنَا لَا تُؤَاخِذْنَا إِن نَّسِينَا أَوْ أَخْطَأْنَا', r: '[البقرة: 286]' },
-    { q: true, t: 'رَبِّ اجْعَلْنِي مُقِيمَ الصَّلَاةِ وَمِن ذُرِّيَّتِي ۚ رَبَّنَا وَتَقَبَّلْ دُعَاءِ', r: '[إبراهيم: 40]' },
-    { q: true, t: 'رَبِّ أَوْزِعْنِي أَنْ أَشْكُرَ نِعْمَتَكَ الَّتِي أَنْعَمْتَ عَلَيَّ وَعَلَىٰ وَالِدَيَّ وَأَنْ أَعْمَلَ صَالِحًا تَرْضَاهُ', r: '[النمل: 19]' },
-    { q: true, t: 'رَبِّ إِنِّي لِمَا أَنزَلْتَ إِلَيَّ مِنْ خَيْرٍ فَقِيرٌ', r: '[القصص: 24]' },
-    { q: true, t: 'رَبَّنَا آتِنَا مِن لَّدُنكَ رَحْمَةً وَهَيِّئْ لَنَا مِنْ أَمْرِنَا رَشَدًا', r: '[الكهف: 10]' },
-    { q: true, t: 'رَبِّ هَبْ لِي مِن لَّدُنكَ ذُرِّيَّةً طَيِّبَةً ۖ إِنَّكَ سَمِيعُ الدُّعَاءِ', r: '[آل عمران: 38]' },
-    { q: true, t: 'رَبِّ أَدْخِلْنِي مُدْخَلَ صِدْقٍ وَأَخْرِجْنِي مُخْرَجَ صِدْقٍ وَاجْعَل لِّي مِن لَّدُنكَ سُلْطَانًا نَّصِيرًا', r: '[الإسراء: 80]' },
+    { q: true, t: 'رَبَّنَا تَقَبَّلۡ مِنَّآۖ إِنَّكَ أَنتَ ٱلسَّمِيعُ ٱلۡعَلِيمُ', r: '[البقرة: 127]' },
+    { q: true, t: 'رَبَّنَا لَا تُؤَاخِذۡنَآ إِن نَّسِينَآ أَوۡ أَخۡطَأۡنَا', r: '[البقرة: 286]' },
+    { q: true, t: 'رَبِّ ٱجۡعَلۡنِي مُقِيمَ ٱلصَّلَوٰةِ وَمِن ذُرِّيَّتِيۚ رَبَّنَا وَتَقَبَّلۡ دُعَآءِ', r: '[إبراهيم: 40]' },
+    { q: true, t: 'رَبِّ أَوۡزِعۡنِيٓ أَنۡ أَشۡكُرَ نِعۡمَتَكَ ٱلَّتِيٓ أَنۡعَمۡتَ عَلَيَّ وَعَلَىٰ وَٰلِدَيَّ وَأَنۡ أَعۡمَلَ صَٰلِحٗا تَرۡضَىٰهُ', r: '[النمل: 19]' },
+    { q: true, t: 'رَبِّ إِنِّي لِمَآ أَنزَلۡتَ إِلَيَّ مِنۡ خَيۡرٖ فَقِيرٞ', r: '[القصص: 24]' },
+    { q: true, t: 'رَبَّنَآ ءَاتِنَا مِن لَّدُنكَ رَحۡمَةٗ وَهَيِّئۡ لَنَا مِنۡ أَمۡرِنَا رَشَدٗا', r: '[الكهف: 10]' },
+    { q: true, t: 'رَبِّ هَبۡ لِي مِن لَّدُنكَ ذُرِّيَّةٗ طَيِّبَةًۖ إِنَّكَ سَمِيعُ ٱلدُّعَآءِ', r: '[آل عمران: 38]' },
+    { q: true, t: 'رَّبِّ أَدۡخِلۡنِي مُدۡخَلَ صِدۡقٖ وَأَخۡرِجۡنِي مُخۡرَجَ صِدۡقٖ وَٱجۡعَل لِّي مِن لَّدُنكَ سُلۡطَٰنٗا نَّصِيرٗا', r: '[الإسراء: 80]' },
     { t: 'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْهَمِّ وَالْحَزَنِ، وَالْعَجْزِ وَالْكَسَلِ، وَالْبُخْلِ وَالْجُبْنِ، وَضَلَعِ الدَّيْنِ، وَغَلَبَةِ الرِّجَالِ', r: 'رواه البخاري (6369)' },
     { t: 'اللَّهُمَّ مُصَرِّفَ الْقُلُوبِ صَرِّفْ قُلُوبَنَا عَلَى طَاعَتِكَ', r: 'رواه مسلم (2654)' },
     { t: 'اللَّهُمَّ إِنِّي ظَلَمْتُ نَفْسِي ظُلْمًا كَثِيرًا، وَلَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ، فَاغْفِرْ لِي مَغْفِرَةً مِنْ عِنْدِكَ، وَارْحَمْنِي، إِنَّكَ أَنْتَ الْغَفُورُ الرَّحِيمُ', r: 'متفق عليه (البخاري 834، مسلم 2705)' },
@@ -1255,11 +1261,12 @@ async function buildGreetingCard(spec) {
   if (txt) {
     const lead = key === 'hadith' ? t('hadithLead') : '';   // « قال رسول الله ﷺ » : on voit tout de suite que c'est un hadith
     const leadH = lead ? 76 : 0;
-    let size = 72, lines, lh, boxH, b0;
+    const waqf = hasWaqf(txt.t);                              // signes de pause : un peu plus d'espace entre les lignes
+    let size = 72, fs = 72, lines, lh, boxH, b0;
     do {
-      g.font = amiri(700, size); lines = wrapLines(g, txt.q ? `﴿ ${txt.t} ﴾` : `« ${txt.t} »`, W - 200);
+      g.font = amiri(700, size); fs = size; lines = wrapLines(g, txt.q ? `﴿ ${txt.t} ﴾` : `« ${txt.t} »`, W - 200);
       // b0 = distance haut de boîte → 1re ligne (marge haute confortable) ; 50 = reste sous la référence
-      lh = Math.round((size + 4) * 1.5); b0 = 46 + leadH + Math.round(size * .95); boxH = b0 + lines.length * lh + 50; size -= 4;
+      lh = Math.round((size + 4) * (waqf ? 1.75 : 1.5)); b0 = 46 + leadH + Math.round(size * .95); boxH = b0 + lines.length * lh + 50; size -= 4;
     } while ((lines.length > 6 || boxH > 640) && size > 36);
     // cartes du jour : le texte sourcé est centré entre l'en-tête (titre) et le pied de carte
     if (spec.evergreen) y = Math.max(y, Math.round((340 + (H - 260)) / 2 - boxH / 2) + 10);
@@ -1267,10 +1274,13 @@ async function buildGreetingCard(spec) {
     g.fillStyle = isSky ? 'rgba(255,255,255,.58)' : 'rgba(255,255,255,.10)'; g.beginPath(); g.roundRect(70, bt, W - 140, boxH, 36); g.fill();
     if (isSky) { g.strokeStyle = 'rgba(15,44,69,.14)'; g.lineWidth = 2; g.stroke(); }
     if (lead) { g.save(); g.font = amiri(400, 44); g.fillStyle = isSky ? '#1B6E80' : accent; g.fillText(lead, W / 2, bt + 74); g.restore(); }
-    g.fillStyle = ink; lines.forEach((ln, i) => g.fillText(ln, W / 2, bt + b0 + i * lh));
+    g.fillStyle = ink; g.font = amiri(700, fs);
+    lines.forEach((ln, i) => drawArabicLine(g, ln, W / 2, bt + b0 + i * lh, fs, px => amiri(400, px), isSky ? '#1B6E80' : accent));
+    // la source, et pour le Coran la riwaya (le texte de l'appli est en Hafs 'an 'Asim) ; la police baisse si la ligne est longue
+    const refLine = txt.q ? `${txt.r}  ·  ${t('riwayaHafs')}` : txt.r;
     let rs = 40; g.font = amiri(400, rs);
-    while (rs > 26 && g.measureText(txt.r).width > W - 240) { rs -= 2; g.font = amiri(400, rs); }   // « … واللفظ للبخاري » : tient sur une ligne
-    g.fillStyle = isSky ? '#1B6E80' : accent; g.fillText(txt.r, W / 2, bt + boxH - 44);
+    while (rs > 26 && g.measureText(refLine).width > W - 240) { rs -= 2; g.font = amiri(400, rs); }
+    g.fillStyle = isSky ? '#1B6E80' : accent; g.fillText(refLine, W / 2, bt + boxH - 44);
     y += boxH + 50;
   }
   const sub = cardSubLocal(key);
@@ -1319,7 +1329,7 @@ function cardText(spec) {
   const sub = cardSubLocal(spec.key);
   let txt = `🌙 ${arTitle}${arLine ? '\n' + arLine : ''}${sub ? '\n' + sub : ''}`;
   const body = cardTextOf(spec);
-  if (body) txt += `\n\n${spec.key === 'hadith' ? t('hadithLead') + '\n' : ''}${body.q ? `﴿ ${body.t} ﴾` : `« ${body.t} »`}\n${body.r}`;
+  if (body) txt += `\n\n${spec.key === 'hadith' ? t('hadithLead') + '\n' : ''}${body.q ? `﴿ ${body.t} ﴾` : `« ${body.t} »`}\n${body.r}${body.q ? ' · ' + t('riwayaHafs') : ''}`;
   const from = (S().cardFrom || '').trim();
   if (from) txt += `\n\nمن: ${from}`;
   return txt + `\n\n📱 ${t('shareFooter')}\n${PLAY_URL}`;
@@ -1350,7 +1360,8 @@ function whenLabel(noon) {
 // Ordre : cartes de tous les jours (sabah el-khir, doua, hadith), puis Joumou'a, puis le reste par date
 const CARD_ORDER = ['morning', 'dua', 'hadith', 'jumuah'];
 const cardRank = sp => { const i = CARD_ORDER.indexOf(sp.key); return i < 0 ? CARD_ORDER.length : i; };
-const preview = (text, n = 6) => { const w = text.split(/\s+/); return w.slice(0, n).join(' ') + (w.length > n ? ' …' : ''); };
+const noWaqf = text => text.replace(/[\u06D6-\u06DC]/g, '');     // listes : sans signes de pause (ils se superposeraient à la ligne du dessus)
+const preview = (text, n = 6) => { const w = noWaqf(text).split(/\s+/); return w.slice(0, n).join(' ') + (w.length > n ? ' …' : ''); };
 
 /** Liste déroulante de tous les textes d'une catégorie : un toucher = partage direct */
 function pickPanel(sp) {
@@ -1362,7 +1373,7 @@ function pickPanel(sp) {
     const item = document.createElement('li'), btn = document.createElement('button');
     btn.type = 'button';
     btn.innerHTML = '<span class="pt"></span><small></small>';
-    btn.querySelector('.pt').textContent = x.q ? `﴿ ${x.t} ﴾` : x.t;
+    btn.querySelector('.pt').textContent = x.q ? `﴿ ${noWaqf(x.t)} ﴾` : noWaqf(x.t);
     btn.querySelector('small').textContent = x.r;
     btn.addEventListener('click', () => shareCard({ ...sp, i }));
     item.append(btn); ul.append(item);
@@ -1438,10 +1449,10 @@ const countdown = new Countdown({
     if (state.elapsed) {
       const txt = '+' + formatHMS(Math.max(0, tNow - state.elapsed.ts)).replace(/^00:/, '');   // +19:05
       $('#countdown').textContent = txt;
-      document.title = `${t(state.elapsed.name)} ${txt}`;
+      document.title = `${prayerLabel(state.elapsed.name, state.today.date)} ${txt}`;
     } else if (remaining != null) {
       $('#countdown').textContent = formatHMS(remaining);
-      document.title = `${t(state.next.name)} ${formatHMS(remaining)}`;
+      document.title = `${prayerLabel(state.next.name, state.next.day === 'today' ? state.today.date : addDays(state.today.date, 1))} ${formatHMS(remaining)}`;
     }
     // changement de jour dans le fuseau du lieu
     if (state.dayKey && dateKeyInTz(tNow, tz()) !== state.dayKey) { loadDays(); if (state.viewKey === state.dayKey) state.viewKey = null; renderAll(); refresh(); }
@@ -1483,6 +1494,10 @@ function checkEvents(tNow) {
       events.push({ id: `${state.today.date}-white`, ts: state.today.times.Isha + 30 * 60000, type: 'white', h, win: 6 * 3600e3 });
     }
   }
+  // vendredi : 15 min après le lever du soleil, « أكثروا من الصلاة على النبي ﷺ »
+  if (S().fridayReminder !== false && state.today.times.Sunrise && isFridayKey(state.today.date)) {
+    events.push({ id: `${state.today.date}-friday`, ts: state.today.times.Sunrise + 15 * 60000, type: 'friday', win: 5 * 3600e3 });
+  }
   // rappels de la veille au soir (20 min après le Maghrib) : début de mois avec le doua, ou Aïd avec le takbir.
   // Au Maroc, seulement quand la date est officielle (annonce du ministère). Fenêtre de 6 h : l'annonce peut tomber tard.
   if (state.today.times.Maghrib) {
@@ -1495,7 +1510,7 @@ function checkEvents(tNow) {
   for (const ev of events) {
     // fenêtre de 90 s : si l'appli s'est réveillée bien après, on ne rejoue pas un Adhan périmé
     if (tNow < ev.ts || tNow - ev.ts > (ev.win || 90000) || state.fired.has(ev.id)) continue;
-    const once = ev.type === 'month' || ev.type === 'eid' || ev.type === 'white';     // un seul envoi, même si l'appli est relancée
+    const once = ev.type === 'month' || ev.type === 'eid' || ev.type === 'white' || ev.type === 'friday';     // un seul envoi, même si l'appli est relancée
     if (once && remAlreadyFired(ev.id)) continue;
     if (once) remMarkFired(ev.id);
     state.fired.add(ev.id);
@@ -1506,7 +1521,7 @@ function checkEvents(tNow) {
 
 async function fireEvent(ev) {
   const a = S().adhan;
-  if (ev.type === 'eid' || ev.type === 'month' || ev.type === 'white') {
+  if (ev.type === 'eid' || ev.type === 'month' || ev.type === 'white' || ev.type === 'friday') {
     const { title, body } = reminderText(t, ev);
     // avec le module Android récent, c'est lui qui envoie ces rappels (même appli fermée) : pas de doublon
     if (!nativeRem()) notify(title, body, { tag: ev.type, vibrateOn: !isSilent() && a.vibrate });
@@ -1514,7 +1529,7 @@ async function fireEvent(ev) {
     return;
   }
   const silent = isSilent();
-  const name = t(ev.p);
+  const name = prayerLabel(ev.p, dateKeyInTz(ev.ts, tz()));
   if (nativeActive() && ev.type !== 'white') {        // le module Android joue l'Adhan : pas de doublon
     if (ev.type === 'at') toast(`${t('itsTime')} ${name}`, 6000);
     return;
@@ -1571,15 +1586,15 @@ async function nativePayload() {
   const su = S().silentUntil === -1 ? 32503680000000 : (S().silentUntil || 0);
   const rem = planNativeReminders({
     today, offset: S().hijriOffset, t,
-    prefs: { eid: S().eidReminder !== false, month: S().monthReminder !== false, white: !!S().whiteDays },
-    addDays, dayInfo: key => { const d = getDay(S(), key); return d && d.times ? { Maghrib: d.times.Maghrib, Isha: d.times.Isha } : null; },
+    prefs: { eid: S().eidReminder !== false, month: S().monthReminder !== false, white: !!S().whiteDays, friday: S().fridayReminder !== false },
+    addDays, dayInfo: key => { const d = getDay(S(), key); return d && d.times ? { Sunrise: d.times.Sunrise, Maghrib: d.times.Maghrib, Isha: d.times.Isha } : null; },
   });
   return {
     v: 2, base: new URL('.', location.href).href, rem, lat: +loc.lat.toFixed(5), lng: +loc.lng.toFixed(5), tz: tz(), method: S().method, school: S().school,
     adj: S().adjust, en: !!a.enabled, na: !!a.notifyAt, nb: a.notifyBefore || 0, vib: !!a.vibrate, su, on: !!S().ongoing, gr: GRACE_MIN,
     hj: Array.from({ length: 31 }, (_, i) => fmtDates(Date.parse(`${addDays(today, i)}T12:00:00Z`)).hijri),
     ad: Object.fromEntries(PRAYERS.map(k => [k, a.enabled ? nativeSound(adhanFor(k)) : 'none'])),
-    names: Object.fromEntries(PRAYERS.map(k => [k, t(k)])),
+    names: { ...Object.fromEntries(PRAYERS.map(k => [k, t(k)])), Jumuah: t('Jumuah') },   // Jumuah : nom du Dhuhr le vendredi
     txt: { itsTime: t('itsTime'), before: t('beforeMsg'), stop: t('stop'), ok: t('nativeOk'), city: loc.name || '',
            chAdhan: t('chAdhan'), chBefore: t('chBefore'), chSilent: t('chSilent'), chOngoing: t('chOngoing'), chReminder: t('chReminder') },
     times,
@@ -1761,6 +1776,22 @@ function renderSun() {
 }
 
 // ================= Réglages =================
+// Maroc : localité officielle la plus proche et choix « horaire de la localité » / « position exacte »
+function renderOfficialLocality() {
+  const s = S(), box = $('#maOfficial'), lang = getLang();
+  box.hidden = Number(s.method) !== 21;
+  const code = s.officialLocalityCode ?? null, chosen = code != null ? localityByCode(Number(code)) : null;
+  $('#sOfficialLocality').checked = s.officialLocality !== false;
+  $('#sOfficialLocality').disabled = !!chosen;                       // une localité choisie à la main remplace le choix automatique
+  const names = allLocalities().map(l => [localityName(l, lang), l.code]).sort((a, b) => a[0].localeCompare(b[0], lang === 'ar' ? 'ar' : 'fr'));
+  $('#sLocalityPick').replaceChildren(new Option(t('officialLocalityAuto'), ''), ...names.map(([n, c]) => new Option(n, c)));
+  $('#sLocalityPick').value = chosen ? String(chosen.code) : '';
+  const loc = s.location, n = loc && nearestLocality(loc.lat, loc.lng);
+  if (chosen) { $('#officialLocalityInfo').textContent = t('officialLocalityChosen', { name: localityName(chosen, lang) }); return; }
+  $('#officialLocalityInfo').textContent = !n || n.km > SNAP_KM ? '' : t(s.officialLocality !== false && n.km <= SNAP_KM ? 'officialLocalityNear' : 'officialLocalityFar',
+    { name: localityName(n, getLang()), km: n.km < 1 ? '< 1' : Math.round(n.km) });
+}
+
 function renderSettings() {
   const s = S();
   const loc = s.location;
@@ -1770,6 +1801,7 @@ function renderSettings() {
 
   $('#sMethod').replaceChildren(...METHOD_IDS.map(id => new Option(t('methods')[id], id, false, id === s.method)));
   $('#sSchool').value = String(s.school);
+  renderOfficialLocality();
 
   $('#adjustGrid').replaceChildren(...['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].map(k => {
     const l = document.createElement('label');
@@ -1794,6 +1826,7 @@ function renderSettings() {
   $('#sWhiteDays').checked = s.whiteDays;
   $('#sMonthReminder').checked = s.monthReminder !== false;
   $('#sEidReminder').checked = s.eidReminder !== false;
+  $('#sFridayReminder').checked = s.fridayReminder !== false;
   renderCredits();
   renderCustomAdhan();
   const ver = $('#appVersion'); if (ver) ver.textContent = `Version ${APP_VERSION}`;
@@ -1911,11 +1944,14 @@ async function ensureNotifPermission() {
 
 function bindSettings() {
   on('#changeLoc', 'click', openLocationDialog);
-  on('#sMethod', 'change', e => { S().method = Number(e.target.value); S().methodAuto = false; save(); refresh(); });
+  on('#sMethod', 'change', e => { S().method = Number(e.target.value); S().methodAuto = false; save(); renderOfficialLocality(); refresh(); });
+  on('#sOfficialLocality', 'change', e => { S().officialLocality = e.target.checked; save(); renderOfficialLocality(); refresh(); });
+  on('#sLocalityPick', 'change', e => { S().officialLocalityCode = e.target.value ? Number(e.target.value) : null; save(); renderOfficialLocality(); refresh(); });
   on('#sSchool', 'change', e => { S().school = Number(e.target.value); save(); refresh(); });
   on('#sAdhanOn', 'change', e => { S().adhan.enabled = e.target.checked; save(); if (e.target.checked) unlockAudio(); });
   on('#sAdhanMode', 'change', e => { S().adhan.mode = e.target.value; save(); renderAdhanPickers(); });
   on('#sVolume', 'input', e => { S().adhan.volume = Number(e.target.value); save(); });
+  on('#sFridayReminder', 'change', async e => { S().fridayReminder = e.target.checked; save(); if (e.target.checked) await ensureNotifPermission(); });
   on('#sEidReminder', 'change', async e => { S().eidReminder = e.target.checked; save(); if (e.target.checked) await ensureNotifPermission(); });
   on('#sMonthReminder', 'change', async e => { S().monthReminder = e.target.checked; save(); if (e.target.checked) await ensureNotifPermission(); });
   on('#sWhiteDays', 'change', async e => { S().whiteDays = e.target.checked; save(); renderWhite(); if (e.target.checked) await ensureNotifPermission(); });

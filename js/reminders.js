@@ -6,11 +6,13 @@ import { habousActive, habousInfo } from './hijri.js';
 
 const DAY = 864e5;
 export const WINDOW_FIXED = 6 * 3600e3;    // rappel « certain » : on peut le recevoir jusqu'à 6 h après l'heure prévue
+export const WINDOW_FRIDAY = 5 * 3600e3;   // rappel du vendredi : utile jusqu'à la prière de la Joumou'a
 export const WINDOW_WATCH = 4 * 3600e3;    // rappel « à surveiller » : le module interroge le calendrier pendant 4 h
 const iso = day => new Date(day * DAY).toISOString().slice(0, 10);
 
 /** Titre et corps d'un rappel { type: 'white' | 'month' | 'eid', kind?, h } */
 export function reminderText(t, ev) {
+  if (ev.type === 'friday') return { title: t('fridayNotifTitle'), body: t('fridayNotifBody') };
   const month = t('hijriMonths')[ev.h.m - 1];
   if (ev.type === 'white') return { title: t('whiteNotifTitle'), body: t('whiteNotifBody', { d: ev.h.d, m: month }) };
   if (ev.type === 'eid') {
@@ -35,6 +37,10 @@ export function planNativeReminders({ today, horizon = 40, dayInfo, addDays, off
     const key = addDays(today, i), d = dayInfo(key);
     if (!d) continue;
     const tomorrow = Date.parse(`${key}T12:00:00Z`) + DAY;
+    if (prefs.friday && d.Sunrise && new Date(`${key}T12:00:00Z`).getUTCDay() === 5) {          // vendredi : 15 min après le lever du soleil
+      const at = d.Sunrise + 15 * 60000;
+      push({ id: `${key}-friday`, kind: 'friday', at, until: at + WINDOW_FRIDAY, ...reminderText(t, { type: 'friday' }) });
+    }
     if (prefs.white && d.Isha) {                                      // jours blancs : 30 min après l'Isha, si le mois est officiel
       const h = hijriOf(tomorrow, offset);
       if (isWhiteDay(h) && monthConfirmed(tomorrow, offset)) {

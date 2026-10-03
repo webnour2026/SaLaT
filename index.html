@@ -194,6 +194,13 @@
         <label class="field"><span data-i18n="madhab">Madhab (Asr)</span>
           <select id="sSchool"><option value="0" data-i18n="shafi"></option><option value="1" data-i18n="hanafi"></option></select>
         </label>
+        <div id="maOfficial" hidden>
+          <label class="switch"><input type="checkbox" id="sOfficialLocality"><span data-i18n="officialLocality">Horaire de la localité officielle la plus proche</span></label>
+          <label class="field"><span data-i18n="officialLocalityPick">Ma localité officielle</span><select id="sLocalityPick"></select></label>
+          <p class="note" id="officialLocalityInfo"></p>
+          <p class="note" data-i18n="officialLocalityHelp"></p>
+          <p class="note" data-i18n="maMethodNote"></p>
+        </div>
         <p class="sub" data-i18n="adjustments">Ajustements manuels (minutes)</p>
         <div class="adjust" id="adjustGrid"></div>
       </fieldset>
@@ -223,6 +230,7 @@
         <label class="switch"><input type="checkbox" id="sWhiteDays"><span data-i18n="whiteReminder">Rappel des jours blancs</span></label>
         <label class="switch"><input type="checkbox" id="sMonthReminder"><span data-i18n="monthReminder">Rappel du début de mois</span></label>
         <label class="switch"><input type="checkbox" id="sEidReminder"><span data-i18n="eidReminder">Rappel des Aïds</span></label>
+        <label class="switch"><input type="checkbox" id="sFridayReminder"><span data-i18n="fridayReminder">Rappel du vendredi</span></label>
         <button class="btn small" type="button" id="testNotif" data-i18n="testNotif"></button>
         <p class="warn" id="notifWarn" hidden></p>
         <details class="limits" id="limitsBox"><summary data-i18n="limitsTitle"></summary><p data-i18n="limits"></p></details>

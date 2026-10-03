@@ -23,8 +23,8 @@ const plan = (today, opts = {}) => {
   const limit = addDays(today, 42);
   return planNativeReminders({
     today, t, addDays, now: Date.parse(today + 'T00:00:00Z'),
-    prefs: { eid: true, month: true, white: true, ...(opts.prefs || {}) }, offset: opts.offset || 0,
-    dayInfo: k => (k > limit ? null : { Maghrib: Date.parse(k + 'T18:40:00Z'), Isha: Date.parse(k + 'T20:00:00Z') }),   // UTC+1 : Maghrib 19:40, Isha 21:00
+    prefs: { eid: true, month: true, white: true, friday: false, ...(opts.prefs || {}) }, offset: opts.offset || 0,
+    dayInfo: k => (k > limit ? null : { Sunrise: Date.parse(k + 'T05:30:00Z'), Maghrib: Date.parse(k + 'T18:40:00Z'), Isha: Date.parse(k + 'T20:00:00Z') }),   // UTC+1 : lever 06:30, Maghrib 19:40, Isha 21:00
   });
 };
 const ids = l => l.map(e => e.id).join(' ');
@@ -83,6 +83,19 @@ p = plan('2026-09-30');
 eq('hors Maroc : aucune surveillance', String(p.some(e => e.watch)), 'false');
 eq('hors Maroc : le début de Joumada I est prévu par le calcul', String(p.some(e => e.kind === 'month')), 'true');
 eq('hors Maroc : jours blancs présents (calcul)', String(plan('2026-09-20').filter(e => e.kind === 'white').length >= 2), 'true');
+
+// vendredi : rappel 15 min après le lever du soleil, utile jusqu'à 5 h plus tard
+p = plan('2026-09-30', { prefs: { friday: true, month: false } });
+const fr = p.filter(e => e.kind === 'friday');
+eq('vendredi : 6 vendredis dans les 40 jours', String(fr.length), '6');
+eq('vendredi : le premier est le 2 octobre 2026', fr[0].id, '2026-10-02-friday');
+eq('vendredi : tous sont des vendredis', String(fr.every(e => new Date(e.id.slice(0, 10) + 'T12:00:00Z').getUTCDay() === 5)), 'true');
+eq('vendredi : envoi à 06:45 (heure du Maroc) = 05:45 UTC', new Date(fr[0].at).toISOString(), '2026-10-02T05:45:00.000Z');
+eq('vendredi : valable 5 h', String((fr[0].until - fr[0].at) / 3600e3), '5');
+eq('vendredi : titre et corps', `${fr[0].title} | ${fr[0].body}`, 'fridayNotifTitle | fridayNotifBody');
+eq('vendredi : désactivé par défaut dans ce test', String(plan('2026-09-30').some(e => e.kind === 'friday')), 'false');
+eq('vendredi : sans lever du soleil connu → pas de rappel', String(planNativeReminders({ today: '2026-09-30', t, addDays, now: Date.parse('2026-09-30T00:00:00Z'), prefs: { friday: true }, offset: 0, dayInfo: k => ({ Maghrib: Date.parse(k + 'T18:40:00Z') }) }).some(e => e.kind === 'friday')), 'false');
+eq('vendredi : coexiste avec les jours blancs (ids distincts)', String(new Set(plan('2026-09-20', { prefs: { friday: true } }).map(e => e.id)).size === plan('2026-09-20', { prefs: { friday: true } }).length), 'true');
 
 // taille de la charge utile envoyée au module (limite 60 000 caractères une fois décodée, mais on reste très en dessous)
 useHabous(true);
