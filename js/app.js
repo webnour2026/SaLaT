@@ -173,6 +173,7 @@ function rerenderHijri() {
   applyHijriSource();
   renderAll();
   if ($('#view-calendar') && !$('#view-calendar').hidden) renderCalendar();
+  if ($('#view-cards') && !$('#view-cards').hidden) renderCards();      // dates des occasions : recalculées dès qu'un nouveau début de mois est annoncé
 }
 function checkHabous(force = false, every) {
   refreshHabous({ force, every }).then(changed => { if (changed) { rerenderHijri(); if (!$('#view-settings').hidden) renderSettings(); requestNativeSync(); } });
@@ -583,7 +584,7 @@ function renderNextOcc() {
   box.hidden = !sp; if (!sp) return;
   const df = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
   $('#noName').textContent = cardTitleOf(sp);
-  $('#noWhen').textContent = `${df.format(sp.noon)} \u00b7 ${whenLabel(sp.noon)}`;
+  $('#noWhen').textContent = `${df.format(sp.noon)} \u00b7 ${whenLabel(sp.noon)}${isExpected(sp) ? ` \u00b7 ${t('expectedDate')}` : ''}`;
   $('#noShare').onclick = () => openCardPreview(sp);
 }
 // ================= Horaires du mois (mois hégirien affiché dans le calendrier) =================
@@ -1200,6 +1201,14 @@ function greetKey(ts = now()) {
   const hr = Number(new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone: tz() }).format(ts));
   return hr >= 5 && hr < 12 ? 'morning' : 'evening';
 }
+// Une date d'occasion est « confirmée » tant qu'elle tombe dans un mois dont le début est connu (Maroc : annonce des Habous ; ailleurs : 30 jours).
+// Au-delà, c'est une prévision calculée, qui peut bouger d'un jour : on l'écrit « متوقع ».
+function isDateConfirmed(noon) {
+  const hi = habousInfo();
+  const horizon = habousActive() && hi ? (hi.last.day + 29) * DAY_MS : civilNoon(now(), tz()) + 30 * DAY_MS;
+  return noon < horizon;
+}
+const isExpected = sp => sp.key !== 'jumuah' && !sp.evergreen && !isDateConfirmed(sp.noon);
 const greetAr = k => (DICT_AR[k === 'morning' ? 'greetMorning' : 'greetEvening']);
 const EVERGREEN = ['morning', 'dua', 'hadith'];
 const DICT_AR = AR_STRINGS;
@@ -1296,6 +1305,12 @@ const CARD_SCENES = {
   ],
 };
 const SCENE_KEYS = [...Object.keys(CARD_SCENES), 'zellige'];
+// Aléa « semé » par la date : la même carte garde le même fond et le même ordre toute la journée (aperçu = carte partagée), et tout change le lendemain.
+function hash32(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function seeded(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const dayNumber = () => Math.floor(civilNoon(now(), tz()) / DAY_MS);
+const sceneFor = spec => SCENE_KEYS[hash32(`${spec.key}|${spec.i ?? ''}|${EVERGREEN_KEYS.includes(spec.key) ? dayNumber() : Math.floor(spec.noon / DAY_MS)}`) % SCENE_KEYS.length];
+const EVERGREEN_KEYS = ['morning', 'dua', 'hadith'];
 function drawMosque(g, W, H, color, scene = 'koutoubia', k = 1) {  // silhouette en bas de carte
   if (scene === 'zellige') return;
   const [main, , far] = CARD_SCENES[scene];
@@ -1375,7 +1390,7 @@ async function buildGreetingCard(spec) {
   const grad = g.createLinearGradient(0, 0, 0, H); grad.addColorStop(0, c1); grad.addColorStop(1, c2);
   g.fillStyle = grad; g.fillRect(0, 0, W, H);
   // fond : Koutoubia, Hassan II, mosquée rurale ou zellige — change à chaque carte, le contenu ne bouge pas
-  const scene = spec.scene || SCENE_KEYS[Math.floor(Math.random() * SCENE_KEYS.length)];
+  const scene = spec.scene || sceneFor(spec);
   const pat = isSky ? '#fff' : accent;
   if (scene === 'zellige') drawZellige(g, W, H, pat); else drawStars(g, W, pat);
   if (themeOf(key) === 'night') {                        // lune
@@ -1433,9 +1448,9 @@ async function buildGreetingCard(spec) {
   g.font = plex(400, 32); g.fillStyle = ink; g.globalAlpha = .88;
   if (key === 'white' && spec.list) {
     const df = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
-    spec.list.forEach(x => { g.fillText(`${df.format(x.noon)} · ${hijriLabel(x.h)}`, W / 2, y); y += 50; });
+    spec.list.forEach(x => { g.fillText(`${df.format(x.noon)}${isExpected({ key: 'white', noon: x.noon }) ? ` (${t('expectedDate')})` : ''} · ${hijriLabel(x.h)}`, W / 2, y); y += 50; });
   } else if (!spec.evergreen) {
-    g.fillText(dateFmt.format(spec.noon), W / 2, y); y += 48;
+    g.fillText(dateFmt.format(spec.noon) + (isExpected(spec) ? ` (${t('expectedDate')})` : ''), W / 2, y); y += 48;
     g.fillText(hijriLabel(hijriOf(spec.noon, S().hijriOffset)), W / 2, y); y += 40;
   }
   g.globalAlpha = 1;
@@ -1572,7 +1587,6 @@ async function paintPreview() {
 }
 function openCardPreview(sp) {
   if (sp.key === 'imsakiya') return shareCard(sp);
-  sp.scene = sp.scene || SCENE_KEYS[Math.floor(Math.random() * SCENE_KEYS.length)];
   if (EVERGREEN.includes(sp.key)) sp.greet = greetKey();
   state.cdSpec = sp;
   $('#cardFrom').value = S().cardFrom || '';
@@ -1593,12 +1607,12 @@ function renderCards() {
     head.querySelector('h2 span').textContent = title; head.querySelector('.cnt').textContent = count != null ? String(count) : '';
     if (onAll) { const a = document.createElement('button'); a.type = 'button'; a.className = 'link-btn'; a.textContent = t('viewAll'); a.addEventListener('click', onAll); head.append(a); }
     const row = document.createElement('div'); row.className = 'hscroll';
-    sec.append(head, row); body.append(sec); return row;
+    sec.append(head, row); return { sec, row };
   };
-  // 1) bientôt : Joumou'a, jours blancs, occasions (dont les deux Aïds), Imsakiya
-  const soon = specs.filter(sp => !sp.evergreen);
+  // « bientôt » : Joumou'a, jours blancs, occasions (dont les deux Aïds), Imsakiya
+  const soon = specs.filter(sp => !sp.evergreen), blocks = { soon: null, daily: [] };
   if (soon.length) {
-    const row = section(t('cardsSoon'), null, null);
+    const { sec, row } = section(t('cardsSoon'), null, null); blocks.soon = sec;
     for (const sp of soon) {
       if (sp.key === 'imsakiya') {
         const b = document.createElement('button'); b.type = 'button'; b.className = 'card-thumb imsak-tile';
@@ -1606,27 +1620,31 @@ function renderCards() {
         b.querySelector('b').textContent = `${t('imsakiya')} ${sp.mon.y}`; b.querySelector('.ct-cap span').textContent = gregSpan(sp.mon);
         b.addEventListener('click', () => shareCard(sp)); row.append(b); continue;
       }
-      row.append(thumbButton(sp, cardTitleOf(sp), `${df.format(sp.noon)} \u00b7 ${whenLabel(sp.noon)}`));
+      row.append(thumbButton(sp, cardTitleOf(sp), `${df.format(sp.noon)} \u00b7 ${whenLabel(sp.noon)}${isExpected(sp) ? ` \u00b7 ${t('expectedDate')}` : ''}`));
     }
   }
-  // 2) chaque jour : versets et rappels, doua, hadith — 6 textes, puis « tout voir »
-  state.cardPicks = state.cardPicks || {};
+  // chaque jour : versets et rappels, doua, hadith — 6 textes, puis « tout voir »
   for (const sp of specs.filter(x => x.evergreen)) {
     const list = CARD_TEXTS[sp.key];
-    if (!state.cardPicks[sp.key]) {
-      const order = list.map((_, i) => i).filter(i => i !== sp.i);
-      for (let k = order.length - 1; k > 0; k--) { const r = Math.floor(Math.random() * (k + 1)); [order[k], order[r]] = [order[r], order[k]]; }
-      state.cardPicks[sp.key] = [sp.i, ...order.slice(0, 5)];
-    }
-    const row = section(categoryTitle(sp.key), list.length, () => openPickAll(sp));
-    for (const i of state.cardPicks[sp.key]) {
+    // texte du jour (rotation dans l'ordre de la liste), puis 5 autres tirés par la date
+    const order = list.map((_, i) => i).filter(i => i !== sp.i), rnd = seeded(hash32(`${sp.key}|${dayNumber()}`));
+    for (let k = order.length - 1; k > 0; k--) { const r = Math.floor(rnd() * (k + 1)); [order[k], order[r]] = [order[r], order[k]]; }
+    const picks = [sp.i, ...order.slice(0, 5)];
+    const { sec, row } = section(categoryTitle(sp.key), list.length, () => openPickAll(sp));
+    for (const i of picks) {
       const spec = { ...sp, i, pick: true }, txt = list[i];
       row.append(thumbButton(spec, t(kindKey(sp.key, txt)), preview(txt.t, 5)));
     }
     const all = document.createElement('button'); all.type = 'button'; all.className = 'card-thumb all-tile';
     all.innerHTML = '<span class="at-n"></span><span class="ct-cap"><b></b></span>'; all.querySelector('.at-n').textContent = String(list.length); all.querySelector('b').textContent = t('viewAll');
     all.addEventListener('click', () => openPickAll(sp)); row.append(all);
+    blocks.daily.push(sec);
   }
+  // les plus utilisées d'abord ; une occasion imminente (aujourd'hui, demain, après-demain) passe devant
+  const today = civilNoon(now(), tz());
+  const urgent = soon.some(sp => sp.key !== 'imsakiya' && sp.noon - today <= 2 * DAY_MS);
+  const ordered = urgent ? [blocks.soon, ...blocks.daily] : [...blocks.daily, blocks.soon];
+  body.append(...ordered.filter(Boolean));
   $('#cardFrom').value = S().cardFrom || '';
 }
 
@@ -2335,7 +2353,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.10.3';
+export const APP_VERSION = '2.10.5';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
