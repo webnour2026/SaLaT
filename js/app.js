@@ -892,6 +892,8 @@ const JUMUAH_VERSE = 'إِنَّ اللَّهَ وَمَلَائِكَتَهُ �
 const JUMUAH_REF = '[الأحزاب: 56]';
 // Textes des cartes : uniquement Coran et hadiths authentiques, avec leur référence.
 // q = verset (entre ﴿ ﴾), sinon hadith/dhikr (entre « »).
+// Amorce des deux adhkar rapportés sous la forme « كان رسول الله ﷺ إذا أصبح قال » (au lieu de « قال رسول الله ﷺ ») : fidèle à la narration
+const MORNING_LEAD = '\u0643\u0627\u0646 \u0631\u0633\u0648\u0644 \u0627\u0644\u0644\u0647 \ufdfa \u0625\u0630\u0627 \u0623\u0635\u0628\u062d \u0642\u0627\u0644';
 const CARD_TEXTS = {
   jumuah: [   // change chaque vendredi
     { q: true, t: JUMUAH_VERSE, r: JUMUAH_REF },
@@ -903,10 +905,7 @@ const CARD_TEXTS = {
             { t: 'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي', r: 'رواه الترمذي (3513)' }],
   occArafa: [{ t: 'صِيَامُ يَوْمِ عَرَفَةَ أَحْتَسِبُ عَلَى اللَّهِ أَنْ يُكَفِّرَ السَّنَةَ الَّتِي قَبْلَهُ وَالسَّنَةَ الَّتِي بَعْدَهُ', r: 'رواه مسلم (1162)' }],
   occAshura: [{ t: 'صِيَامُ يَوْمِ عَاشُورَاءَ أَحْتَسِبُ عَلَى اللَّهِ أَنْ يُكَفِّرَ السَّنَةَ الَّتِي قَبْلَهُ', r: 'رواه مسلم (1162)' }],
-  morning: [  // adhkar du matin + versets courts ; liste mélangée à chaque ouverture
-    { t: 'أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ', r: 'رواه مسلم (2723)' },
-    { t: 'اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ النُّشُورُ', r: 'رواه الترمذي (3391)' },
-    { t: 'مَنْ قَالَ حِينَ يُصْبِحُ وَحِينَ يُمْسِي: سُبْحَانَ اللَّهِ وَبِحَمْدِهِ مِائَةَ مَرَّةٍ، لَمْ يَأْتِ أَحَدٌ يَوْمَ الْقِيَامَةِ بِأَفْضَلَ مِمَّا جَاءَ بِهِ إِلَّا أَحَدٌ قَالَ مِثْلَ مَا قَالَ أَوْ زَادَ عَلَيْهِ', r: 'رواه مسلم (2692)' },
+  morning: [  // versets coraniques uniquement (les adhkar prophétiques sont dans « hadith »)
     // — Versets courts (sabah el-khir) : texte de référence uthmani, vérifié —
     { q: true, t: 'إِنَّ ٱلصَّلَوٰةَ كَانَتۡ عَلَى ٱلۡمُؤۡمِنِينَ كِتَٰبٗا مَّوۡقُوتٗا', r: '[النساء: 103]' },
     { q: true, t: 'حَٰفِظُواْ عَلَى ٱلصَّلَوَٰتِ وَٱلصَّلَوٰةِ ٱلۡوُسۡطَىٰ وَقُومُواْ لِلَّهِ قَٰنِتِينَ', r: '[البقرة: 238]' },
@@ -1180,6 +1179,10 @@ const CARD_TEXTS = {
     { t: 'مِنْ حُسْنِ إِسْلَامِ الْمَرْءِ تَرْكُهُ مَا لَا يَعْنِيهِ', r: 'رواه الترمذي (2317)' },
     { t: 'أَكْمَلُ الْمُؤْمِنِينَ إِيمَانًا أَحْسَنُهُمْ خُلُقًا', r: 'رواه أبو داود (4682) والترمذي (1162)' },
     { t: 'الرَّاحِمُونَ يَرْحَمُهُمُ الرَّحْمَنُ، ارْحَمُوا مَنْ فِي الْأَرْضِ يَرْحَمْكُمْ مَنْ فِي السَّمَاءِ', r: 'رواه الترمذي (1924) واللفظ له، وأبو داود (4941)' },
+    // — adhkar du matin et du soir rapportés dans les hadiths (déplacés de la catégorie « versets ») —
+    { lead: MORNING_LEAD, t: 'أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ', r: 'رواه مسلم (2723)' },
+    { lead: MORNING_LEAD, t: 'اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ النُّشُورُ', r: 'رواه الترمذي (3391)' },
+    { t: 'مَنْ قَالَ حِينَ يُصْبِحُ وَحِينَ يُمْسِي: سُبْحَانَ اللَّهِ وَبِحَمْدِهِ مِائَةَ مَرَّةٍ، لَمْ يَأْتِ أَحَدٌ يَوْمَ الْقِيَامَةِ بِأَفْضَلَ مِمَّا جَاءَ بِهِ إِلَّا أَحَدٌ قَالَ مِثْلَ مَا قَالَ أَوْ زَادَ عَلَيْهِ', r: 'رواه مسلم (2692)' },
   ],
 };
 /** Texte à afficher pour une carte (rotation hebdomadaire / quotidienne, ou doua choisie) */
@@ -1233,7 +1236,7 @@ const isExpected = sp => sp.key !== 'jumuah' && !sp.evergreen && !isDateConfirme
 const greetAr = k => (DICT_AR[k === 'morning' ? 'greetMorning' : 'greetEvening']);
 const EVERGREEN = ['morning', 'dua', 'hadith'];
 const DICT_AR = AR_STRINGS;
-const kindKey = (key, txt) => (key === 'dua' ? 'kindDua' : key === 'hadith' ? 'kindHadith' : txt && txt.q ? 'kindVerse' : 'kindDhikr');
+const kindKey = key => (key === 'dua' ? 'kindDua' : key === 'hadith' ? 'kindHadith' : 'kindVerse');   // verset | doua | hadith
 const CARD_THEME = {
   green: ['#0B5D4B', '#12806A', '#E9C46A'],   // Joumou'a, Mawlid, nouvel an…
   night: ['#141F3D', '#3B2F63', '#E9C46A'],   // Ramadan, Qadr, jours blancs
@@ -1437,7 +1440,7 @@ async function buildGreetingCard(spec) {
   // texte sourcé (verset, hadith, dhikr ou doua)
   const txt = cardTextOf(spec);
   if (txt) {
-    const lead = key === 'hadith' ? t('hadithLead') : '';   // « قال رسول الله ﷺ » : on voit tout de suite que c'est un hadith
+    const lead = key === 'hadith' ? (txt.lead || t('hadithLead')) : '';   // « قال رسول الله ﷺ » : on voit tout de suite que c'est un hadith
     const leadH = lead ? 76 : 0;
     const waqf = hasWaqf(txt.t);                              // signes de pause : un peu plus d'espace entre les lignes
     let size = 72, fs = 72, lines, lh, boxH, b0;
@@ -1509,7 +1512,7 @@ function cardText(spec) {
   const icon = EVERGREEN.includes(spec.key) && (spec.greet || greetKey()) === 'morning' ? '\u2600\ufe0f' : spec.key === 'occAdha' ? '\ud83d\udc11' : '\ud83c\udf19';   // soleil le matin, croissant le soir, mouton pour l'Aïd al-Adha
   let txt = `${icon} ${arTitle}${arLine ? '\n' + arLine : ''}${sub ? '\n' + sub : ''}`;
   const body = cardTextOf(spec);
-  if (body) txt += `\n\n${spec.key === 'hadith' ? t('hadithLead') + '\n' : ''}${body.q ? `﴿ ${body.t} ﴾` : `« ${body.t} »`}\n${body.r}${body.q ? ' · ' + t('riwayaHafs') : ''}`;
+  if (body) txt += `\n\n${spec.key === 'hadith' ? (body.lead || t('hadithLead')) + '\n' : ''}${body.q ? `﴿ ${body.t} ﴾` : `« ${body.t} »`}\n${body.r}${body.q ? ' · ' + t('riwayaHafs') : ''}`;
   const from = cardSender();
   if (from) txt += `\n\nمن: ${from}`;
   return txt + `\n\n📱 ${t('shareFooter')}\n${PLAY_URL}`;
@@ -2380,7 +2383,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.11.3';
+export const APP_VERSION = '2.11.4';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
