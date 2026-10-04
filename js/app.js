@@ -90,12 +90,24 @@ function applyLang() {
 }
 
 // ================= Navigation =================
+// Le mode « fit » ajuste Horaires, Qibla et Calendrier à la hauteur de l'écran. Si le contenu ne tient pas (petit téléphone, texte agrandi
+// à 150-200 %), on le coupe : l'écran défile normalement au lieu de superposer des lignes.
+function setFit() {
+  const body = document.body, want = state.view !== 'settings' && state.view !== 'cards';
+  body.classList.toggle('fit', want);
+  if (!want) return;
+  const v = document.querySelector('.view:not([hidden])');
+  const pl = v && v.id === 'view-home' ? v.querySelector('.prayers') : null;          // la liste des prières doit tenir sans que ses lignes se chevauchent
+  // tolérance de 12 px : les lignes peuvent se tasser un peu (36 → 30 px) ; au-delà elles se chevaucheraient
+  if (v && (v.scrollHeight > v.clientHeight + 12 || (pl && pl.scrollHeight > pl.clientHeight + 12))) body.classList.remove('fit');
+}
+window.addEventListener('resize', () => requestAnimationFrame(setFit));
 function go(view) {
   document.querySelectorAll('.view').forEach(v => { v.hidden = v.id !== `view-${view}`; });
   document.querySelectorAll('.tabbar button').forEach(b => {
     if (b.dataset.goto === view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
-  document.body.classList.toggle('fit', view !== 'settings' && view !== 'cards');   // écran ajusté, sans défilement
+  state.view = view; setFit();                                                       // écran ajusté, sans défilement, s'il tient
   document.body.classList.toggle('no-top', view !== 'home' && view !== 'settings');  // barre du haut (ville, langue, cloche, réglages) : seulement sur Horaires et Réglages
   $('#settingsBtn')?.classList.toggle('active', view === 'settings');
   requestAnimationFrame(() => document.querySelectorAll('main, .view').forEach(el => { el.scrollLeft = 0; }));
@@ -110,6 +122,7 @@ function go(view) {
   if (view === 'cards') renderCards();
   if (view === 'calendar') { state.calAnchor = null; renderCalendar(); }
   window.scrollTo({ top: 0 });
+  requestAnimationFrame(() => { if (view !== 'settings' && view !== 'cards') document.body.classList.add('fit'); setFit(); });   // après le rendu : mesure réelle
   if (!(view === 'settings' && state.spage)) history.replaceState(null, '', `#${view}`);
 }
 
@@ -284,7 +297,7 @@ function skyFor(t) {
   return 'maghrib';
 }
 
-function renderAll() { renderHeader(); renderHome(); renderWhite(); renderOccChip(); renderSilent(); renderCta(); }
+function renderAll() { renderHeader(); renderHome(); renderWhite(); renderOccChip(); renderSilent(); renderCta(); requestAnimationFrame(setFit); }
 
 // ================= Consulter d'autres jours =================
 // state.viewKey : date consultée ('YYYY-MM-DD'), null = aujourd'hui (avec compte à rebours)
@@ -2353,7 +2366,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.10.5';
+export const APP_VERSION = '2.11.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
