@@ -1207,6 +1207,14 @@ const CARD_AR = {
   dua: ['دعاء', ''],
   hadith: ['حديث شريف', ''],
 };
+/** Nom à écrire sur une carte : rien par défaut ; le nom saisi seulement si l'utilisateur a coché « ajouter le nom de l'expéditeur ». */
+const cardSender = () => (S().cardNoName === false ? (S().cardFrom || '').trim() : '');
+function syncCardNameUi() {
+  const add = S().cardNoName === false;                    // « ajouter le nom » : décoché par défaut
+  $('#cardAddName').checked = add;
+  $('#cardFromField').hidden = !add;
+  $('#cardFrom').value = S().cardFrom || '';
+}
 // Salutation d'une carte du jour : « صباح الخير » jusqu'au Dhuhr du lieu, « مساء الخير » ensuite (et la nuit, avant le Fajr)
 function greetKey(ts = now()) {
   const dh = state.today?.times?.Dhuhr, fj = state.today?.times?.Fajr;
@@ -1472,7 +1480,7 @@ async function buildGreetingCard(spec) {
   base.drawImage(layer, 0, dy);
   g = base; g.textAlign = 'center'; g.direction = 'rtl';   // le canevas hors écran est en LTR par défaut : pied de carte en arabe
   // dédicace (facultative) : « من: … »
-  const from = (S().cardFrom || '').trim();
+  const from = cardSender();
   if (from) {
     g.direction = 'rtl'; g.font = amiri(700, 44); g.fillStyle = isSky ? ink : accent;
     g.fillText(`من: ${from}`, W / 2, H - 215);
@@ -1502,7 +1510,7 @@ function cardText(spec) {
   let txt = `${icon} ${arTitle}${arLine ? '\n' + arLine : ''}${sub ? '\n' + sub : ''}`;
   const body = cardTextOf(spec);
   if (body) txt += `\n\n${spec.key === 'hadith' ? t('hadithLead') + '\n' : ''}${body.q ? `﴿ ${body.t} ﴾` : `« ${body.t} »`}\n${body.r}${body.q ? ' · ' + t('riwayaHafs') : ''}`;
-  const from = (S().cardFrom || '').trim();
+  const from = cardSender();
   if (from) txt += `\n\nمن: ${from}`;
   return txt + `\n\n📱 ${t('shareFooter')}\n${PLAY_URL}`;
 }
@@ -1602,7 +1610,7 @@ function openCardPreview(sp) {
   if (sp.key === 'imsakiya') return shareCard(sp);
   if (EVERGREEN.includes(sp.key)) sp.greet = greetKey();
   state.cdSpec = sp;
-  $('#cardFrom').value = S().cardFrom || '';
+  syncCardNameUi();
   $('#cdPreview').replaceChildren();
   $('#cardDialog').showModal();
   paintPreview();
@@ -2322,6 +2330,12 @@ function bind() {
   on('#settingsBtn', 'click', () => go('settings'));
   on('#monthPrint', 'click', printMonthTable);
   on('#monthShare', 'click', shareMonthTable);
+  on('#cardAddName', 'change', e => {
+    S().cardNoName = !e.target.checked; save();                                     // décochée (défaut) : envoi sans nom
+    $('#cardFromField').hidden = !e.target.checked;
+    if (e.target.checked) setTimeout(() => $('#cardFrom').focus(), 50);            // cochée : on demande le nom, le clavier s'ouvre dessus
+    paintPreview();
+  });
   on('#cardFrom', 'change', e => { S().cardFrom = e.target.value.trim().slice(0, 40); save(); paintPreview(); });
   on('#cardFrom', 'input', e => { clearTimeout(state.cdTimer); state.cdTimer = setTimeout(() => { S().cardFrom = e.target.value.trim().slice(0, 40); save(); paintPreview(); }, 350); });
   on('#cdClose', 'click', () => $('#cardDialog').close());
@@ -2366,7 +2380,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.11.0';
+export const APP_VERSION = '2.11.3';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

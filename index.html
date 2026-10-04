@@ -449,7 +449,8 @@
   <dialog id="cardDialog" class="sheet card-sheet" aria-labelledby="cdTitle">
     <h2 id="cdTitle" class="sr-only" data-i18n="cardPreview">Aperçu de la carte</h2>
     <div class="cd-preview" id="cdPreview"></div>
-    <label class="field"><span data-i18n="cardFrom">Votre nom sur la carte (facultatif)</span>
+    <label class="switch"><input type="checkbox" id="cardAddName"><span data-i18n="cardAddName">Envoyer avec mon nom</span></label>
+    <label class="field" id="cardFromField" hidden><span data-i18n="cardFrom">Votre nom sur la carte</span>
       <input id="cardFrom" type="text" maxlength="40" autocomplete="name" data-i18n-ph="cardFromPh"></label>
     <div class="cd-actions">
       <button class="btn" id="cdClose" type="button" data-i18n="close">Fermer</button>

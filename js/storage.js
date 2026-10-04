@@ -15,6 +15,7 @@ export const DEFAULTS = {
   hijriOffset: 0,               // -2 … +2 (correction manuelle, surtout utile hors du Maroc)
   hijriSource: 'auto',          // auto (Maroc → Habous, ailleurs → calcul) | habous | calc
   cardFrom: '',                 // nom affiché « من: … » sur les cartes partagées
+  cardNoName: true,             // true (défaut) : cartes envoyées sans nom ; false : le nom de l'expéditeur est ajouté (case « إضافة اسم المُرسِل »)
   ongoing: true,                // notification permanente (prochaine prière + compte à rebours), module Android
   tzMode: 'auto',               // 'auto' (selon la ville) ou décalage fixe en heures : '0', '1', '-5'…
   whiteDays: true,              // rappel des jours blancs
