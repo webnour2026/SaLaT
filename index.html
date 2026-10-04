@@ -108,32 +108,35 @@
     <section class="view qibla-view" id="view-qibla" hidden aria-labelledby="qiblaTitle">
       <h1 class="sr-only" id="qiblaTitle" data-i18n="qiblaDir">Direction de la Qibla</h1>
 
-      <div class="kaaba-top" id="kaabaTop" aria-hidden="true">
-        <svg viewBox="0 0 64 64">
-          <path class="k-top" d="M32 8 56 18 32 28 8 18Z"/>
-          <path class="k-left" d="M8 18 32 28v28L8 46Z"/>
-          <path class="k-right" d="M56 18 32 28v28l24-10Z"/>
-          <path class="k-band" d="M8 23.5 32 33.5 56 23.5v4L32 37.5 8 27.5Z"/>
-        </svg>
-      </div>
+      <p class="heading-chip"><span data-i18n="heading">Cap du téléphone</span> <b id="headingBig">--</b>°</p>
 
       <div class="dial-wrap">
-        <svg class="dial" id="dial" viewBox="-175 -175 350 350" aria-hidden="true">
+        <svg class="dial" id="dial" viewBox="-170 -170 340 340" aria-hidden="true">
+          <circle class="ring" r="130"/>
           <g id="rose">
-            <circle class="ring" r="112"/>
             <g id="roseTicks"></g>
             <g id="roseLabels"></g>
-            <g id="qiblaMark"><line class="qneedle" x1="0" y1="0" x2="0" y2="-100"/><circle class="qhub" r="5"/><polygon class="qmark" points="0,-166 -13,-138 0,-145 13,-138"/></g>
+            <g id="qiblaMark">
+              <g id="qiblaIcon">
+                <circle class="qdisc" r="22"/>
+                <g transform="translate(-14 -14) scale(.4375)">
+                  <path class="k-top" d="M32 8 56 18 32 28 8 18Z"/>
+                  <path class="k-left" d="M8 18 32 28v28L8 46Z"/>
+                  <path class="k-right" d="M56 18 32 28v28l24-10Z"/>
+                  <path class="k-band" d="M8 23.5 32 33.5 56 23.5v4L32 37.5 8 27.5Z"/>
+                </g>
+              </g>
+            </g>
           </g>
+          <path class="okmark" d="M-34 4 -12 26 36 -24"/>
+          <path class="pointer" d="M0 -147 -11 -166 11 -166Z"/>
         </svg>
       </div>
 
-      <p class="heading-big" id="headingBig" aria-live="off">--</p>
-      <p class="qibla-cap"><span data-i18n="qiblaIn">Direction de la Qibla à</span> <span id="qiblaCity"></span></p>
-      <p class="qibla-val"><span id="qiblaDeg">--°</span> · <span id="qiblaCardinal"></span></p>
-      <p class="compass-msg" id="compassMsg" role="status"></p>
+      <p class="compass-msg turn" id="compassMsg" role="status"></p>
+      <p class="qibla-line"><span data-i18n="qiblaIn">Direction de la Qibla à</span> <span id="qiblaCity"></span> <span class="qibla-val"><span id="qiblaDeg">--°</span> <span id="qiblaCardinal"></span></span></p>
 
-      <div class="sensor-row">
+      <div class="sensor-row" id="sensorRow" hidden>
         <span class="dot" id="sensorDot" data-q="off"></span>
         <span class="sensor-text" id="sensorText"></span>
         <button class="link-btn" id="calibrateBtn" type="button" data-i18n="calibrateShort">Calibrer</button>

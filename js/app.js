@@ -1738,8 +1738,8 @@ const compass = new Compass({
     // hystérésis : aligné sous 2°, désaligné au-delà de 4°
     const aligned = flat && Math.abs(diff) <= (compass.wasAligned ? 4 : 2);
     $('#dial').classList.toggle('aligned', aligned);
-    $('#kaabaTop').classList.toggle('on', aligned);
-    $('#headingBig').classList.toggle('on', aligned);
+    $('#qiblaIcon').classList.toggle('on', aligned);
+    uprightQibla();
     const msg = $('#compassMsg');
     if (!flat) { msg.textContent = t('notFlat'); msg.className = 'compass-msg alert-s'; }
     else if (aligned) { msg.textContent = t('aligned'); msg.className = 'compass-msg ok-s'; if (!compass.wasAligned) vibrate(60); }
@@ -1752,7 +1752,7 @@ const compass = new Compass({
     const map = { unsupported: 'compassUnsupported', denied: 'compassDenied', nodata: 'compassBlocked', relative: 'compassRelative', blocked: 'compassBlocked' };
     if (map[s]) {
       $('#compassMsg').textContent = t(map[s]); $('#compassMsg').className = 'compass-msg alert-s';
-      $('#rose').style.transform = ''; state.roseAngle = null; uprightLabels(0); $('#headingBig').textContent = '--';
+      $('#rose').style.transform = ''; state.roseAngle = null; uprightLabels(0); uprightQibla(); $('#headingBig').textContent = '--';
       setSensor('off');
     }
     if (s === 'calibrate') setSensor('poor');
@@ -1768,27 +1768,36 @@ function setCompassMsg(text, cls) {
 function setSensor(q) {
   if (state.sensorQ === q) return;
   state.sensorQ = q;
+  $('#sensorRow').hidden = q === 'good';                    // capteur précis : rien à signaler
   $('#sensorDot').dataset.q = q;
   $('#sensorText').textContent = t({ good: 'sensorGood', fair: 'sensorFair', poor: 'sensorPoor', off: 'sensorOff' }[q]);
 }
 
+const RING_R = 130;                                      // rayon de l'anneau du cadran (voir index.html)
 function buildDial() {
   const ns = 'http://www.w3.org/2000/svg';
   const ticks = $('#roseTicks');
-  for (let a = 0; a < 360; a += 45) {
+  for (let a = 0; a < 360; a += 15) {
+    if (a % 90 === 0) continue;                            // les points cardinaux ont leur lettre
+    const len = a % 45 === 0 ? 11 : 6;
     const l = document.createElementNS(ns, 'line');
-    l.setAttribute('x1', 0); l.setAttribute('x2', 0); l.setAttribute('y1', -140); l.setAttribute('y2', -160);
-    l.setAttribute('transform', `rotate(${a + 22.5})`);
-    l.setAttribute('class', 'rtick');
+    l.setAttribute('x1', 0); l.setAttribute('x2', 0); l.setAttribute('y1', -(RING_R - 3)); l.setAttribute('y2', -(RING_R - 3 - len));
+    l.setAttribute('transform', `rotate(${a})`);
+    l.setAttribute('class', a % 45 === 0 ? 'rtick major' : 'rtick');
     ticks.append(l);
   }
   renderDialLabels();
+}
+// L'icône de la Kaaba reste droite à l'écran pendant que la rose tourne
+function uprightQibla() {
+  const ic = $('#qiblaIcon'); if (!ic) return;
+  ic.setAttribute('transform', `translate(0 ${-RING_R}) rotate(${-((state.roseAngle || 0) + (state.qibla || 0))})`);
 }
 function renderDialLabels() {
   const ns = 'http://www.w3.org/2000/svg';
   const names = { fr: ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'], en: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'], ar: ['شمال', '', 'شرق', '', 'جنوب', '', 'غرب', ''] }[getLang()];
   $('#roseLabels').replaceChildren(...names.map((n, i) => n && (() => {
-    const a = i * 45, r = 98;
+    const a = i * 45, r = 92;
     const x = Math.sin(a * Math.PI / 180) * r, y = -Math.cos(a * Math.PI / 180) * r;
     const tx = document.createElementNS(ns, 'text');
     tx.setAttribute('x', x.toFixed(1)); tx.setAttribute('y', y.toFixed(1));
@@ -1818,6 +1827,7 @@ function renderQibla() {
   $('#qiblaMag').textContent = `${fmtDeg(mag)}° (${t('declShort')} ${state.decl >= 0 ? '+' : ''}${fmtDeg(state.decl)}°)`;
   $('#qiblaDist').textContent = `${Math.round(distanceToKaaba(loc.lat, loc.lng)).toLocaleString(locale())} km`;
   $('#qiblaMark').setAttribute('transform', `rotate(${state.qibla})`);
+  uprightQibla();
   if (!state.sensorQ) setSensor('off');
   renderSun();
   if (!Compass.isSupported()) compass.onStatus('unsupported');
@@ -2183,7 +2193,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.10.1';
+export const APP_VERSION = '2.10.2';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
