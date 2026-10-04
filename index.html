@@ -188,61 +188,107 @@
     </section>
 
     <section class="view" id="view-settings" hidden aria-labelledby="settingsTitle">
+      <div id="settingsHubBox">
       <h1 class="view-title" id="settingsTitle" data-i18n="settings">Réglages</h1>
+      <ul class="hub" id="settingsHub">
+        <li><button type="button" class="hub-row" data-page="loc">
+          <span class="hub-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span>
+          <span class="hub-txt"><span class="hub-title" data-i18n="sLocation">Localisation</span><span class="hub-sub" id="hub-loc"></span></span>
+          <span class="hub-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span>
+        </button></li>
+        <li><button type="button" class="hub-row" data-page="calc">
+          <span class="hub-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></span>
+          <span class="hub-txt"><span class="hub-title" data-i18n="sCalc">Calcul des horaires</span><span class="hub-sub" id="hub-calc"></span></span>
+          <span class="hub-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span>
+        </button></li>
+        <li><button type="button" class="hub-row" data-page="adhan">
+          <span class="hub-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
+          <span class="hub-txt"><span class="hub-title" data-i18n="sAdhanNotif">Adhan et notifications</span><span class="hub-sub" id="hub-adhan"></span></span>
+          <span class="hub-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span>
+        </button></li>
+        <li><button type="button" class="hub-row" data-page="look">
+          <span class="hub-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg></span>
+          <span class="hub-txt"><span class="hub-title" data-i18n="sLook">Langue et apparence</span><span class="hub-sub" id="hub-look"></span></span>
+          <span class="hub-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span>
+        </button></li>
+        <li><button type="button" class="hub-row" data-page="adv">
+          <span class="hub-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></span>
+          <span class="hub-txt"><span class="hub-title" data-i18n="sAdvanced">Avancé</span><span class="hub-sub" id="hub-adv"></span></span>
+          <span class="hub-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span>
+        </button></li>
+        <li><button type="button" class="hub-row" data-page="about">
+          <span class="hub-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></span>
+          <span class="hub-txt"><span class="hub-title" data-i18n="sAbout">À propos</span><span class="hub-sub" id="hub-about"></span></span>
+          <span class="hub-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span>
+        </button></li>
+      </ul>
+      </div>
 
+      <div class="spage" id="spage-loc" hidden>
+        <div class="spage-head"><button class="spage-back" type="button" data-i18n-aria="back" aria-label="Retour"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><h2 class="spage-title" data-i18n="sLocation">Localisation</h2></div>
       <fieldset class="group">
-        <legend data-i18n="sLocation">Localisation</legend>
+        <legend class="sr-only" data-i18n="sLocation">Localisation</legend>
         <div class="line">
           <span id="locSummary"></span>
           <button class="btn small" type="button" id="changeLoc" data-i18n="change">Modifier</button>
         </div>
       </fieldset>
-
+      </div>
+      <div class="spage" id="spage-calc" hidden>
+        <div class="spage-head"><button class="spage-back" type="button" data-i18n-aria="back" aria-label="Retour"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><h2 class="spage-title" data-i18n="sCalc">Calcul des horaires</h2></div>
       <fieldset class="group">
-        <legend data-i18n="sCalc">Calcul des horaires</legend>
+        <legend class="sr-only" data-i18n="sCalc">Calcul des horaires</legend>
+        
         <label class="field"><span data-i18n="method">Méthode de calcul</span><select id="sMethod"></select></label>
         <label class="field"><span data-i18n="madhab">Madhab (Asr)</span>
           <select id="sSchool"><option value="0" data-i18n="shafi"></option><option value="1" data-i18n="hanafi"></option></select>
         </label>
         <div id="maOfficial" hidden>
-          <label class="switch"><input type="checkbox" id="sOfficialLocality"><span data-i18n="officialLocality">Horaire de la localité officielle la plus proche</span></label>
           <label class="field"><span data-i18n="officialLocalityPick">Ma localité officielle</span><select id="sLocalityPick"></select></label>
           <p class="note" id="officialLocalityInfo"></p>
           <p class="note" data-i18n="maMethodNote"></p>
         </div>
-        <p class="sub" data-i18n="adjustments">Ajustements manuels (minutes)</p>
-        <div class="adjust" id="adjustGrid"></div>
       </fieldset>
-
+      </div>
+      <div class="spage" id="spage-adhan" hidden>
+        <div class="spage-head"><button class="spage-back" type="button" data-i18n-aria="back" aria-label="Retour"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><h2 class="spage-title" data-i18n="sAdhanNotif">Adhan et notifications</h2></div>
       <fieldset class="group">
-        <legend data-i18n="sAdhan">Appel à la prière</legend>
+        <legend data-i18n="sSounds">Son</legend>
         <label class="switch"><input type="checkbox" id="sAdhanOn"><span data-i18n="adhanEnabled"></span></label>
         <div class="seg" role="radiogroup" id="sAdhanMode">
           <label><input type="radio" name="adhanMode" value="global"><span data-i18n="oneForAll"></span></label>
           <label><input type="radio" name="adhanMode" value="perPrayer"><span data-i18n="perPrayer"></span></label>
         </div>
         <div id="adhanPickers"></div>
-        <div class="custom-adhan">
-          <p class="sub" data-i18n="myAdhans">Mes Adhans</p>
+        <label class="field"><span data-i18n="volume">Volume</span><input type="range" id="sVolume" min="0" max="1" step="0.05"></label>
+        <label class="switch"><input type="checkbox" id="sAdhanShort"><span data-i18n="adhanShort">Adhan court (20 s)</span></label>
+        <label class="switch"><input type="checkbox" id="sVibrate"><span data-i18n="vibration"></span></label>
+        <details class="limits custom-adhan">
+          <summary data-i18n="myAdhans">Mes Adhans</summary>
           <p class="note" data-i18n="importHelp"></p>
           <ul class="custom-list" id="customList"></ul>
           <input type="file" id="customFile" accept="audio/*,.mp3,.m4a,.aac,.ogg,.opus,.wav,.flac" multiple hidden>
           <button class="btn small" type="button" id="customImport" data-i18n="importAdhans">Importer des Adhans</button>
-        </div>
-        <label class="field"><span data-i18n="volume">Volume</span><input type="range" id="sVolume" min="0" max="1" step="0.05"></label>
-        <label class="switch"><input type="checkbox" id="sAdhanShort"><span data-i18n="adhanShort">Adhan court (20 s)</span></label>
-        <label class="switch"><input type="checkbox" id="sVibrate"><span data-i18n="vibration"></span></label>
+        </details>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend data-i18n="sNotifs">Notifications</legend>
         <label class="switch"><input type="checkbox" id="sNotifyAt"><span data-i18n="notifyAt"></span></label>
         <label class="field"><span data-i18n="notifyBefore">Notification avant la prière</span>
           <select id="sNotifyBefore"></select>
         </label>
+        <button class="btn small" type="button" id="testNotif" data-i18n="testNotif"></button>
+        <p class="warn" id="notifWarn" hidden></p>
+        <details class="limits" id="limitsBox"><summary data-i18n="limitsTitle"></summary><p data-i18n="limits"></p></details>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend data-i18n="sReminders">Rappels</legend>
         <label class="switch"><input type="checkbox" id="sWhiteDays"><span data-i18n="whiteReminder">Rappel des jours blancs</span></label>
         <label class="switch"><input type="checkbox" id="sMonthReminder"><span data-i18n="monthReminder">Rappel du début de mois</span></label>
         <label class="switch"><input type="checkbox" id="sEidReminder"><span data-i18n="eidReminder">Rappel des Aïds</span></label>
         <label class="switch"><input type="checkbox" id="sFridayReminder"><span data-i18n="fridayReminder">Rappel du vendredi</span></label>
-        <button class="btn small" type="button" id="testNotif" data-i18n="testNotif"></button>
-        <p class="warn" id="notifWarn" hidden></p>
-        <details class="limits" id="limitsBox"><summary data-i18n="limitsTitle"></summary><p data-i18n="limits"></p></details>
       </fieldset>
 
       <fieldset class="group native-group" id="nativeGroup" hidden>
@@ -253,7 +299,9 @@
         <button class="btn small btn-primary" type="button" id="nativeSync" data-i18n="nativeBtnOn">Activer</button>
         <details class="limits"><summary data-i18n="samsungTitle"></summary><p data-i18n="samsungTip"></p></details>
       </fieldset>
-
+      </div>
+      <div class="spage" id="spage-look" hidden>
+        <div class="spage-head"><button class="spage-back" type="button" data-i18n-aria="back" aria-label="Retour"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><h2 class="spage-title" data-i18n="sLook">Langue et apparence</h2></div>
       <fieldset class="group">
         <legend data-i18n="sInterface">Langue</legend>
         <div class="seg" role="radiogroup" id="sLang">
@@ -262,7 +310,6 @@
           <label><input type="radio" name="lang" value="en"><span>English</span></label>
         </div>
       </fieldset>
-
       <fieldset class="group">
         <legend data-i18n="sAppearance">Apparence</legend>
         <div class="seg" role="radiogroup" id="sTheme">
@@ -271,15 +318,21 @@
           <label><input type="radio" name="theme" value="auto"><span data-i18n="auto"></span></label>
         </div>
       </fieldset>
-
+      </div>
+      <div class="spage" id="spage-adv" hidden>
+        <div class="spage-head"><button class="spage-back" type="button" data-i18n-aria="back" aria-label="Retour"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><h2 class="spage-title" data-i18n="sAdvanced">Avancé</h2></div>
+      <fieldset class="group">
+        <legend data-i18n="adjustments">Ajustements manuels (minutes)</legend>
+        <div class="adj" id="adjustGrid"></div>
+        <button class="btn small" type="button" id="adjReset" data-i18n="adjReset">Tout remettre à 0</button>
+      </fieldset>
       <fieldset class="group">
         <legend data-i18n="sTz">Fuseau horaire</legend>
         <label class="field"><span data-i18n="tzLabel">Heure locale</span>
-          <select id="sTz"><option value="auto" data-i18n="tzAuto">Automatique</option><option value="-12">UTC−12</option><option value="-11">UTC−11</option><option value="-10">UTC−10</option><option value="-9">UTC−9</option><option value="-8">UTC−8</option><option value="-7">UTC−7</option><option value="-6">UTC−6</option><option value="-5">UTC−5</option><option value="-4">UTC−4</option><option value="-3">UTC−3</option><option value="-2">UTC−2</option><option value="-1">UTC−1</option><option value="0">UTC±0</option><option value="1">UTC+1</option><option value="2">UTC+2</option><option value="3">UTC+3</option><option value="4">UTC+4</option><option value="5">UTC+5</option><option value="6">UTC+6</option><option value="7">UTC+7</option><option value="8">UTC+8</option><option value="9">UTC+9</option><option value="10">UTC+10</option><option value="11">UTC+11</option><option value="12">UTC+12</option><option value="13">UTC+13</option><option value="14">UTC+14</option></select>
+          <select id="sTz"><option value="auto" data-i18n="tzAuto">Automatique</option><option value="-12">UTC−12</option><option value="-11">UTC−11</option><option value="-10">UTC−10</option><option value="-9">UTC−9</option><option value="-8">UTC−8</option><option value="-7">UTC−7</option><option value="-6">UTC−6</option><option value="-5">UTC−5</option><option value="-4">UTC−4</option><option value="-3">UTC−3</option><option value="-2">UTC−2</option><option value="-1">UTC−1</option><option value="0">GMT (UTC±0)</option><option value="1">UTC+1</option><option value="2">UTC+2</option><option value="3">UTC+3</option><option value="4">UTC+4</option><option value="5">UTC+5</option><option value="6">UTC+6</option><option value="7">UTC+7</option><option value="8">UTC+8</option><option value="9">UTC+9</option><option value="10">UTC+10</option><option value="11">UTC+11</option><option value="12">UTC+12</option><option value="13">UTC+13</option><option value="14">UTC+14</option></select>
         </label>
         <p class="note" data-i18n="tzHelp"></p>
       </fieldset>
-
       <fieldset class="group">
         <legend data-i18n="sHijri">Date hégirienne</legend>
         <label class="field"><span data-i18n="hijriSource">Calendrier</span>
@@ -294,28 +347,32 @@
           <select id="sHijri"><option>-2</option><option>-1</option><option>0</option><option>+1</option><option>+2</option></select>
         </label>
       </fieldset>
-
       <fieldset class="group">
         <legend data-i18n="sCompass">Boussole</legend>
         <label class="switch"><input type="checkbox" id="sDeclAuto"><span data-i18n="declAuto"></span></label>
         <label class="field"><span data-i18n="declination"></span><input type="number" id="sDecl" step="0.1" min="-30" max="30" inputmode="decimal"></label>
         <p class="note" data-i18n="declinationHelp"></p>
       </fieldset>
-
       <fieldset class="group">
         <legend data-i18n="sClock">Horloge</legend>
         <div class="line"><span><span data-i18n="clockSynced"></span> : <strong id="clockOffset">0 s</strong></span>
           <button class="btn small" type="button" id="syncBtn" data-i18n="syncNow"></button></div>
       </fieldset>
-
       <fieldset class="group">
         <legend data-i18n="sData">Données</legend>
-        <button class="btn small" type="button" id="clearBtn" data-i18n="clearCache"></button>
-        <p class="note" data-i18n="about"></p>
+        <button class="btn small danger" type="button" id="clearBtn" data-i18n="clearCache"></button>
+      </fieldset>
+      </div>
+      <div class="spage" id="spage-about" hidden>
+        <div class="spage-head"><button class="spage-back" type="button" data-i18n-aria="back" aria-label="Retour"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><h2 class="spage-title" data-i18n="sAbout">À propos</h2></div>
+      <fieldset class="group">
+        <legend data-i18n="sAbout">À propos</legend>
         <p class="note" id="appVersion"></p>
+        <p class="note" data-i18n="about"></p>
         <p class="note" data-i18n="audioCreditsTitle"></p>
         <ul class="note credits" id="audioCredits"></ul>
       </fieldset>
+      </div>
     </section>
   </main>
 
@@ -380,6 +437,15 @@
     </svg>
     <p data-i18n="calibrateHelp"></p>
     <form method="dialog"><button class="btn btn-primary wide" data-i18n="done">Terminé</button></form>
+  </dialog>
+
+  <dialog id="clearDialog" class="sheet center" aria-labelledby="clearTitle">
+    <h2 id="clearTitle" data-i18n="clearQ">Effacer les horaires enregistrés ?</h2>
+    <p data-i18n="clearHint">Ils seront rechargés ou recalculés.</p>
+    <form method="dialog" class="clear-btns">
+      <button class="btn" value="cancel" data-i18n="cancel">Annuler</button>
+      <button class="btn btn-danger" id="clearConfirm" value="ok" data-i18n="clearYes">Effacer</button>
+    </form>
   </dialog>
 
   <!-- Adhan en cours -->

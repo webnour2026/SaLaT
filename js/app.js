@@ -106,11 +106,35 @@ function go(view) {
     setCompassMsg(t('compassSearching'), '');
     compass.start({ ask: !Compass.needsPermission() });
   }
-  if (view === 'settings') renderSettings();
+  if (view === 'settings') { showSettingsPage(state.pendingPage || null, { silent: true }); state.pendingPage = null; renderSettings(); }
   if (view === 'cards') renderCards();
   if (view === 'calendar') { state.calAnchor = null; renderCalendar(); }
   window.scrollTo({ top: 0 });
-  history.replaceState(null, '', `#${view}`);
+  if (!(view === 'settings' && state.spage)) history.replaceState(null, '', `#${view}`);
+}
+
+// ================= Réglages : menu et sous-pages =================
+const SPAGES = ['loc', 'calc', 'adhan', 'look', 'adv', 'about'];
+state.spage = null;
+function showSettingsPage(name, { push = false, silent = false } = {}) {
+  if (name && !SPAGES.includes(name)) name = null;
+  state.spage = name;
+  if (!name) renderSettingsHub();                              // résumés à jour à chaque retour au menu
+  const hub = $('#settingsHubBox'); if (hub) hub.hidden = !!name;
+  SPAGES.forEach(p => { const el = $(`#spage-${p}`); if (el) el.hidden = p !== name; });
+  if (push && name) history.pushState({ spage: name }, '', `#settings/${name}`);
+  else if (!silent) history.replaceState(null, '', name ? `#settings/${name}` : '#settings');
+  if (!silent) window.scrollTo({ top: 0 });
+}
+function renderSettingsHub() {
+  const s = S(), a = s.adhan, loc = s.location, set = (id, txt) => { const el = $(`#hub-${id}`); if (el) el.textContent = txt || ''; };
+  set('loc', loc ? (loc.name || t('chooseCity')) : t('chooseCity'));
+  set('calc', t('methods')[s.method] || '');
+  const snd = a.enabled ? [t('hubOn'), a.mode === 'perPrayer' ? t('perPrayer') : (a.global === 'none' ? t('none') : '')].filter(Boolean) : [t('hubOff')];
+  set('adhan', snd.join(' \u00b7 '));
+  set('look', `${{ fr: 'Fran\u00e7ais', ar: '\u0627\u0644\u0639\u0631\u0628\u064a\u0629', en: 'English' }[s.lang] || ''} \u00b7 ${t(s.theme === 'auto' ? 'auto' : s.theme)}`);
+  set('adv', '');
+  set('about', `Version ${APP_VERSION}`);
 }
 
 // ================= Position =================
@@ -1831,11 +1855,9 @@ function renderOfficialLocality() {
   const s = S(), box = $('#maOfficial'), lang = getLang();
   box.hidden = Number(s.method) !== 21;
   const code = s.officialLocalityCode ?? null, chosen = code != null ? localityByCode(Number(code)) : null;
-  $('#sOfficialLocality').checked = s.officialLocality !== false;
-  $('#sOfficialLocality').disabled = !!chosen;                       // une localité choisie à la main remplace le choix automatique
   const names = allLocalities().map(l => [localityName(l, lang), l.code]).sort((a, b) => a[0].localeCompare(b[0], lang === 'ar' ? 'ar' : 'fr'));
-  $('#sLocalityPick').replaceChildren(new Option(t('officialLocalityAuto'), ''), ...names.map(([n, c]) => new Option(n, c)));
-  $('#sLocalityPick').value = chosen ? String(chosen.code) : '';
+  $('#sLocalityPick').replaceChildren(new Option(t('officialLocalityAuto'), ''), new Option(t('officialLocalityExact'), 'exact'), ...names.map(([n, c]) => new Option(n, c)));
+  $('#sLocalityPick').value = chosen ? String(chosen.code) : (s.officialLocality === false ? 'exact' : '');
   // une seule ligne, et seulement si elle apprend quelque chose : on s'est collé à une AUTRE localité que le lieu de l'utilisateur
   const loc = s.location, n = loc && nearestLocality(loc.lat, loc.lng);
   const show = !chosen && s.officialLocality !== false && !!n && n.km <= SNAP_KM && !sameLocalityName(loc.name, n);
@@ -1846,8 +1868,11 @@ function renderOfficialLocality() {
 function renderSettings() {
   const s = S();
   const loc = s.location;
+  const lri = x => `\u2066${x}\u2069`;   // chiffres isolés : plus de signe « moins » collé du mauvais côté
   $('#locSummary').textContent = loc
-    ? `${loc.source === 'gps' ? t('gpsAuto') : t('manualCity')} — ${loc.name || ''} (${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)})${loc.accuracy ? ` · ${t('gpsAccuracy')} ±${loc.accuracy} m` : ''}`
+    ? (loc.name
+        ? `${loc.source === 'gps' ? t('gpsAuto') : t('manualCity')} \u2014 ${loc.name}${loc.accuracy ? ` \u00b7 \u00b1${lri(`${loc.accuracy} m`)}` : ''}`
+        : `${t('gpsAuto')} \u2014 ${lri(`${loc.lat.toFixed(3)}, ${loc.lng.toFixed(3)}`)}`)
     : t('chooseCity');
 
   // « Moonsighting Committee » (id 15) : méthode britannique / nord-américaine, nom trompeur en arabe et calcul hors ligne approximatif :
@@ -1856,17 +1881,19 @@ function renderSettings() {
   $('#sSchool').value = String(s.school);
   renderOfficialLocality();
 
-  $('#adjustGrid').replaceChildren(...['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].map(k => {
-    const l = document.createElement('label');
-    l.innerHTML = '<span></span><input type="number" min="-30" max="30" step="1" inputmode="numeric">';
-    l.firstChild.textContent = t(k);
-    const inp = l.lastChild; inp.value = s.adjust[k] || 0;
-    inp.addEventListener('change', () => {
-      s.adjust[k] = Math.max(-30, Math.min(30, Math.round(Number(inp.value) || 0)));
-      inp.value = s.adjust[k]; save(); loadDays(); renderHome();
-    });
-    return l;
+  const PR = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+  const fmtAdj = v => v ? `${v > 0 ? '+' : '\u2212'}${Math.abs(v)} ${t('minShort')}` : '0';
+  const setAdj = (k, v) => { s.adjust[k] = Math.max(-30, Math.min(30, v)); save(); loadDays(); renderHome(); };
+  $('#adjustGrid').replaceChildren(...PR.map(k => {
+    const row = document.createElement('div'); row.className = 'adj-row';
+    row.innerHTML = '<span></span><button type="button" class="adj-btn" data-d="-1">\u2212</button><span class="adj-val"></span><button type="button" class="adj-btn" data-d="1">+</button>';
+    row.firstChild.textContent = t(k);
+    const val = row.querySelector('.adj-val'), paint = () => { const v = s.adjust[k] || 0; val.textContent = fmtAdj(v); val.classList.toggle('zero', !v); };
+    paint();
+    row.querySelectorAll('.adj-btn').forEach(b => b.addEventListener('click', () => { setAdj(k, (s.adjust[k] || 0) + Number(b.dataset.d)); paint(); }));
+    return row;
   }));
+  const reset = $('#adjReset'); if (reset) { reset.onclick = () => { PR.forEach(k => { s.adjust[k] = 0; }); save(); loadDays(); renderHome(); renderSettings(); }; reset.hidden = !PR.some(k => s.adjust[k]); }
 
   const a = s.adhan;
   $('#sAdhanOn').checked = a.enabled;
@@ -1880,6 +1907,7 @@ function renderSettings() {
   $('#sMonthReminder').checked = s.monthReminder !== false;
   $('#sEidReminder').checked = s.eidReminder !== false;
   $('#sFridayReminder').checked = s.fridayReminder !== false;
+  renderSettingsHub();
   renderCredits();
   renderCustomAdhan();
   const ver = $('#appVersion'); if (ver) ver.textContent = `Version ${APP_VERSION}`;
@@ -1902,8 +1930,9 @@ function renderSettings() {
   $('#sOngoing').checked = !!s.ongoing;
   $('#sDeclAuto').checked = s.declAuto;
   $('#sDecl').disabled = s.declAuto;
-  $('#sDecl').value = s.declAuto ? fmtDeg(currentDeclination()).replace(',', '.') : s.declination;
-  $('#clockOffset').textContent = `${getOffset() >= 0 ? '+' : ''}${Math.round(getOffset() / 1000)} s`;
+  const dv = Number(currentDeclination());
+  $('#sDecl').value = s.declAuto ? (Number.isFinite(dv) ? dv.toFixed(1) : '') : s.declination;   // valeur numérique (un champ numérique refuse « 1,0° O »)
+  $('#clockOffset').textContent = `\u2066${getOffset() >= 0 ? '+' : '\u2212'}${Math.abs(Math.round(getOffset() / 1000))} s\u2069`;   // isolé : le signe reste du bon côté
 }
 
 // Auteurs et licences des Adhans : fichier généré par le workflow « Télécharger les Adhans »
@@ -1998,8 +2027,11 @@ async function ensureNotifPermission() {
 function bindSettings() {
   on('#changeLoc', 'click', openLocationDialog);
   on('#sMethod', 'change', e => { S().method = Number(e.target.value); S().methodAuto = false; save(); renderOfficialLocality(); refresh(); checkOfficiel(true); });
-  on('#sOfficialLocality', 'change', e => { S().officialLocality = e.target.checked; save(); renderOfficialLocality(); refresh(); checkOfficiel(true); });
-  on('#sLocalityPick', 'change', e => { S().officialLocalityCode = e.target.value ? Number(e.target.value) : null; save(); renderOfficialLocality(); refresh(); checkOfficiel(true); });
+  on('#sLocalityPick', 'change', e => {
+    const v = e.target.value, exact = v === 'exact';
+    S().officialLocality = !exact; S().officialLocalityCode = v && !exact ? Number(v) : null;   // Automatique | position exacte | localité choisie
+    save(); renderOfficialLocality(); refresh(); checkOfficiel(true);
+  });
   on('#sSchool', 'change', e => { S().school = Number(e.target.value); save(); refresh(); });
   on('#sAdhanOn', 'change', e => { S().adhan.enabled = e.target.checked; save(); if (e.target.checked) unlockAudio(); renderCta(); renderHome(); });
   on('#ctaAdhanBtn', 'click', enableAdhan);
@@ -2049,7 +2081,14 @@ function bindSettings() {
   on('#sDecl', 'change', e => { S().declination = Math.max(-30, Math.min(30, Number(String(e.target.value).replace(',', '.')) || 0)); save(); state.decl = currentDeclination(); });
   on('#sDeclAuto', 'change', e => { S().declAuto = e.target.checked; save(); state.decl = currentDeclination(); renderSettings(); });
   on('#syncBtn', 'click', async () => { await syncClock(); computeNext(); renderSettings(); });
-  on('#clearBtn', 'click', () => { clearMonths(); toast(t('cleared')); refresh(); });
+  on('#clearBtn', 'click', () => $('#clearDialog').showModal());
+  on('#clearConfirm', 'click', () => { clearMonths(); toast(t('cleared')); refresh(); });   // le bouton « Annuler » ferme simplement la boîte
+  on('#settingsHub', 'click', e => { const r = e.target.closest('.hub-row'); if (r) showSettingsPage(r.dataset.page, { push: true }); });
+  document.querySelectorAll('.spage-back').forEach(b => b.addEventListener('click', () => { if (history.state?.spage) history.back(); else showSettingsPage(null); }));
+  window.addEventListener('popstate', () => {
+    if ($('#view-settings').hidden) return;
+    const m = location.hash.match(/^#settings\/(\w+)$/); showSettingsPage(m ? m[1] : null, { silent: true });
+  });
 }
 
 // ================= Service worker =================
@@ -2144,7 +2183,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.10.0';
+export const APP_VERSION = '2.10.1';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
@@ -2193,7 +2232,8 @@ function init() {
   registerSW();
   countdown.start();
 
-  const view = (location.hash || '#home').slice(1);
+  const [view, page] = (location.hash || '#home').slice(1).split('/');
+  if (view === 'settings' && page) state.pendingPage = page;
   go(['home', 'qibla', 'calendar', 'cards', 'settings'].includes(view) ? view : 'home');
   renderNoLoc();
 
