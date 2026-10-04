@@ -1,4 +1,4 @@
-import { t, setLang, locale, getLang } from './i18n.js';
+import { t, setLang, locale, getLang, AR_STRINGS } from './i18n.js';
 import { loadSettings, saveSettings, clearMonths, PRAYERS } from './storage.js';
 import { now, syncClock, getOffset } from './clock.js';
 import { ensureMonths, ensureMonth, getDay, findNext, findElapsed, dateKeyInTz, addDays, deviceTz } from './prayer-times.js';
@@ -521,7 +521,8 @@ function renderCalendar() {
   const gf = new Intl.DateTimeFormat(locale(), { month: 'long', year: 'numeric', timeZone: 'UTC' });
   const a = gf.format(mon.days[0].noon), b = gf.format(mon.days.at(-1).noon);
   $('#calSub').textContent = a === b ? a : `${a} – ${b}`;
-  const mb = $('#calMonthTable'); if (mb) mb.textContent = mon.m === 9 ? t('imsakiya') : t('monthTimes');
+  const mbt = $('#calMonthTableTxt'); if (mbt) { mbt.textContent = mon.m === 9 ? t('imsakiya') : t('monthTimesShort'); $('#calMonthTable').setAttribute('aria-label', mon.m === 9 ? t('imsakiya') : t('calTable')); }
+  const tb = $('#calToday'); if (tb) tb.hidden = mon.days.some(d => d.noon === todayNoon);   // « اليوم » seulement quand on regarde un autre mois
   // en-têtes : semaine du samedi au vendredi en arabe, du lundi au dimanche sinon
   const first = getLang() === 'ar' ? 6 : 1;
   const wd = new Intl.DateTimeFormat(locale(), { weekday: getLang() === 'ar' ? 'long' : 'short', timeZone: 'UTC' });
@@ -536,7 +537,7 @@ function renderCalendar() {
   const gd = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'short', timeZone: 'UTC' });
   const cells = mon.days.map(d => {
     const el = document.createElement('div');
-    el.className = 'cal-day' + (d.white ? ' white' : '') + (d.occasion ? ' occ' : '') + (d.noon === todayNoon ? ' today' : '');
+    el.className = 'cal-day' + (d.white ? ' white' : '') + (d.occasion ? ' occ' : '') + (d.noon === todayNoon ? ' today' : '') + (d.dow === 5 ? ' fri' : '');
     el.setAttribute('role', 'gridcell');
     el.tabIndex = 0;
     const key = new Date(d.noon).toISOString().slice(0, 10);
@@ -551,6 +552,7 @@ function renderCalendar() {
   });
   grid.replaceChildren(...heads, ...blanks, ...cells);
   const df = new Intl.DateTimeFormat(locale(), { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+  renderNextOcc();
   const events = mon.days.filter(d => d.occasion).map(d => [t(d.occasion.key), d]);
   const whites = mon.days.filter(d => d.white);
   if (whites.length) events.push([t('whiteDays'), whites[0], null, whites]);
@@ -573,6 +575,16 @@ function renderCalendar() {
     }
     return li;
   }));
+}
+/** Bloc « prochaine occasion » du calendrier : la plus proche à partir d'aujourd'hui (jours blancs et occasions, pas le vendredi) */
+function renderNextOcc() {
+  const box = $('#nextOcc'); if (!box) return;
+  const sp = cardSpecs().find(x => !x.evergreen && x.key !== 'jumuah' && x.key !== 'imsakiya');
+  box.hidden = !sp; if (!sp) return;
+  const df = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+  $('#noName').textContent = cardTitleOf(sp);
+  $('#noWhen').textContent = `${df.format(sp.noon)} \u00b7 ${whenLabel(sp.noon)}`;
+  $('#noShare').onclick = () => openCardPreview(sp);
 }
 // ================= Horaires du mois (mois hégirien affiché dans le calendrier) =================
 // Mois grégoriens couverts par un mois hégirien, en toutes lettres
@@ -1181,6 +1193,17 @@ const CARD_AR = {
   dua: ['دعاء', ''],
   hadith: ['حديث شريف', ''],
 };
+// Salutation d'une carte du jour : « صباح الخير » jusqu'au Dhuhr du lieu, « مساء الخير » ensuite (et la nuit, avant le Fajr)
+function greetKey(ts = now()) {
+  const dh = state.today?.times?.Dhuhr, fj = state.today?.times?.Fajr;
+  if (dh && fj) return ts >= fj && ts < dh ? 'morning' : 'evening';
+  const hr = Number(new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone: tz() }).format(ts));
+  return hr >= 5 && hr < 12 ? 'morning' : 'evening';
+}
+const greetAr = k => (DICT_AR[k === 'morning' ? 'greetMorning' : 'greetEvening']);
+const EVERGREEN = ['morning', 'dua', 'hadith'];
+const DICT_AR = AR_STRINGS;
+const kindKey = (key, txt) => (key === 'dua' ? 'kindDua' : key === 'hadith' ? 'kindHadith' : txt && txt.q ? 'kindVerse' : 'kindDhikr');
 const CARD_THEME = {
   green: ['#0B5D4B', '#12806A', '#E9C46A'],   // Joumou'a, Mawlid, nouvel an…
   night: ['#141F3D', '#3B2F63', '#E9C46A'],   // Ramadan, Qadr, jours blancs
@@ -1193,6 +1216,7 @@ const themeOf = key => (['occFitr', 'occAdha'].includes(key) ? 'gold'
   : ['occRamadan', 'occQadr', 'white', 'occNisfShaban'].includes(key) ? 'night'
   : ['occAshura', 'occArafa'].includes(key) ? 'teal' : ['morning', 'dua', 'hadith'].includes(key) ? 'sky' : 'green');
 const cardSubLocal = key => (getLang() === 'ar' ? ''
+  : EVERGREEN.includes(key) ? t(greetKey() === 'morning' ? 'greetMorning' : 'greetEvening')
   : key === 'jumuah' ? t('cardJumuah') : key === 'white' ? t('cardWhite') : (t('cardSub') || {})[key] || t(key));
 
 /** Liste des cartes disponibles à partir d'aujourd'hui */
@@ -1212,7 +1236,7 @@ function cardSpecs() {
   }
   // occasions à venir (≈ 1 an)
   const seen = new Set();
-  for (let i = 0; i < 370 && seen.size < 5; i++) {
+  for (let i = 0; i < 370 && seen.size < OCCASIONS.length; i++) {
     const noon = today + i * DAY_MS, h = hijriOf(noon, off);
     const o = OCCASIONS.find(x => x.m === h.m && x.d === h.d);
     if (o && !seen.has(o.key)) { seen.add(o.key); out.push({ key: o.key, noon, h }); }
@@ -1295,6 +1319,49 @@ function drawZellige(g, W, H, color) {
   g.restore();
 }
 
+/** Illustration d'Aïd, dessinée ici (aucune image externe) ; renvoie la hauteur utilisée. */
+function drawEidArt(g, key, cx, top, accent) {
+  g.save();
+  if (key === 'occAdha') {                                   // le mouton
+    const K = 1.2, cy = top + 170 * K, wool = '#FFF4DC', dark = '#2B1A12';
+    g.translate(cx, cy); g.scale(K, K);
+    g.fillStyle = 'rgba(0,0,0,.2)'; g.beginPath(); g.ellipse(0, 162, 190, 16, 0, 0, 7); g.fill();       // ombre
+    g.fillStyle = dark;
+    for (const x of [-92, -44, 58, 106]) { g.beginPath(); g.roundRect(x - 11, 80, 22, 82, 9); g.fill(); }  // pattes
+    g.fillStyle = wool;
+    for (const [x, y, r] of [[-110, 14, 60], [-62, -28, 64], [-6, -44, 66], [52, -34, 64], [104, 0, 60], [-96, 56, 56], [-40, 62, 60], [22, 62, 60], [80, 54, 54], [-24, 8, 72], [38, 12, 66]]) { g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
+    g.strokeStyle = 'rgba(122,82,40,.28)'; g.lineWidth = 3;                                              // boucles de laine
+    for (const [x, y, r] of [[-62, -28, 40], [-6, -44, 42], [52, -34, 40], [104, 0, 36], [-24, 8, 44], [38, 12, 40]]) { g.beginPath(); g.arc(x, y, r, Math.PI * 1.05, Math.PI * 1.9); g.stroke(); }
+    g.fillStyle = wool; g.beginPath(); g.arc(176, 6, 22, 0, 7); g.fill();                                // queue
+    g.save(); g.translate(-176, 20); g.rotate(-.12);                                                      // tête
+    g.fillStyle = dark; g.beginPath(); g.ellipse(0, 0, 50, 62, 0, 0, 7); g.fill();
+    g.fillStyle = '#3B261A'; g.beginPath(); g.ellipse(-24, 4, 22, 34, .5, 0, 7); g.fill();               // oreille
+    g.beginPath(); g.ellipse(34, -34, 18, 30, -.5, 0, 7); g.fill();
+    g.fillStyle = wool; g.beginPath(); g.arc(12, -24, 6.5, 0, 7); g.fill();                              // œil
+    g.fillStyle = '#6A4630'; g.beginPath(); g.ellipse(-8, 42, 22, 14, 0, 0, 7); g.fill();                // museau
+    g.strokeStyle = accent; g.lineWidth = 15; g.lineCap = 'round';                                       // cornes
+    g.beginPath(); g.arc(30, -52, 34, Math.PI * .9, Math.PI * 2.15); g.stroke();
+    g.beginPath(); g.arc(-4, -62, 34, Math.PI * 1.05, Math.PI * 2.3); g.stroke();
+    g.restore();
+    g.restore(); return 420;
+  }
+  // Aïd al-Fitr : emblème — rub el-hizb (deux carrés), croissant et étoile
+  const K = 1.2, cy = top + 150 * K, R = 140;
+  g.translate(cx, cy); g.scale(K, K);
+  g.strokeStyle = accent; g.lineWidth = 5;
+  g.globalAlpha = .9; g.beginPath(); g.arc(0, 0, R + 14, 0, 7); g.stroke();
+  g.globalAlpha = .12; g.fillStyle = accent; g.beginPath(); g.arc(0, 0, R + 14, 0, 7); g.fill();
+  g.globalAlpha = .85; g.lineWidth = 5;
+  for (const rot of [0, Math.PI / 4]) { g.save(); g.rotate(rot); g.strokeRect(-R * .78, -R * .78, R * 1.56, R * 1.56); g.restore(); }
+  g.globalAlpha = 1;
+  g.fillStyle = accent; g.beginPath(); g.arc(-8, 0, 78, 0, 7); g.fill();                                // croissant
+  g.save(); g.globalCompositeOperation = 'destination-out'; g.beginPath(); g.arc(18, -10, 66, 0, 7); g.fill(); g.restore();
+  g.fillStyle = accent; g.beginPath();                                                                  // étoile à 8 branches
+  for (let i = 0; i < 16; i++) { const r = i % 2 ? 11 : 26, a = i * Math.PI / 8 - Math.PI / 2; g.lineTo(52 + Math.cos(a) * r, -26 + Math.sin(a) * r); }
+  g.closePath(); g.fill();
+  g.restore(); return 372;
+}
+
 async function buildGreetingCard(spec) {
   await ensureCardFonts();
   const W = 1080, H = 1350, key = spec.key;
@@ -1320,7 +1387,9 @@ async function buildGreetingCard(spec) {
   // le contenu est dessiné sur un calque, puis centré verticalement au-dessus de la dédicace
   const base = g, layer = document.createElement('canvas'); layer.width = W; layer.height = H;
   g = layer.getContext('2d');
-  const [arTitle, arLine] = CARD_AR[key] || [t(key), ''];
+  let [arTitle, arLine] = CARD_AR[key] || [t(key), ''];
+  const txt0 = EVERGREEN.includes(key) ? cardTextOf(spec) : null;
+  if (EVERGREEN.includes(key)) { arTitle = greetAr(spec.greet || greetKey()); arLine = DICT_AR[kindKey(key, txt0)]; }   // « صباح / مساء الخير » + آية، ذكر، دعاء ou حديث
   g.textAlign = 'center'; g.direction = 'rtl'; g.textBaseline = 'alphabetic';
   const top = 120; let y = top + (spec.evergreen ? 90 : 110);   // cartes du jour : titre plus haut
   g.fillStyle = isSky ? ink : accent; g.font = kufi(key === 'occMawlid' || key === 'occIsra' ? 84 : 112);
@@ -1328,6 +1397,7 @@ async function buildGreetingCard(spec) {
   y += 80;
   if (key === 'occNewYear' && spec.h) { g.font = amiri(700, 60); g.fillStyle = ink; g.fillText(`${spec.h.y} هـ`, W / 2, y); y += 70; }
   if (arLine) { g.font = amiri(400, 56); g.fillStyle = ink; g.fillText(arLine, W / 2, y); y += 70; }
+  if (key === 'occAdha' || key === 'occFitr') { y += 24; y += drawEidArt(g, key, W / 2, y, accent) + 36; }   // mouton de l'Aïd al-Adha / emblème de l'Aïd al-Fitr
   // texte sourcé (verset, hadith, dhikr ou doua)
   const txt = cardTextOf(spec);
   if (txt) {
@@ -1397,9 +1467,11 @@ async function buildGreetingCard(spec) {
 }
 
 function cardText(spec) {
-  const [arTitle, arLine] = CARD_AR[spec.key] || [t(spec.key), ''];
+  let [arTitle, arLine] = CARD_AR[spec.key] || [t(spec.key), ''];
+  if (EVERGREEN.includes(spec.key)) { arTitle = greetAr(spec.greet || greetKey()); arLine = DICT_AR[kindKey(spec.key, cardTextOf(spec))]; }
   const sub = cardSubLocal(spec.key);
-  let txt = `🌙 ${arTitle}${arLine ? '\n' + arLine : ''}${sub ? '\n' + sub : ''}`;
+  const icon = EVERGREEN.includes(spec.key) && (spec.greet || greetKey()) === 'morning' ? '\u2600\ufe0f' : spec.key === 'occAdha' ? '\ud83d\udc11' : '\ud83c\udf19';   // soleil le matin, croissant le soir, mouton pour l'Aïd al-Adha
+  let txt = `${icon} ${arTitle}${arLine ? '\n' + arLine : ''}${sub ? '\n' + sub : ''}`;
   const body = cardTextOf(spec);
   if (body) txt += `\n\n${spec.key === 'hadith' ? t('hadithLead') + '\n' : ''}${body.q ? `﴿ ${body.t} ﴾` : `« ${body.t} »`}\n${body.r}${body.q ? ' · ' + t('riwayaHafs') : ''}`;
   const from = (S().cardFrom || '').trim();
@@ -1435,58 +1507,126 @@ const cardRank = sp => { const i = CARD_ORDER.indexOf(sp.key); return i < 0 ? CA
 const noWaqf = text => text.replace(/[\u06D6-\u06DC]/g, '');     // listes : sans signes de pause (ils se superposeraient à la ligne du dessus)
 const preview = (text, n = 6) => { const w = noWaqf(text).split(/\s+/); return w.slice(0, n).join(' ') + (w.length > n ? ' …' : ''); };
 
-/** Liste déroulante de tous les textes d'une catégorie : un toucher = partage direct */
-function pickPanel(sp) {
-  const panel = document.createElement('li'); panel.className = 'pick-panel'; panel.hidden = true;
-  const ul = document.createElement('ul'); ul.className = 'pick-list';
-  const order = CARD_TEXTS[sp.key].map((_, i) => i);
-  for (let k = order.length - 1; k > 0; k--) { const r = Math.floor(Math.random() * (k + 1)); [order[k], order[r]] = [order[r], order[k]]; }
-  order.forEach(i => { const x = CARD_TEXTS[sp.key][i];   // ordre différent à chaque ouverture
+/** Liste complète des textes d'une catégorie (fenêtre) : un toucher = aperçu de la carte */
+function openPickAll(sp) {
+  $('#pdTitle').textContent = categoryTitle(sp.key);
+  const ul = $('#pdList'); ul.replaceChildren();
+  CARD_TEXTS[sp.key].forEach((x, i) => {
     const item = document.createElement('li'), btn = document.createElement('button');
-    btn.type = 'button';
-    btn.innerHTML = '<span class="pt"></span><small></small>';
-    btn.querySelector('.pt').textContent = x.q ? `﴿ ${noWaqf(x.t)} ﴾` : noWaqf(x.t);
+    btn.type = 'button'; btn.innerHTML = '<span class="pt"></span><small></small>';
+    btn.querySelector('.pt').textContent = x.q ? `\uFD3F ${noWaqf(x.t)} \uFD3E` : noWaqf(x.t);
     btn.querySelector('small').textContent = x.r;
-    btn.addEventListener('click', () => shareCard({ ...sp, i }));
+    btn.addEventListener('click', () => { $('#pickDialog').close(); openCardPreview({ ...sp, i }); });
     item.append(btn); ul.append(item);
   });
-  panel.append(ul);
-  return panel;
+  $('#pickDialog').showModal(); ul.scrollTop = 0;
+}
+const categoryTitle = key => (key === 'morning' ? t('cardsMorning') : getLang() === 'ar' ? (CARD_AR[key] || [t(key)])[0] : t(key === 'hadith' ? 'kindHadith' : 'kindDua'));
+const cardTitleOf = sp => (sp.key === 'imsakiya' ? `${t('imsakiya')} ${sp.mon.y}`
+  : getLang() === 'ar' ? (CARD_AR[sp.key] || [t(sp.key)])[0]
+  : t({ jumuah: 'cardJumuah', white: 'whiteDays' }[sp.key] || sp.key));
+
+// ---- Aperçus : la vraie carte, dessinée en petit (une à la fois, seulement quand elle devient visible)
+const THUMB_W = 296, THUMB_H = 370;
+const thumbQueue = []; let thumbBusy = false;
+async function pumpThumbs() {
+  if (thumbBusy) return; thumbBusy = true;
+  while (thumbQueue.length) {
+    const { sp, cv } = thumbQueue.shift();
+    if (!cv.isConnected) continue;
+    try {
+      const full = await buildGreetingCard(sp);
+      cv.width = THUMB_W; cv.height = THUMB_H;
+      const g = cv.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(full, 0, 0, THUMB_W, THUMB_H);
+      cv.classList.add('ready');
+    } catch { /* l'aperçu reste vide, la carte se partage quand même */ }
+    await new Promise(r => setTimeout(r, 30));
+  }
+  thumbBusy = false;
+}
+let thumbObserver = null;
+function watchThumb(cv, sp) {
+  if (!('IntersectionObserver' in window)) { thumbQueue.push({ sp, cv }); pumpThumbs(); return; }
+  thumbObserver = thumbObserver || new IntersectionObserver(entries => {
+    entries.forEach(en => { if (en.isIntersecting) { const x = en.target.__job; thumbObserver.unobserve(en.target); thumbQueue.push(x); } });
+    pumpThumbs();
+  }, { rootMargin: '0px 240px 240px 240px' });
+  cv.__job = { sp, cv }; thumbObserver.observe(cv);
+}
+function thumbButton(sp, label, caption) {
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'card-thumb';
+  b.innerHTML = '<canvas width="8" height="10"></canvas><span class="ct-cap"><b></b><span></span></span>';
+  b.querySelector('b').textContent = label; b.querySelector('.ct-cap span').textContent = caption || '';
+  b.addEventListener('click', () => openCardPreview(sp));
+  watchThumb(b.querySelector('canvas'), sp);
+  return b;
+}
+
+// ---- Aperçu plein format + partage
+async function paintPreview() {
+  const sp = state.cdSpec; if (!sp) return;
+  const box = $('#cdPreview'), stamp = (state.cdStamp = (state.cdStamp || 0) + 1);
+  const cv = await buildGreetingCard(sp);
+  if (stamp !== state.cdStamp) return;                       // une saisie plus récente a pris le relais
+  cv.className = 'cd-canvas'; box.replaceChildren(cv);
+}
+function openCardPreview(sp) {
+  if (sp.key === 'imsakiya') return shareCard(sp);
+  sp.scene = sp.scene || SCENE_KEYS[Math.floor(Math.random() * SCENE_KEYS.length)];
+  if (EVERGREEN.includes(sp.key)) sp.greet = greetKey();
+  state.cdSpec = sp;
+  $('#cardFrom').value = S().cardFrom || '';
+  $('#cdPreview').replaceChildren();
+  $('#cardDialog').showModal();
+  paintPreview();
 }
 
 function renderCards() {
   const df = new Intl.DateTimeFormat(locale(), { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
-  const specs = cardSpecs().map((sp, n) => ({ sp, n })).sort((a, b) => cardRank(a.sp) - cardRank(b.sp) || a.n - b.n).map(x => x.sp);
-  const rows = [];
-  for (const sp of specs) {
-    const li = document.createElement('li');
-    const title = sp.key === 'imsakiya' ? `${t('imsakiya')} ${sp.mon.y}`
-      : getLang() === 'ar' ? (CARD_AR[sp.key] || [t(sp.key)])[0]
-      : t({ jumuah: 'cardJumuah', white: 'whiteDays' }[sp.key] || sp.key);
-    const sub = sp.key === 'imsakiya' ? gregSpan(sp.mon)
-      : sp.pick ? `${CARD_TEXTS[sp.key].length} ${t('textsCount')}`
-      : sp.evergreen ? preview(cardTextOf(sp).t)
-      : `${df.format(sp.noon)} · ${whenLabel(sp.noon)}`;
-    li.innerHTML = '<div class="cl-txt"><b></b><small></small></div><div class="cl-btns"><button class="btn small btn-primary" type="button"></button></div>';
-    li.querySelector('b').textContent = title;
-    li.querySelector('small').textContent = sub;
-    const b = li.querySelector('button');
-    rows.push(li);
-    if (sp.pick) {                                        // doua / hadith : ouvrir la liste pour choisir
-      const panel = pickPanel(sp);
-      b.textContent = t('chooseText') + ' ▾'; b.setAttribute('aria-expanded', 'false');
-      b.addEventListener('click', () => {
-        panel.hidden = !panel.hidden;
-        b.setAttribute('aria-expanded', String(!panel.hidden));
-        b.textContent = t('chooseText') + (panel.hidden ? ' ▾' : ' ▴');
-      });
-      rows.push(panel);
-      continue;
+  const specs = cardSpecs();
+  const body = $('#cardsBody'); body.replaceChildren();
+  thumbQueue.length = 0;
+  const section = (title, count, onAll) => {
+    const sec = document.createElement('section'); sec.className = 'cards-sec';
+    const head = document.createElement('div'); head.className = 'cards-sec-head';
+    head.innerHTML = '<h2><span></span> <small class="cnt"></small></h2>';
+    head.querySelector('h2 span').textContent = title; head.querySelector('.cnt').textContent = count != null ? String(count) : '';
+    if (onAll) { const a = document.createElement('button'); a.type = 'button'; a.className = 'link-btn'; a.textContent = t('viewAll'); a.addEventListener('click', onAll); head.append(a); }
+    const row = document.createElement('div'); row.className = 'hscroll';
+    sec.append(head, row); body.append(sec); return row;
+  };
+  // 1) bientôt : Joumou'a, jours blancs, occasions (dont les deux Aïds), Imsakiya
+  const soon = specs.filter(sp => !sp.evergreen);
+  if (soon.length) {
+    const row = section(t('cardsSoon'), null, null);
+    for (const sp of soon) {
+      if (sp.key === 'imsakiya') {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'card-thumb imsak-tile';
+        b.innerHTML = '<span class="it-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 10v10M15 10v10"/></svg></span><span class="ct-cap"><b></b><span></span></span>';
+        b.querySelector('b').textContent = `${t('imsakiya')} ${sp.mon.y}`; b.querySelector('.ct-cap span').textContent = gregSpan(sp.mon);
+        b.addEventListener('click', () => shareCard(sp)); row.append(b); continue;
+      }
+      row.append(thumbButton(sp, cardTitleOf(sp), `${df.format(sp.noon)} \u00b7 ${whenLabel(sp.noon)}`));
     }
-    b.textContent = sp.key === 'imsakiya' ? t('imsakiya') : t('shareCard');
-    b.addEventListener('click', () => shareCard(sp));
   }
-  $('#cardsList').replaceChildren(...rows);
+  // 2) chaque jour : versets et rappels, doua, hadith — 6 textes, puis « tout voir »
+  state.cardPicks = state.cardPicks || {};
+  for (const sp of specs.filter(x => x.evergreen)) {
+    const list = CARD_TEXTS[sp.key];
+    if (!state.cardPicks[sp.key]) {
+      const order = list.map((_, i) => i).filter(i => i !== sp.i);
+      for (let k = order.length - 1; k > 0; k--) { const r = Math.floor(Math.random() * (k + 1)); [order[k], order[r]] = [order[r], order[k]]; }
+      state.cardPicks[sp.key] = [sp.i, ...order.slice(0, 5)];
+    }
+    const row = section(categoryTitle(sp.key), list.length, () => openPickAll(sp));
+    for (const i of state.cardPicks[sp.key]) {
+      const spec = { ...sp, i, pick: true }, txt = list[i];
+      row.append(thumbButton(spec, t(kindKey(sp.key, txt)), preview(txt.t, 5)));
+    }
+    const all = document.createElement('button'); all.type = 'button'; all.className = 'card-thumb all-tile';
+    all.innerHTML = '<span class="at-n"></span><span class="ct-cap"><b></b></span>'; all.querySelector('.at-n').textContent = String(list.length); all.querySelector('b').textContent = t('viewAll');
+    all.addEventListener('click', () => openPickAll(sp)); row.append(all);
+  }
   $('#cardFrom').value = S().cardFrom || '';
 }
 
@@ -2146,13 +2286,15 @@ function bind() {
   on('#calNext', 'click', () => calShift(1));
   on('#calToday', 'click', () => { state.calAnchor = null; renderCalendar(); });
   on('#calMonthTable', 'click', () => openMonthTable());
-  on('#calCards', 'click', () => go('cards'));
   on('#occChip', 'click', () => { const sp = state.chipSpec; if (sp) shareCard(sp); else go('cards'); });
   on('#occMore', 'click', () => go('cards'));
   on('#settingsBtn', 'click', () => go('settings'));
   on('#monthPrint', 'click', printMonthTable);
   on('#monthShare', 'click', shareMonthTable);
-  on('#cardFrom', 'change', e => { S().cardFrom = e.target.value.trim().slice(0, 40); save(); });
+  on('#cardFrom', 'change', e => { S().cardFrom = e.target.value.trim().slice(0, 40); save(); paintPreview(); });
+  on('#cardFrom', 'input', e => { clearTimeout(state.cdTimer); state.cdTimer = setTimeout(() => { S().cardFrom = e.target.value.trim().slice(0, 40); save(); paintPreview(); }, 350); });
+  on('#cdClose', 'click', () => $('#cardDialog').close());
+  on('#cdShare', 'click', () => { if (state.cdSpec) shareCard(state.cdSpec); });
   on('#dayShare', 'click', shareDay);
   on('#dayPrev', 'click', () => shiftDay(-1));
   on('#dayNext', 'click', () => shiftDay(1));
@@ -2193,7 +2335,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.10.2';
+export const APP_VERSION = '2.10.3';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
@@ -2281,3 +2423,5 @@ try { init(); } finally {
   window.__appStarted = true;
   requestAnimationFrame(() => document.body.classList.remove('booting'));   // retire l'écran de démarrage
 }
+
+export { buildGreetingCard, cardSpecs, greetKey };   // utilisés aussi par les tests visuels

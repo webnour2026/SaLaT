@@ -162,8 +162,11 @@
     <section class="view" id="view-calendar" hidden aria-labelledby="calTitle2">
       <div class="cal-head">
         <button class="icon-btn cal-nav" id="calPrev" type="button" aria-label="‹">‹</button>
-        <div>
-          <h1 class="view-title cal-title" id="calTitle2">—</h1>
+        <div class="cal-ttl">
+          <div class="cal-ttl-row">
+            <h1 class="view-title cal-title" id="calTitle2">…</h1>
+            <button class="chip-btn" id="calToday" type="button" hidden data-i18n="today">Aujourd’hui</button>
+          </div>
           <p class="cal-sub" id="calSub"></p>
         </div>
         <button class="icon-btn cal-nav" id="calNext" type="button" aria-label="›">›</button>
@@ -172,22 +175,23 @@
       <p class="cal-legend"><span class="lg today"></span><span data-i18n="today">Aujourd’hui</span>
         <span class="lg white"></span><span data-i18n="whiteDays">Jours blancs</span>
         <span class="lg occ"></span><span data-i18n="occasions">Occasions</span></p>
-      <ul class="cal-events" id="calEvents"></ul>
-      <div class="cal-actions">
-        <button class="btn small btn-primary" id="calMonthTable" type="button" data-i18n="monthTimes">Horaires du mois</button>
-        <button class="btn small" id="calCards" type="button" data-i18n="cards">Cartes à partager</button>
-        <button class="btn small" id="calToday" type="button" data-i18n="backToday">Revenir à aujourd’hui</button>
+      <div class="next-occ" id="nextOcc" hidden>
+        <div class="no-txt"><small data-i18n="nextOcc">Prochaine occasion</small><b id="noName"></b><span id="noWhen"></span></div>
+        <button class="btn small" id="noShare" type="button" data-i18n="shareCard">Partager</button>
       </div>
+      <ul class="cal-events" id="calEvents"></ul>
+      <button class="chip-btn month-tbl" id="calMonthTable" type="button" aria-label="Horaires du mois">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 10v10M15 10v10"/></svg>
+        <span id="calMonthTableTxt"></span>
+      </button>
       <p class="note" data-i18n="calNote"></p>
     </section>
 
     <!-- ============ RÉGLAGES ============ -->
     <section class="view" id="view-cards" hidden aria-labelledby="cardsTitle">
       <h1 class="view-title" id="cardsTitle" data-i18n="cards">Cartes à partager</h1>
-      <p class="note" data-i18n="cardsHelp"></p>
-      <label class="field"><span data-i18n="cardFrom">Votre nom sur la carte (facultatif)</span>
-        <input id="cardFrom" type="text" maxlength="40" autocomplete="name" data-i18n-ph="cardFromPh"></label>
-      <ul class="cards-list" id="cardsList"></ul>
+      <p class="note" data-i18n="cardsHelp2"></p>
+      <div id="cardsBody"></div>
     </section>
 
     <section class="view" id="view-settings" hidden aria-labelledby="settingsTitle">
@@ -440,6 +444,23 @@
     </svg>
     <p data-i18n="calibrateHelp"></p>
     <form method="dialog"><button class="btn btn-primary wide" data-i18n="done">Terminé</button></form>
+  </dialog>
+
+  <dialog id="cardDialog" class="sheet card-sheet" aria-labelledby="cdTitle">
+    <h2 id="cdTitle" class="sr-only" data-i18n="cardPreview">Aperçu de la carte</h2>
+    <div class="cd-preview" id="cdPreview"></div>
+    <label class="field"><span data-i18n="cardFrom">Votre nom sur la carte (facultatif)</span>
+      <input id="cardFrom" type="text" maxlength="40" autocomplete="name" data-i18n-ph="cardFromPh"></label>
+    <div class="cd-actions">
+      <button class="btn" id="cdClose" type="button" data-i18n="close">Fermer</button>
+      <button class="btn btn-primary" id="cdShare" type="button" data-i18n="shareCard">Partager</button>
+    </div>
+  </dialog>
+
+  <dialog id="pickDialog" class="sheet" aria-labelledby="pdTitle">
+    <h2 id="pdTitle" class="pd-title"></h2>
+    <ul class="pick-list" id="pdList"></ul>
+    <form method="dialog"><button class="btn wide" data-i18n="close">Fermer</button></form>
   </dialog>
 
   <dialog id="clearDialog" class="sheet center" aria-labelledby="clearTitle">
