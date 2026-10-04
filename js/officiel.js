@@ -24,6 +24,16 @@ export function officialDay(code, dateKey, model) {
 const valid = f => f && f.v === 1 && f.j && typeof f.j === 'object'
   && Object.entries(f.j).every(([k, v]) => /^\d{4}-\d{2}-\d{2}$/.test(k) && HHMM.test(v));
 
+/** Garde la localité courante et les 3 consultées le plus récemment : un fichier fait ~13 Ko, le stockage du navigateur est limité. */
+function prune(current) {
+  try {
+    const codes = Object.keys(localStorage).filter(k => k.startsWith(KEY) && !k.endsWith('.at')).map(k => k.slice(KEY.length));
+    const at = c => Number(localStorage.getItem(KEY + c + '.at') || 0);
+    codes.filter(c => String(c) !== String(current)).sort((a, b) => at(b) - at(a)).slice(3)
+      .forEach(c => { localStorage.removeItem(KEY + c); localStorage.removeItem(KEY + c + '.at'); });
+  } catch { /* stockage indisponible : sans conséquence */ }
+}
+
 let busy = false;
 /** Télécharge data/officiel/<code>.json (au plus toutes les 6 h). Renvoie true si le contenu a changé. */
 export async function refreshOfficiel(code, { force = false, every = 6 * 3600e3 } = {}) {
@@ -41,6 +51,7 @@ export async function refreshOfficiel(code, { force = false, every = 6 * 3600e3 
     const next = JSON.stringify(fresh);
     if (before === next) return false;
     localStorage.setItem(KEY + code, next);
+    prune(code);
     return true;
   } catch { return false; } finally { busy = false; }
 }

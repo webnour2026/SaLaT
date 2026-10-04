@@ -36,6 +36,7 @@ export const DEFAULTS = {
     notifyAt: true,
     notifyBefore: 0,            // 0 | 5 | 10 | 15
     short: false,               // Adhan court (20 s)
+    mute: {},                   // { Fajr: true, … } : cloche barrée = pas d'Adhan pour cette prière
   },
 };
 

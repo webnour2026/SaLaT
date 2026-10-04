@@ -94,6 +94,13 @@ export function computeDay({ lat, lng, snap = true, code = null }, dateStr, meth
   };
   h.Maghrib = h.Sunset;
   h.Isha = p.ishaMin ? h.Maghrib + p.ishaMin / 60 : angleTime(ishaAngle, 18 / 24);
+  // Hautes latitudes (Europe du Nord en été…) : quand le Soleil n'atteint pas l'angle, Fajr/Isha n'existent pas ou sont aberrants.
+  // Règle « angle » (celle de PrayTimes et d'AlAdhan par défaut) : portion de la nuit = angle / 60. Sans effet aux latitudes ordinaires.
+  if (Number.isFinite(h.Sunrise) && Number.isFinite(h.Sunset)) {
+    const night = fix(h.Sunrise - h.Sunset, 24), part = a => (a / 60) * night;
+    if (!(fix(h.Sunrise - h.Fajr, 24) <= part(fajrAngle))) h.Fajr = h.Sunrise - part(fajrAngle);
+    if (!p.ishaMin && !(fix(h.Isha - h.Sunset, 24) <= part(ishaAngle))) h.Isha = h.Sunset + part(ishaAngle);
+  }
   for (const [k, min] of Object.entries(p.offsets || {})) h[k] += min / 60;
   if (isMA) for (const [k, sec] of Object.entries(MA_MODEL.off)) h[k] += sec / 3600;
   h.Imsak = h.Fajr - 10 / 60;

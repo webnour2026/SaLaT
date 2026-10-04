@@ -28,7 +28,7 @@ const LIST_ROWS = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 // Le vendredi, la prière du Dhuhr est la prière de la Joumou'a
 const isFridayKey = dateKey => new Date(`${dateKey}T12:00:00Z`).getUTCDay() === 5;
 const prayerLabel = (k, dateKey) => (k === 'Dhuhr' && dateKey && isFridayKey(dateKey) ? t('Jumuah') : t(k));
-const EXTRA_ROWS = ['Imsak', 'Sunset', 'Midnight'];
+const EXTRA_ROWS = ['Imsak', 'Midnight'];
 
 const state = {
   settings: loadSettings(),
@@ -259,7 +259,7 @@ function skyFor(t) {
   return 'maghrib';
 }
 
-function renderAll() { renderHeader(); renderHome(); renderWhite(); renderOccChip(); renderSilent(); }
+function renderAll() { renderHeader(); renderHome(); renderWhite(); renderOccChip(); renderSilent(); renderCta(); }
 
 // ================= Consulter d'autres jours =================
 // state.viewKey : date consultée ('YYYY-MM-DD'), null = aujourd'hui (avec compte à rebours)
@@ -307,6 +307,7 @@ function renderHeader() {
   renderNoLoc();
   const loc = S().location;
   $('#placeName').textContent = loc ? (loc.name || `${loc.lat.toFixed(3)}, ${loc.lng.toFixed(3)}`) : t('chooseCity');
+  const chip = $('#officialChip'); if (chip) chip.hidden = !loc || Number(S().method) !== 21;   // calcul selon les critères des Habous (Maroc)
   const day = shownDay();
   const { greg, hijri } = fmtDates(viewing() && day ? (day.times.Dhuhr || now()) : now());
   $('#gregDate').textContent = greg;
@@ -324,6 +325,37 @@ const PRAYER_ICONS = {
 };
 const prayerIcon = k => `<svg class="pi" viewBox="0 0 24 24" aria-hidden="true">${PRAYER_ICONS[k] || ''}</svg>`;
 
+const BELL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path class="slash" d="M4 4l16 16"/></svg>';
+
+// Barre de progression du héros : de la dernière étape (lever, prière…) à la prochaine prière ; elle clignote doucement sous 10 min
+function renderBar(tNow) {
+  const bar = $('#archBar'), arch = $('#arch'); if (!bar) return;
+  const nx = state.next;
+  if (state.elapsed || !nx || !state.today || viewing()) { bar.hidden = true; arch.classList.remove('soon'); return; }
+  const d = state.today.times; let prev = null;
+  for (const k of LIST_ROWS) { const ts = d[k]; if (ts != null && ts <= tNow && (!prev || ts > prev.ts)) prev = { name: k, ts, date: state.today.date }; }
+  if (!prev) {                                    // avant le Fajr : on part de l'Isha de la veille
+    try { const y = getDay(S(), addDays(state.today.date, -1)); if (y?.times?.Isha) prev = { name: 'Isha', ts: y.times.Isha, date: addDays(state.today.date, -1) }; } catch { /* sans la veille, pas de barre */ }
+  }
+  if (!prev || nx.ts <= prev.ts) { bar.hidden = true; return; }
+  const frac = Math.min(1, Math.max(0, (tNow - prev.ts) / (nx.ts - prev.ts)));
+  $('#archBarFill').style.width = `${(frac * 100).toFixed(1)}%`;
+  $('#barPrev').textContent = `${prayerLabel(prev.name, prev.date)} ${fmtTime(prev.ts)}`;
+  $('#barNext').textContent = `${prayerLabel(nx.name, nx.day === 'today' ? state.today.date : addDays(state.today.date, 1))} ${fmtTime(nx.ts)}`;
+  bar.hidden = false;
+  arch.classList.toggle('soon', nx.ts - tNow > 0 && nx.ts - tNow < 10 * 60000);
+}
+
+// Seule action contextuelle de l'accueil : l'Adhan est désactivé → une ligne pour le réactiver
+function renderCta() {
+  const box = $('#ctaAdhan'); if (!box) return;
+  box.hidden = viewing() || !S().location || !!S().adhan.enabled;
+}
+function enableAdhan() {
+  const c = $('#sAdhanOn'); if (!c) return;
+  c.checked = true; c.dispatchEvent(new Event('change', { bubbles: true }));   // même chemin que dans les réglages (son, droits, module Android)
+}
+
 function renderOtherDay(day) {
   const ts = day.times.Dhuhr || now();
   $('#nextLabel').textContent = t('timesOf');
@@ -340,11 +372,11 @@ function renderOtherDay(day) {
   });
   $('#prayerList').replaceChildren(...rows);
   $('#extraTimes').replaceChildren(...EXTRA_ROWS.map(k => {
-    const div = document.createElement('div');
-    div.innerHTML = '<dt></dt><dd></dd>';
-    div.firstChild.textContent = t(k);
-    div.lastChild.textContent = fmtTime(day.times[k]);
-    return div;
+    const sp = document.createElement('span');
+    sp.innerHTML = '<b></b> <time></time>';
+    sp.firstChild.textContent = t(k);
+    sp.lastChild.textContent = fmtTime(day.times[k]);
+    return sp;
   }));
   const st = $('#status');
   st.textContent = day.source === 'local' ? t('localCalc') : '';
@@ -379,21 +411,27 @@ function renderHome() {
     const isNext = el ? el.name === k : next.day === 'today' && next.name === k;
     const past = ts <= tNow && !isNext;
     li.className = [past ? 'past' : '', isNext ? 'next' : '', !isPrayer ? 'minor' : '', current === k ? 'current' : ''].filter(Boolean).join(' ');
-    li.innerHTML = `<span class="mark">${prayerIcon(k)}</span><span class="name"></span><time class="time"></time>`;
+    li.innerHTML = `<span class="mark">${prayerIcon(k)}</span><span class="name"></span><time class="time"></time>${isPrayer ? '<button type="button" class="bell"></button>' : ''}`;
     li.querySelector('.name').textContent = prayerLabel(k, state.today.date);
     if (current === k) li.querySelector('.name').dataset.badge = t('inProgress');
     li.querySelector('.time').textContent = fmtTime(ts);
+    if (isPrayer) {
+      const b = li.querySelector('.bell'), off = !S().adhan.enabled || !!(S().adhan.mute && S().adhan.mute[k]);
+      b.dataset.k = k; b.innerHTML = BELL_SVG; b.classList.toggle('off', off); b.setAttribute('aria-pressed', String(!off));
+      b.setAttribute('aria-label', t(off ? 'bellOff' : 'bellOn', { name: prayerLabel(k, state.today.date) }));
+    }
     if (isNext) li.setAttribute('aria-current', 'time');
     return li;
   });
   $('#prayerList').replaceChildren(...rows);
+  renderBar(tNow);
 
   $('#extraTimes').replaceChildren(...EXTRA_ROWS.map(k => {
-    const div = document.createElement('div');
-    div.innerHTML = '<dt></dt><dd></dd>';
-    div.firstChild.textContent = t(k);
-    div.lastChild.textContent = fmtTime(state.today.times[k]);
-    return div;
+    const sp = document.createElement('span');
+    sp.innerHTML = '<b></b> <time></time>';
+    sp.firstChild.textContent = t(k);
+    sp.lastChild.textContent = fmtTime(state.today.times[k]);
+    return sp;
   }));
 
   // « Dernière mise à jour » n'apparaît que si c'est utile : hors ligne, calcul local ou données anciennes
@@ -782,11 +820,12 @@ async function shareDay() {
 }
 
 function printMonthTable() {
-  const html = `<!doctype html><html lang="${getLang()}" dir="${document.documentElement.dir}"><head><meta charset="utf-8"><title>${$('#monthTitle').textContent}</title>
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const html = `<!doctype html><html lang="${getLang()}" dir="${document.documentElement.dir}"><head><meta charset="utf-8"><title>${esc($('#monthTitle').textContent)}</title>
 <style>body{font:12px system-ui,sans-serif;margin:16px;color:#111}h1{font-size:17px;margin:0 0 4px}p{margin:0 0 10px;color:#555}
 table{border-collapse:collapse;width:100%}th,td{border:1px solid #bbb;padding:4px 6px;text-align:center;font-variant-numeric:tabular-nums}
 thead th{background:#0E6B58;color:#fff}tr.friday{font-weight:700}tr.white{background:#f6ecd6}tbody th{text-align:start;white-space:nowrap}</style></head>
-<body><h1>${$('#monthTitle').textContent}</h1><p>${$('#monthSub').textContent}</p><table>${$('#monthTable').innerHTML}</table><p style="margin-top:10px">${t('shareFooter')} — ${PLAY_URL}</p></body></html>`;
+<body><h1>${esc($('#monthTitle').textContent)}</h1><p>${esc($('#monthSub').textContent)}</p><table>${$('#monthTable').innerHTML}</table><p style="margin-top:10px">${t('shareFooter')} — ${PLAY_URL}</p></body></html>`;
   const fr = document.createElement('iframe');
   fr.style.cssText = 'position:fixed;width:0;height:0;border:0;right:0;bottom:0';
   document.body.append(fr);
@@ -1439,8 +1478,8 @@ function renderOccChip() {
   row.hidden = viewing() || !state.chipSpec;
   if (!state.chipSpec) return;
   $('#occTxt').textContent = sp
-    ? `🌙 ${(CARD_AR[sp.key] || [t(sp.key)])[0]} · ${t('shareCard')}`
-    : `${daily.key === 'dua' ? '🤲' : '📖'} ${preview(cardTextOf(daily).t, 7)}`;   // début du texte : suscite la curiosité
+    ? `${(CARD_AR[sp.key] || [t(sp.key)])[0]} \u00b7 ${t('shareCard')}`
+    : preview(cardTextOf(daily).t, 12);   // début du texte, sur deux lignes
   chip.setAttribute('aria-label', `${t('shareCard')} : ${$('#occTxt').textContent}`);
   chip.classList.toggle('daily', !sp);
 }
@@ -1475,6 +1514,7 @@ const countdown = new Countdown({
 });
 
 function adhanFor(prayer) {
+  if (S().adhan.mute && S().adhan.mute[prayer]) return 'none';   // cloche barrée : pas d'Adhan pour cette prière
   const a = S().adhan;
   return a.mode === 'perPrayer' ? a.perPrayer[prayer] : a.global;
 }
@@ -1600,6 +1640,7 @@ async function nativePayload() {
   });
   return {
     v: 2, base: new URL('.', location.href).href, rem, lat: +loc.lat.toFixed(5), lng: +loc.lng.toFixed(5), tz: tz(), method: S().method, school: S().school,
+    ol: S().officialLocality !== false, olc: S().officialLocalityCode ?? null,   // Maroc : localité officielle (collage automatique / choix manuel), pour le calcul de secours du module
     adj: S().adjust, en: !!a.enabled, na: !!a.notifyAt, nb: a.notifyBefore || 0, vib: !!a.vibrate, su, on: !!S().ongoing, gr: GRACE_MIN,
     hj: Array.from({ length: 31 }, (_, i) => fmtDates(Date.parse(`${addDays(today, i)}T12:00:00Z`)).hijri),
     ad: Object.fromEntries(PRAYERS.map(k => [k, a.enabled ? nativeSound(adhanFor(k)) : 'none'])),
@@ -1960,7 +2001,16 @@ function bindSettings() {
   on('#sOfficialLocality', 'change', e => { S().officialLocality = e.target.checked; save(); renderOfficialLocality(); refresh(); checkOfficiel(true); });
   on('#sLocalityPick', 'change', e => { S().officialLocalityCode = e.target.value ? Number(e.target.value) : null; save(); renderOfficialLocality(); refresh(); checkOfficiel(true); });
   on('#sSchool', 'change', e => { S().school = Number(e.target.value); save(); refresh(); });
-  on('#sAdhanOn', 'change', e => { S().adhan.enabled = e.target.checked; save(); if (e.target.checked) unlockAudio(); });
+  on('#sAdhanOn', 'change', e => { S().adhan.enabled = e.target.checked; save(); if (e.target.checked) unlockAudio(); renderCta(); renderHome(); });
+  on('#ctaAdhanBtn', 'click', enableAdhan);
+  on('#prayerList', 'click', e => {
+    const b = e.target.closest('.bell'); if (!b) return;
+    const a = S().adhan;
+    if (!a.enabled) return enableAdhan();                                  // Adhan coupé partout : on le réactive d'abord
+    a.mute = a.mute || {};
+    if (a.mute[b.dataset.k]) delete a.mute[b.dataset.k]; else a.mute[b.dataset.k] = true;
+    save(); renderHome(); requestNativeSync();
+  });
   on('#sAdhanMode', 'change', e => { S().adhan.mode = e.target.value; save(); renderAdhanPickers(); });
   on('#sVolume', 'input', e => { S().adhan.volume = Number(e.target.value); save(); });
   on('#sFridayReminder', 'change', async e => { S().fridayReminder = e.target.checked; save(); if (e.target.checked) await ensureNotifPermission(); });
@@ -2094,7 +2144,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.5.1';
+export const APP_VERSION = '2.10.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

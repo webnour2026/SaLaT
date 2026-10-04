@@ -66,7 +66,8 @@ final class AlarmScheduler {
         // secours : calcul astronomique + ajustements de l'utilisateur
         long[] t = PrayerCalc.compute(cfg.optDouble("lat"), cfg.optDouble("lng"),
                 day.get(Calendar.YEAR), day.get(Calendar.MONTH) + 1, day.get(Calendar.DAY_OF_MONTH),
-                cfg.optInt("method", 21), cfg.optInt("school", 0));
+                cfg.optInt("method", 21), cfg.optInt("school", 0),
+                cfg.optBoolean("ol", true), cfg.isNull("olc") ? -1 : cfg.optInt("olc", -1));
         JSONObject adj = cfg.optJSONObject("adj");
         if (adj != null) for (int k = 0; k < 5; k++) if (t[k] > 0) t[k] += adj.optInt(KEYS[k], 0) * 60000L;
         return t;

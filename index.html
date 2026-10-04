@@ -24,10 +24,13 @@
   <a class="skip" href="#main">Aller au contenu</a>
 
   <header class="topbar">
+    <div class="top-left">
     <button class="place" id="placeBtn" type="button" aria-haspopup="dialog">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>
       <span id="placeName" data-i18n="locating">Localisation en cours…</span>
     </button>
+    <span class="chip-official" id="officialChip" data-i18n="officialChip" hidden>Critères des Habous</span>
+    </div>
     <div class="top-right">
       <button class="lang-btn gear-btn" id="settingsBtn" type="button" data-i18n-aria="settings" aria-label="Réglages">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.14 12.94a7.07 7.07 0 0 0 .05-.94 7.07 7.07 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7 7 0 0 0-1.62-.94l-.36-2.54A.5.5 0 0 0 13.9 2h-3.84a.5.5 0 0 0-.49.42l-.36 2.54a7 7 0 0 0-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.67 8.48a.5.5 0 0 0 .12.64l2.03 1.58a7.07 7.07 0 0 0-.05.94c0 .32.02.63.05.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96a7 7 0 0 0 1.62.94l.36 2.54a.5.5 0 0 0 .49.42h3.84a.5.5 0 0 0 .49-.42l.36-2.54a7 7 0 0 0 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Z"/></svg>
@@ -35,7 +38,7 @@
       <button class="lang-btn silent-btn" id="silentBtn" type="button" aria-haspopup="dialog" data-i18n-title="silentMode">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path id="bellPath" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3a1.5 1.5 0 0 0-3 0v1.16A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/><path class="slash" d="M3.3 2.3 21.7 20.7l-1.4 1.4L1.9 3.7Z"/></svg>
       </button>
-      <button class="lang-btn" id="langBtn" type="button" aria-label="Langue / اللغة / Language">ع</button>
+      <button class="lang-btn" id="langBtn" type="button" aria-label="Langue / اللغة / Language" hidden>ع</button>
     </div>
   </header>
 
@@ -43,18 +46,23 @@
     <!-- ============ HORAIRES ============ -->
     <section class="view" id="view-home" aria-labelledby="nextLabel">
       <div class="dates daynav">
-        <button class="icon-btn dn-btn" id="dayPrev" type="button" data-i18n-aria="prevDay" aria-label="Jour précédent"><span aria-hidden="true">‹</span></button>
+        <button class="icon-btn dn-btn" id="dayPrev" type="button" data-i18n-aria="prevDay" aria-label="Jour précédent"><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></span></button>
         <div class="dn-center">
           <p id="gregDate">&nbsp;</p>
           <p id="hijriDate" class="hijri">&nbsp;</p>
         </div>
-        <button class="icon-btn dn-btn" id="dayNext" type="button" data-i18n-aria="nextDay" aria-label="Jour suivant"><span aria-hidden="true">›</span></button>
+        <button class="icon-btn dn-btn" id="dayNext" type="button" data-i18n-aria="nextDay" aria-label="Jour suivant"><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span></button>
       </div>
 
       <div class="noloc" id="noLoc" hidden>
         <p data-i18n="noLocText">Pour afficher les horaires, indiquez votre ville.</p>
         <button class="btn btn-primary wide" type="button" id="noLocCity" data-i18n="chooseCity">Choisir une ville</button>
         <button class="btn wide" type="button" id="noLocGps" data-i18n="useGps">Utiliser ma position GPS</button>
+      </div>
+
+      <div class="cta-adhan" id="ctaAdhan" hidden>
+        <span data-i18n="ctaAdhanTxt">L’Adhan est désactivé</span>
+        <button class="btn btn-primary small" id="ctaAdhanBtn" type="button" data-i18n="ctaAdhanBtn">Activer l’Adhan</button>
       </div>
 
       <div class="arch" id="arch" data-sky="day">
@@ -66,24 +74,26 @@
         <p class="arch-time" id="nextTime">--:--</p>
         <p class="arch-in" id="archIn" data-i18n="in">Dans</p>
         <p class="countdown" id="countdown" role="timer" aria-live="off">--:--:--</p>
+        <div class="arch-bar" id="archBar" hidden>
+          <div class="arch-bar-track"><i id="archBarFill"></i></div>
+          <div class="arch-bar-lbl"><span id="barPrev"></span><span id="barNext"></span></div>
+        </div>
         <p class="arch-at"><span data-i18n="nextAt">Heure de la prochaine prière :</span> <strong id="nextAt">--:--</strong></p>
         <button class="btn small day-today" id="dayToday" type="button" hidden data-i18n="backToday">Revenir à aujourd’hui</button>
       </div>
 
       <div class="occ-row" id="occRow" hidden>
-        <button class="occ-chip" id="occChip" type="button"><span class="occ-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16a3 3 0 0 0-2.4 1.2l-6.7-3.4a3 3 0 0 0 0-1.6l6.7-3.4A3 3 0 1 0 15 7a3 3 0 0 0 .1.8L8.4 11.2a3 3 0 1 0 0 1.6l6.7 3.4A3 3 0 1 0 18 16Z"/></svg></span><span class="occ-txt" id="occTxt"></span></button>
-        <button class="occ-more" id="occMore" type="button" data-i18n-aria="moreCards" aria-label="Plus de cartes">☰</button>
+        <button class="occ-chip" id="occChip" type="button"><span class="occ-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5A2.5 2.5 0 0 1 7.5 3H19v15H7.5A2.5 2.5 0 0 0 5 20.5v-15Z"/><path d="M5 20.5A2.5 2.5 0 0 0 7.5 23H19v-5"/><path d="M9 8h6M9 11.5h4"/></svg></span><span class="occ-txt" id="occTxt"></span></button>
+        <button class="occ-more" id="occMore" type="button" hidden data-i18n-aria="moreCards" aria-label="Plus de cartes">☰</button>
       </div>
       <div class="white-card" id="whiteCard" hidden>
         <p class="white-title"><span aria-hidden="true">🌕</span> <span data-i18n="whiteDays">Jours blancs</span></p>
         <p id="whiteText"></p>
       </div>
 
-      <ol class="prayers" id="prayerList" aria-label="Horaires du jour"></ol>
-
-      <div class="extras">
-        <h2 data-i18n="otherTimes">Autres repères</h2>
-        <dl id="extraTimes"></dl>
+      <div class="plist">
+        <ol class="prayers" id="prayerList" aria-label="Horaires du jour"></ol>
+        <p class="plist-foot" id="extraTimes"></p>
       </div>
 
       <p class="status" id="status"></p>
@@ -311,19 +321,19 @@
 
   <nav class="tabbar" aria-label="Navigation">
     <button type="button" data-goto="home" aria-current="page">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm1 9.4 3.3 2-1 1.7L11 13V7h2v5.4Z"/></svg>
+      <span class="ti-pill"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
       <span data-i18n="home">Horaires</span>
     </button>
     <button type="button" data-goto="qibla">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5 5-2Z"/></svg>
+      <span class="ti-pill"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5 5-2Z"/></svg></span>
       <span data-i18n="qibla">Qibla</span>
     </button>
     <button type="button" data-goto="calendar">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h2v2h6V2h2v2h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3V2Zm12 8H5v9h14v-9ZM15.5 11a3.5 3.5 0 1 0 2.1 6.3A3 3 0 1 1 17.6 12a3.5 3.5 0 0 0-2.1-1Z"/></svg>
+      <span class="ti-pill"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M16 3v4M8 3v4M4 11h16"/></svg></span>
       <span data-i18n="calendar">Calendrier</span>
     </button>
     <button type="button" data-goto="cards">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16a3 3 0 0 0-2.4 1.2l-6.7-3.4a3 3 0 0 0 0-1.6l6.7-3.4A3 3 0 1 0 15 7a3 3 0 0 0 .1.8L8.4 11.2a3 3 0 1 0 0 1.6l6.7 3.4A3 3 0 1 0 18 16Z"/></svg>
+      <span class="ti-pill"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.6"/><path d="m4 16 4.5-4.5L13 16l3-3 4 4"/></svg></span>
       <span data-i18n="cardsTab">Cartes</span>
     </button>
   </nav>
