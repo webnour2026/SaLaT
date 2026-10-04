@@ -63,11 +63,11 @@ eq('Page sans table : aucune ligne', parsePage('<html><body>maintenance</body></
 eq('Table de 10 jours : trop courte, ignorée', parsePage(html(REAL.slice(0, 10)), NOW), []);
 eq('Jours non consécutifs : suites de moins de 20 jours ignorées', parsePage(html([...REAL.slice(0, 12), ...REAL.slice(14)]), NOW).length, 0);
 
-// 5) Fusion : on garde de J−2 à J+45, rien n'est réécrit si rien n'a changé
+// 5) Fusion : année glissante (de J−400 à J+45), rien n'est réécrit si rien n'a changé
 const now2 = Date.UTC(2026, 9, 3);
-const days = { '2026-09-20': '0301 0500 1200 1500 1800 1900', '2026-10-03': '0450 0609 1214 1531 1810 1920', '2026-10-04': '0451 0610 1213 1530 1808 1918', '2026-12-30': '0600 0800 1200 1500 1700 1800' };
+const days = { '2025-01-01': '0600 0800 1200 1500 1700 1800', '2025-10-03': '0451 0610 1213 1530 1808 1918', '2026-09-20': '0301 0500 1200 1500 1800 1900', '2026-10-03': '0450 0609 1214 1531 1810 1920', '2026-10-04': '0451 0610 1213 1530 1808 1918', '2026-12-30': '0600 0800 1200 1500 1700 1800' };
 const mf = mergeFile(null, 1, days, now2);
-eq('fusion : jours trop anciens ou trop lointains écartés', Object.keys(mf.file.j), ['2026-10-03', '2026-10-04']);
+eq('fusion : jours de plus de 400 jours ou à plus de 45 jours écartés, le reste gardé', Object.keys(mf.file.j), ['2025-10-03', '2026-09-20', '2026-10-03', '2026-10-04']);
 eq('fusion : une seconde fois avec les mêmes jours = aucun changement', mergeFile(mf.file, 1, days, now2).changed, false);
 eq('fusion : une heure corrigée = changement', mergeFile(mf.file, 1, { ...days, '2026-10-04': '0452 0610 1213 1530 1808 1918' }, now2).changed, true);
 

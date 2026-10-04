@@ -83,10 +83,10 @@ export function analyse(code, rows) {
   return { ok, days: ok ? days : {}, rejects, stats: { n, ident, pct: n ? Math.round(1000 * ident / n) / 10 : 0, max, moy: n ? Math.round(100 * sum / n) / 100 : 0 } };
 }
 
-/** Fusionne les jours reçus dans le fichier existant ; garde de J−2 à J+45. Renvoie { file, changed }. */
+/** Fusionne les jours reçus dans le fichier existant ; garde une année glissante (de J−400 à J+45). Renvoie { file, changed }. */
 export function mergeFile(existing, code, days, now = Date.now()) {
   const j = { ...(existing?.j || {}), ...days };
-  const lo = ymd(now - 2 * 864e5), hi = ymd(now + 45 * 864e5);
+  const lo = ymd(now - 400 * 864e5), hi = ymd(now + 45 * 864e5);
   const kept = Object.fromEntries(Object.entries(j).filter(([k]) => k >= lo && k <= hi).sort(([a], [b]) => (a < b ? -1 : 1)));
   const changed = JSON.stringify(kept) !== JSON.stringify(existing?.j || {});
   return { file: { v: 1, code, maj: changed ? ymd(now) : (existing?.maj || ymd(now)), j: kept }, changed };
