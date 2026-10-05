@@ -422,7 +422,8 @@ main { max-width: 560px; margin: 0 auto; padding: 0 16px; }
   body.fit #view-home > .btn[data-goto="qibla"] { display: none; }   /* l'onglet Qibla suffit */
 
   /* --- Qibla --- */
-  body.fit .qibla-view { padding-top: 0; justify-content: center; gap: 2px; padding-bottom: 8px; }
+  body.fit .qibla-view { padding-top: 0; justify-content: center; justify-content: safe center; gap: 2px; padding-bottom: 8px; }   /* « safe » : si ça déborde, on part du haut et on peut défiler */
+  body.fit .qibla-view > * { flex-shrink: 0; }
   body.fit .qibla-view .heading-chip { position: absolute; inset-block-start: 8px; inset-inline-end: 16px; }
   body.fit .qibla-view .dial-wrap { flex: none; margin: 0; }
   body.fit .qibla-view .dial { width: min(94vw, 50vh, 400px); }
@@ -703,3 +704,22 @@ body.fit .cal-events::-webkit-scrollbar { display: none; }
 #sensorHelpBtn[hidden] { display: none; }
 .sh-none { margin: 4px 0 10px; font-size: .9rem; }
 .sh-sun { margin-bottom: 8px; }
+
+/* Petit bonhomme du « soleil dans le dos » (vue de dessus) */
+.sun-fig { display: block; width: 190px; height: 190px; margin: 2px auto 6px; direction: ltr; overflow: visible; }
+.sun-fig[hidden] { display: none; }
+.sf-ring { fill: none; stroke: var(--rule); stroke-width: 1.5; stroke-dasharray: 3 5; }
+.sf-sun circle { fill: #F2B134; }
+.sf-sun g { stroke: #F2B134; stroke-width: 3; stroke-linecap: round; }
+.sf-sunline { stroke: #F2B134; stroke-width: 1.6; stroke-dasharray: 2 5; stroke-linecap: round; opacity: .8; }
+.sf-body { fill: var(--zellige); }
+.sf-head { fill: var(--paper); stroke: var(--ink); stroke-width: 2.4; }
+.sf-nose { fill: var(--ink); }
+.sf-gaze { fill: none; stroke: var(--zellige); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.sf-dash { stroke: var(--gold); stroke-width: 1.6; stroke-dasharray: 4 4; }
+.sf-arc { fill: none; stroke: var(--gold); stroke-width: 2.4; stroke-linecap: round; }
+.sf-deg { fill: var(--ink); font: 700 13px var(--font-body); paint-order: stroke; stroke: var(--paper); stroke-width: 4px; stroke-linejoin: round; }
+.sf-kaaba circle { fill: #F6F1E6; stroke: var(--gold); stroke-width: 2.2; }
+.walk-card { margin-top: 12px; }
+#walkMsg { margin: 6px 0 10px; line-height: 1.6; min-height: 1.6em; }
+#walkMsg:empty { display: none; }

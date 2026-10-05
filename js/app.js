@@ -107,6 +107,7 @@ function go(view) {
   document.querySelectorAll('.tabbar button').forEach(b => {
     if (b.dataset.goto === view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
+  if (view !== 'qibla') stopWalk();
   state.view = view; setFit();                                                       // écran ajusté, sans défilement, s'il tient
   document.body.classList.toggle('no-top', view !== 'home' && view !== 'settings');  // barre du haut (ville, langue, cloche, réglages) : seulement sur Horaires et Réglages
   $('#settingsBtn')?.classList.toggle('active', view === 'settings');
@@ -2206,6 +2207,72 @@ function renderQibla() {
   if (!Compass.isSupported()) compass.onStatus('unsupported');
 }
 
+/**
+ * Petit bonhomme vu de dessus : il part face au soleil (mode « front ») ou dos au soleil (mode « back »), puis pivote de `angle`° (droite > 0)
+ * jusqu'à la Qibla, marquée par la Kaaba. Animation en boucle (SMIL), figée si l'utilisateur a demandé moins d'animations.
+ */
+function drawSunFigure(mode, angle, label, svg = $('#sunFig')) {
+  if (!svg) return;
+  const R = 60, RS = 90, rad = angle * Math.PI / 180, kx = 100 + R * Math.sin(rad), ky = 100 - R * Math.cos(rad);   // Kaaba sur l'anneau, soleil en dehors
+  const ax = 100 + 36 * Math.sin(rad), ay = 100 - 36 * Math.cos(rad), mx = 100 + 62 * Math.sin(rad / 2) + (angle > 0 ? 27 : -27), my = 100 - 62 * Math.cos(rad / 2) + 4;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, val = Math.round(angle * 10) / 10;
+  const sunY = mode === 'back' ? 100 + RS : 100 - RS;
+  const rays = Array.from({ length: 8 }, (_, i) => `<line x1="0" y1="-12" x2="0" y2="-17" transform="rotate(${i * 45})"/>`).join('');
+  const anim = reduce ? '' : `<animateTransform attributeName="transform" type="rotate" calcMode="spline" values="0 100 100;0 100 100;${val} 100 100;${val} 100 100;0 100 100" keyTimes="0;.2;.5;.85;1" keySplines="0 0 1 1;.4 0 .2 1;0 0 1 1;.4 0 .2 1" dur="6s" repeatCount="indefinite"/>`;
+  svg.innerHTML = `
+    <circle class="sf-ring" cx="100" cy="100" r="${R}"/>
+    ${mode === 'walk' ? '' : `<line class="sf-sunline" x1="100" y1="${mode === 'back' ? sunY - 18 : sunY + 18}" x2="100" y2="${mode === 'back' ? 118 : 82}"/>
+    <g class="sf-sun" transform="translate(100 ${sunY})"><circle r="9"/><g>${rays}</g></g>`}
+    ${Math.abs(val) >= 3 ? `<path class="sf-arc" d="M100 ${100 - 36}A36 36 0 0 ${val > 0 ? 1 : 0} ${ax.toFixed(1)} ${ay.toFixed(1)}"/>` : ''}
+    <line class="sf-dash" x1="100" y1="100" x2="${kx.toFixed(1)}" y2="${ky.toFixed(1)}"/>
+    <g class="sf-kaaba" transform="translate(${kx.toFixed(1)} ${ky.toFixed(1)}) rotate(${-val})"><circle r="13"/><path d="M0-7 9-2.5 0 2-9-2.5Z" fill="#4A4F54"/><path d="M-9-2.5 0 2V10L-9 5.5Z" fill="#2B2E31"/><path d="M9-2.5 0 2V10L9 5.5Z" fill="#1B1D1F"/><path d="M-9 0 0 4.5 9 0v2L0 6.5-9 2Z" fill="#C9962B"/></g>
+    ${Math.abs(val) >= 3 ? `<text class="sf-deg" x="${mx.toFixed(1)}" y="${my.toFixed(1)}" text-anchor="middle" direction="ltr">${Math.abs(val).toLocaleString(locale(), { maximumFractionDigits: 1 })}\u00b0</text>` : ''}
+    <g class="sf-man" ${reduce ? `transform="rotate(${val} 100 100)"` : ''}>${anim}
+      <rect class="sf-body" x="76" y="98" width="48" height="20" rx="10"/>
+      <circle class="sf-head" cx="100" cy="106" r="10.5"/>
+      <path class="sf-nose" d="M100 91.5l-4.5 6.5h9z"/>
+      <path class="sf-gaze" d="M100 86V60M92 69l8-10 8 10"/>
+    </g>`;
+  svg.setAttribute('aria-label', label || ''); svg.removeAttribute('hidden');       // (la propriété `hidden` n'existe pas sur un <svg> : il faut l'attribut)
+}
+
+// ---- Qibla en marchant : le cap vient du GPS (sens de déplacement), sans boussole ni caméra ----
+const walk = { id: null, fixes: [], heads: [], t0: 0, timer: null };
+const toRad = d => d * Math.PI / 180, toDeg = r => r * 180 / Math.PI;
+const bearingBetween = (p, q) => { const f1 = toRad(p.lat), f2 = toRad(q.lat), dl = toRad(q.lng - p.lng); return (toDeg(Math.atan2(Math.sin(dl) * Math.cos(f2), Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(dl))) + 360) % 360; };
+const metersBetween = (p, q) => { const f1 = toRad(p.lat), f2 = toRad(q.lat), df = f2 - f1, dl = toRad(q.lng - p.lng), s = Math.sin(df / 2) ** 2 + Math.cos(f1) * Math.cos(f2) * Math.sin(dl / 2) ** 2; return 12742000 * Math.asin(Math.sqrt(s)); };
+const circMean = list => (toDeg(Math.atan2(list.reduce((s, x) => s + Math.sin(toRad(x)), 0), list.reduce((s, x) => s + Math.cos(toRad(x)), 0))) + 360) % 360;
+function walkOnFix(pos) {
+  const c = pos.coords, fix = { lat: c.latitude, lng: c.longitude, acc: c.accuracy || 99 };
+  let h = null;
+  if (Number.isFinite(c.heading) && Number.isFinite(c.speed) && c.speed >= 0.8) h = c.heading;                  // cap fourni par le GPS (déplacement réel)
+  else {                                                                                                         // sinon : direction entre deux positions assez éloignées
+    const ref = walk.fixes.find(f => metersBetween(f, fix) >= 15 && f.acc <= 20 && fix.acc <= 20);
+    if (ref) h = bearingBetween(ref, fix);
+    else { walk.fixes.push(fix); if (walk.fixes.length > 8) walk.fixes.shift(); }
+  }
+  if (h === null) { $('#walkMsg').textContent = Date.now() - walk.t0 < 4000 ? t('walkWait') : t('walkMove'); return; }
+  walk.heads.push(h); if (walk.heads.length > 3) walk.heads.shift();
+  const heading = circMean(walk.heads), turn = ((state.qibla - heading + 540) % 360) - 180;                    // < 0 : la Qibla est à gauche
+  const line2 = Math.abs(turn) < 8 ? t('walkAligned') : t(turn > 0 ? 'walkTurnR' : 'walkTurnL', { d: fmtDeg(Math.abs(turn)) });
+  const text = `${t('walkNow', { h: Math.round(heading) })} ${line2}`;
+  $('#walkMsg').textContent = text;
+  drawSunFigure('walk', turn, text, $('#walkFig'));
+}
+function stopWalk() {
+  if (walk.id !== null) navigator.geolocation.clearWatch(walk.id);
+  clearTimeout(walk.timer); walk.id = null;
+  const b = $('#walkBtn'); if (b) b.textContent = t('walkStart');
+}
+function toggleWalk() {
+  if (walk.id !== null) { stopWalk(); return; }
+  if (!navigator.geolocation) { $('#walkMsg').textContent = t('walkDenied'); return; }
+  walk.fixes = []; walk.heads = []; walk.t0 = Date.now();
+  $('#walkMsg').textContent = t('walkWait'); $('#walkBtn').textContent = t('walkStop');
+  walk.id = navigator.geolocation.watchPosition(walkOnFix, e => { stopWalk(); $('#walkMsg').textContent = t('walkDenied'); }, { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
+  walk.timer = setTimeout(stopWalk, 3 * 60 * 1000);                                                              // s'arrête seul après 3 min (batterie)
+}
+
 function renderSun() {
   const loc = S().location; if (!loc || state.qibla == null) return;
   const tNow = now();
@@ -2217,9 +2284,13 @@ function renderSun() {
       // soleil presque dans le dos (typiquement au Maroc : coucher du soleil, Qibla vers l'est) : plus parlant de lui tourner le dos
       const r = ((state.qibla - (sp.azimuth + 180) + 540) % 360) - 180;
       $('#sunRel').textContent = Math.abs(r) < 3 ? t('sunBack') : t(r > 0 ? 'sunBehindR' : 'sunBehindL', { d: fmtDeg(Math.abs(r)) });
-    } else $('#sunRel').textContent = t('sunRel', { d: fmtDeg(Math.abs(d)), side: d > 0 ? t('toRight') : t('toLeft') });
+      drawSunFigure('back', r, $('#sunRel').textContent);
+    } else {
+      $('#sunRel').textContent = t('sunRel', { d: fmtDeg(Math.abs(d)), side: d > 0 ? t('toRight') : t('toLeft') });
+      drawSunFigure('front', d, $('#sunRel').textContent);
+    }
   } else {
-    $('#sunNow').textContent = t('sunDown'); $('#sunRel').textContent = t('sunNightTip');
+    $('#sunNow').textContent = t('sunDown'); $('#sunRel').textContent = t('sunNightTip'); const fg = $('#sunFig'); if (fg) fg.setAttribute('hidden', '');   // la nuit : pas de soleil à montrer
   }
   // journée dans le fuseau du lieu : de Fajr à Isha si connus, sinon ±12 h
   const day = state.today?.times;
@@ -2517,6 +2588,8 @@ function bind() {
   on('#compassStart', 'click', async () => { unlockAudio(); await compass.start(); });
   on('#calibrateBtn', 'click', () => $('#calDialog').showModal());
   on('#sensorHelpBtn', 'click', showSensorHelp);
+  on('#walkBtn', 'click', toggleWalk);
+  document.querySelector('.qibla-more')?.addEventListener('toggle', () => requestAnimationFrame(setFit));   // le contenu change de hauteur : on re-vérifie
   on('#sensorHelpSun', 'click', () => { $('#sensorHelpDlg').close(); showQiblaAlternatives(true); });
   on('#adhanStop', 'click', () => { stopAdhan(); hideAdhanAlert(); });
   on('#adhanSilent', 'click', () => { stopAdhan(); hideAdhanAlert(); renderSilent(); $('#silentDialog').showModal(); });
@@ -2581,7 +2654,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.12.10';
+export const APP_VERSION = '2.12.13';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

@@ -153,9 +153,18 @@
         <p class="debug" id="compassDebug"></p>
         <div class="sun-card">
           <h2 data-i18n="sunCheck">Vérification par le soleil</h2>
+          <svg class="sun-fig" id="sunFig" viewBox="-8 -8 216 216" role="img" hidden></svg>
           <p id="sunNow"></p>
           <p id="sunRel"></p>
           <ul id="sunTimes"></ul>
+        </div>
+        <div class="sun-card walk-card" id="walkCard">
+          <h2 data-i18n="walkTitle">Trouver la Qibla en marchant (GPS)</h2>
+          <p class="note" data-i18n="walkIntro"></p>
+          <svg class="sun-fig" id="walkFig" viewBox="-8 -8 216 216" role="img" hidden></svg>
+          <p id="walkMsg" role="status"></p>
+          <button class="btn wide" id="walkBtn" type="button" data-i18n="walkStart">Démarrer</button>
+          <p class="note" data-i18n="walkNote"></p>
         </div>
         <p class="note" data-i18n="trueNorthNote"></p>
       </details>
