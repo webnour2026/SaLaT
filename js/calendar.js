@@ -29,7 +29,8 @@ export const hijriOf = (noon, offsetDays = 0) => hijriParts(noon + offsetDays * 
 /** Jours blancs à jeûner : 13, 14, 15 — sauf le 13 Dhou al-Hijja (jour de Tachriq, jeûne interdit). */
 export const isWhiteDay = h => [13, 14, 15].includes(h.d) && !(h.m === 12 && h.d === 13);
 
-export const occasionOf = h => OCCASIONS.find(o => o.m === h.m && o.d === h.d) || null;
+// Le 1er de chaque mois hégirien est une occasion (« فاتح الشهر ») ; Mouharram, Ramadan et Chawwal gardent leur fête propre
+export const occasionOf = h => OCCASIONS.find(o => o.m === h.m && o.d === h.d) || (h.d === 1 ? { m: h.m, d: 1, key: 'occMonth' } : null);
 
 /** Tous les jours du mois hégirien contenant `anchorNoon`. */
 export function hijriMonth(anchorNoon, offsetDays = 0) {

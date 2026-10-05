@@ -47,5 +47,8 @@ eq('douas : pas de verset sans q ni hadith sans source', T.dua.filter(x => !x.q 
 const i18n = fs.readFileSync(new URL('../js/i18n.js', import.meta.url), 'utf8');
 const riw = [...i18n.matchAll(/riwayaWarsh: '((?:[^'\\]|\\.)*)'/g)].map(m => JSON.parse(`"${m[1]}"`));
 eq('mention sur les cartes : « ورش عن نافع » + « العدّ المدني الأخير » + « المصحف المغربي » dans les 3 langues', riw.map(s => ['ورش عن نافع', 'العدّ المدني الأخير', 'المصحف المغربي'].every(w => s.includes(w))), [true, true, true]);
+const monthDua = [...i18n.matchAll(/monthDua: '((?:[^'\\]|\\.)*)'/g)].map(m => JSON.parse(`"${m[1]}"`));
+eq('doua du croissant : le texte de la carte = celui des rappels, dans les 3 langues', monthDua.map(s => plain(s) === plain(T.occMonth[0].t)), [true, true, true]);
+eq('doua du croissant : formulation du Tirmidhi 3451 (« باليمن »), sans « هلال رشد وخير »', [/باليمن/.test(plain(T.occMonth[0].t)), /هلال رشد/.test(plain(T.occMonth[0].t)), T.occMonth[0].r], [true, false, 'رواه الترمذي (3451)']);
 console.log(fails ? `\n${fails} échec(s)` : '\nTous les tests réussis');
 process.exit(fails ? 1 : 0);

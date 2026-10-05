@@ -579,13 +579,13 @@ function renderCalendar() {
     el.innerHTML = '<span class="hd"></span><span class="gd"></span>';
     el.firstChild.textContent = d.h.d;
     el.lastChild.textContent = gd.format(d.noon);
-    if (d.occasion) el.title = t(d.occasion.key);
+    if (d.occasion) el.title = occTitle(d.occasion, d.h);
     return el;
   });
   grid.replaceChildren(...heads, ...blanks, ...cells);
   const df = new Intl.DateTimeFormat(locale(), { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
   renderNextOcc();
-  const events = mon.days.filter(d => d.occasion).map(d => [t(d.occasion.key), d]);
+  const events = mon.days.filter(d => d.occasion).map(d => [occTitle(d.occasion, d.h), d]);
   const whites = mon.days.filter(d => d.white);
   if (whites.length) events.push([t('whiteDays'), whites[0], null, whites]);
   events.sort((x, y) => x[1].noon - y[1].noon);
@@ -922,6 +922,7 @@ const CARD_TEXTS = {
   occRamadan: [{ q: true, t: '\u0634\u064e\u0647\u0652\u0631\u064f \u0631\u064e\u0645\u064e\u0636\u064e\u0627\u0646\u064e \u0627\u064e\u06ec\u0644\u0630\u0650\u06d2\u0653 \u0623\u064f\u0646\u0632\u0650\u0644\u064e \u0641\u0650\u064a\u0647\u0650 \u0627\u0650\u06ec\u0644\u0652\u0642\u064f\u0631\u0652\u0621\u064e\u0627\u0646\u064f \u0647\u064f\u062f\u0649\u0657 \u0644\u0651\u0650\u0644\u0646\u0651\u064e\u0627\u0633\u0650 \u0648\u064e\u0628\u064e\u064a\u0651\u0650\u0646\u064e\u0670\u062a\u0656 \u0645\u0651\u0650\u0646\u064e \u0627\u064e\u06ec\u0644\u0652\u0647\u064f\u062f\u06ea\u0649\u0670 \u0648\u064e\u0627\u0644\u0652\u0641\u064f\u0631\u0652\u0642\u064e\u0627\u0646\u0650', r: '[\u0627\u0644\u0628\u0642\u0631\u0629: 184]' }],
   occQadr: [{ q: true, t: '\u0644\u064e\u064a\u0652\u0644\u064e\u0629\u064f \u0627\u064f\u06ec\u0644\u0652\u0642\u064e\u062f\u0652\u0631\u0650 \u062e\u064e\u064a\u0652\u0631\u065e \u0645\u0651\u0650\u0646\u064e \u0627\u064e\u0644\u0652\u0641\u0650 \u0634\u064e\u0647\u0652\u0631\u0656', r: '[\u0627\u0644\u0642\u062f\u0631: 3]' },
             { t: 'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي', r: 'رواه الترمذي (3513)' }],
+  occMonth: [{ lead: '\u0643\u0627\u0646 \u0631\u0633\u0648\u0644 \u0627\u0644\u0644\u0647 \ufdfa \u0625\u0630\u0627 \u0631\u0623\u0649 \u0627\u0644\u0647\u0644\u0627\u0644 \u0642\u0627\u0644', t: '\u0627\u0644\u0644\u064e\u0651\u0647\u064f\u0645\u064e\u0651 \u0623\u064e\u0647\u0650\u0644\u064e\u0651\u0647\u064f \u0639\u064e\u0644\u064e\u064a\u0652\u0646\u064e\u0627 \u0628\u0650\u0627\u0644\u0652\u064a\u064f\u0645\u0652\u0646\u0650 \u0648\u064e\u0627\u0644\u0625\u0650\u064a\u0645\u064e\u0627\u0646\u0650\u060c \u0648\u064e\u0627\u0644\u0633\u064e\u0651\u0644\u064e\u0627\u0645\u064e\u0629\u0650 \u0648\u064e\u0627\u0644\u0625\u0650\u0633\u0652\u0644\u064e\u0627\u0645\u0650\u060c \u0631\u064e\u0628\u0650\u0651\u064a \u0648\u064e\u0631\u064e\u0628\u064f\u0651\u0643\u064e \u0627\u0644\u0644\u064e\u0651\u0647\u064f', r: '\u0631\u0648\u0627\u0647 \u0627\u0644\u062a\u0631\u0645\u0630\u064a (3451)' }],   // doua du croissant : Tirmidhi 3451, texte d'après le Tirmidhi (« باليمن ») ; identique à celui des rappels (i18n monthDua), vérifié par test-cards-data
   occArafa: [{ t: 'صِيَامُ يَوْمِ عَرَفَةَ أَحْتَسِبُ عَلَى اللَّهِ أَنْ يُكَفِّرَ السَّنَةَ الَّتِي قَبْلَهُ وَالسَّنَةَ الَّتِي بَعْدَهُ', r: 'رواه مسلم (1162)' }],
   occAshura: [{ t: 'صِيَامُ يَوْمِ عَاشُورَاءَ أَحْتَسِبُ عَلَى اللَّهِ أَنْ يُكَفِّرَ السَّنَةَ الَّتِي قَبْلَهُ', r: 'رواه مسلم (1162)' }],
   morning: [  // versets coraniques uniquement, RIWAYA DE WARSH ʿAN NĀFIʿ (décompte médinois récent, comme le Mushaf Mohammedi) ; les adhkar prophétiques sont dans « hadith »
@@ -1356,6 +1357,10 @@ function syncCardNameUi() {
   $('#cardFromField').hidden = !add;
   $('#cardFrom').value = S().cardFrom || '';
 }
+/** Titre d'une occasion : « فاتح شهر جمادى الأولى » pour le 1er d'un mois ; les autres occasions n'ont pas de {m}. */
+const occTitle = (o, h) => t(o.key, { m: t('hijriMonths')[h.m - 1] });
+const arOccTitle = (key, h) => (AR_STRINGS[key] || '').replace('{m}', AR_STRINGS.hijriMonths[h.m - 1]);
+const cardArTitle = sp => (sp.key === 'occMonth' ? arOccTitle('occMonth', sp.h) : (CARD_AR[sp.key] || [t(sp.key)])[0]);
 // Salutation d'une carte du jour : « صباح الخير » jusqu'au Dhuhr du lieu, « مساء الخير » ensuite (et la nuit, avant le Fajr)
 function greetKey(ts = now()) {
   const dh = state.today?.times?.Dhuhr, fj = state.today?.times?.Fajr;
@@ -1386,7 +1391,8 @@ const CARD_THEME = {
 const themeOf = key => (['occFitr', 'occAdha'].includes(key) ? 'gold'
   : ['occRamadan', 'occQadr', 'white', 'occNisfShaban'].includes(key) ? 'night'
   : ['occAshura', 'occArafa'].includes(key) ? 'teal' : ['morning', 'dua', 'hadith'].includes(key) ? 'sky' : 'green');
-const cardSubLocal = key => (getLang() === 'ar' ? ''
+const cardSubLocal = (key, h) => (getLang() === 'ar' ? ''
+  : key === 'occMonth' ? occTitle({ key }, h)
   : EVERGREEN.includes(key) ? t(greetKey() === 'morning' ? 'greetMorning' : 'greetEvening')
   : key === 'jumuah' ? t('cardJumuah') : key === 'white' ? t('cardWhite') : (t('cardSub') || {})[key] || t(key));
 
@@ -1411,6 +1417,11 @@ function cardSpecs() {
     const noon = today + i * DAY_MS, h = hijriOf(noon, off);
     const o = OCCASIONS.find(x => x.m === h.m && x.d === h.d);
     if (o && !seen.has(o.key)) { seen.add(o.key); out.push({ key: o.key, noon, h }); }
+  }
+  // prochain « فاتح الشهر » : 1er d'un mois sans fête propre (Mouharram, Ramadan et Chawwal ont déjà leur carte)
+  for (let i = 0; i < 45; i++) {
+    const noon = today + i * DAY_MS, h = hijriOf(noon, off);
+    if (h.d === 1 && !OCCASIONS.some(o => o.m === h.m && o.d === 1)) { out.push({ key: 'occMonth', noon, h }); break; }
   }
   // Imsakiya du prochain Ramadan (ou du Ramadan en cours)
   for (let i = -30; i < 370; i++) {
@@ -1566,6 +1577,7 @@ const warsh = px => `400 ${px}px WarshQ, Amiri, serif`;             // texte cor
   const base = g, layer = document.createElement('canvas'); layer.width = W; layer.height = H;
   g = layer.getContext('2d');
   let [arTitle, arLine] = CARD_AR[key] || [t(key), ''];
+  if (key === 'occMonth') { arTitle = arOccTitle('occMonth', spec.h); arLine = '\u0634\u0647\u0631 \u0645\u0628\u0627\u0631\u0643 \u0633\u0639\u064a\u062f'; }   // « شهر مبارك سعيد »
   const txt0 = EVERGREEN.includes(key) ? cardTextOf(spec) : null;
   if (EVERGREEN.includes(key)) { arTitle = greetAr(spec.greet || greetKey()); arLine = DICT_AR[kindKey(key, txt0)]; }   // « صباح / مساء الخير » + آية، ذكر، دعاء ou حديث
   g.textAlign = 'center'; g.direction = 'rtl'; g.textBaseline = 'alphabetic';
@@ -1579,7 +1591,7 @@ const warsh = px => `400 ${px}px WarshQ, Amiri, serif`;             // texte cor
   // texte sourcé (verset, hadith, dhikr ou doua)
   const txt = cardTextOf(spec);
   if (txt) {
-    const lead = key === 'hadith' ? (txt.lead || t('hadithLead')) : '';   // « قال رسول الله ﷺ » : on voit tout de suite que c'est un hadith
+    const lead = key === 'hadith' || txt.lead ? (txt.lead || t('hadithLead')) : '';   // « قال رسول الله ﷺ » : on voit tout de suite que c'est un hadith
     const leadH = lead ? 76 : 0;
     const waqf = hasWaqf(txt.t);                              // signes de pause : un peu plus d'espace entre les lignes
     const QB = !!txt.q;                                       // verset : police Warsh, un peu plus grande et épaissie pour égaler le poids des textes en Amiri gras
@@ -1610,7 +1622,7 @@ const warsh = px => `400 ${px}px WarshQ, Amiri, serif`;             // texte cor
     }
     y += boxH + 50;
   }
-  const sub = cardSubLocal(key);
+  const sub = cardSubLocal(key, spec.h);
   g.direction = document.documentElement.dir === 'rtl' ? 'rtl' : 'ltr';
   if (sub && !spec.evergreen) { g.font = plex(500, 36); g.fillStyle = ink; g.globalAlpha = .92; g.fillText(sub, W / 2, y); g.globalAlpha = 1; y += 58; }
   // date(s) — pas de ville ni d'horaires : la carte peut être envoyée partout au Maroc
@@ -1653,12 +1665,13 @@ const warsh = px => `400 ${px}px WarshQ, Amiri, serif`;             // texte cor
 
 function cardText(spec) {
   let [arTitle, arLine] = CARD_AR[spec.key] || [t(spec.key), ''];
+  if (spec.key === 'occMonth') { arTitle = arOccTitle('occMonth', spec.h); arLine = '\u0634\u0647\u0631 \u0645\u0628\u0627\u0631\u0643 \u0633\u0639\u064a\u062f'; }
   if (EVERGREEN.includes(spec.key)) { arTitle = greetAr(spec.greet || greetKey()); arLine = DICT_AR[kindKey(spec.key, cardTextOf(spec))]; }
-  const sub = cardSubLocal(spec.key);
+  const sub = cardSubLocal(spec.key, spec.h);
   const icon = EVERGREEN.includes(spec.key) && (spec.greet || greetKey()) === 'morning' ? '\u2600\ufe0f' : spec.key === 'occAdha' ? '\ud83d\udc11' : '\ud83c\udf19';   // soleil le matin, croissant le soir, mouton pour l'Aïd al-Adha
   let txt = `${icon} ${arTitle}${arLine ? '\n' + arLine : ''}${sub ? '\n' + sub : ''}`;
   const body = cardTextOf(spec);
-  if (body) txt += `\n\n${spec.key === 'hadith' ? (body.lead || t('hadithLead')) + '\n' : ''}${body.q ? `﴿ ${body.t} ﴾` : `« ${body.t} »`}\n${body.r}${body.q ? ' · ' + t('riwayaWarsh') : ''}`;
+  if (body) txt += `\n\n${spec.key === 'hadith' || body.lead ? (body.lead || t('hadithLead')) + '\n' : ''}${body.q ? `﴿ ${body.t} ﴾` : `« ${body.t} »`}\n${body.r}${body.q ? ' · ' + t('riwayaWarsh') : ''}`;
   const from = cardSender();
   if (from) txt += `\n\nمن: ${from}`;
   return txt + `\n\n📱 ${t('shareFooter')}\n${PLAY_URL}`;
@@ -1709,6 +1722,7 @@ function openPickAll(sp) {
 }
 const categoryTitle = key => (key === 'morning' ? t('cardsMorning') : getLang() === 'ar' ? (CARD_AR[key] || [t(key)])[0] : t(key === 'hadith' ? 'kindHadith' : 'kindDua'));
 const cardTitleOf = sp => (sp.key === 'imsakiya' ? `${t('imsakiya')} ${sp.mon.y}`
+  : sp.key === 'occMonth' ? occTitle(sp, sp.h)
   : getLang() === 'ar' ? (CARD_AR[sp.key] || [t(sp.key)])[0]
   : t({ jumuah: 'cardJumuah', white: 'whiteDays' }[sp.key] || sp.key));
 
@@ -1831,7 +1845,7 @@ function renderOccChip() {
   row.hidden = viewing() || !state.chipSpec;
   if (!state.chipSpec) return;
   $('#occTxt').textContent = sp
-    ? `${(CARD_AR[sp.key] || [t(sp.key)])[0]} \u00b7 ${t('shareCard')}`
+    ? `${cardArTitle(sp)} \u00b7 ${t('shareCard')}`
     : preview(cardTextOf(daily).t, 12);   // début du texte, sur deux lignes
   chip.setAttribute('aria-label', `${t('shareCard')} : ${$('#occTxt').textContent}`);
   chip.classList.toggle('daily', !sp);
@@ -2541,7 +2555,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.12.3';
+export const APP_VERSION = '2.12.5';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
