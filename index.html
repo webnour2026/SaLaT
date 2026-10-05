@@ -144,6 +144,7 @@
         <button class="link-btn" id="calibrateBtn" type="button" data-i18n="calibrateShort">Calibrer</button>
       </div>
       <button class="btn btn-primary wide" id="compassStart" type="button" hidden data-i18n="enableCompass">Activer la boussole</button>
+      <button class="link-btn" id="sensorHelpBtn" type="button" hidden data-i18n="sensorHelpBtn">Comment activer les capteurs ?</button>
 
       <details class="qibla-more">
         <summary data-i18n="moreDetails">Plus de détails</summary>
@@ -466,6 +467,12 @@
     <p class="pd-note" id="pdNote" data-i18n="quranNote" hidden></p>
     <ul class="pick-list" id="pdList"></ul>
     <form method="dialog"><button class="btn wide" data-i18n="close">Fermer</button></form>
+  </dialog>
+
+  <dialog id="sensorHelpDlg" class="sheet center" aria-labelledby="shTitle">
+    <h2 id="shTitle" data-i18n="sensorHelpTitle">Activer les capteurs de mouvement</h2>
+    <ol class="sh-list" id="sensorHelpList"></ol>
+    <form method="dialog"><button class="btn btn-primary wide" data-i18n="done">Terminé</button></form>
   </dialog>
 
   <dialog id="clearDialog" class="sheet center" aria-labelledby="clearTitle">

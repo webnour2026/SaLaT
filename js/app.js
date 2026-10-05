@@ -583,10 +583,12 @@ function renderCalendar() {
     return el;
   });
   grid.replaceChildren(...heads, ...blanks, ...cells);
+  grid.dataset.rows = String(Math.ceil((blanks.length + cells.length) / 7));      // 5 ou 6 lignes : le mode « un écran » réduit les cases des mois de 6 lignes
   const df = new Intl.DateTimeFormat(locale(), { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
   renderNextOcc();
-  const events = mon.days.filter(d => d.occasion).map(d => [occTitle(d.occasion, d.h), d]);
-  const whites = mon.days.filter(d => d.white);
+  // seulement ce qui reste à venir (aujourd'hui compris) : les événements passés du mois ne sont plus listés
+  const events = mon.days.filter(d => d.occasion && d.noon >= todayNoon).map(d => [occTitle(d.occasion, d.h), d]);
+  const whites = mon.days.filter(d => d.white && d.noon >= todayNoon);
   if (whites.length) events.push([t('whiteDays'), whites[0], null, whites]);
   events.sort((x, y) => x[1].noon - y[1].noon);
   const and = new Intl.ListFormat(locale(), { type: 'conjunction' });
@@ -607,6 +609,7 @@ function renderCalendar() {
     }
     return li;
   }));
+  requestAnimationFrame(setFit);                          // la hauteur change d'un mois à l'autre (5 ou 6 lignes) : on re-vérifie que tout tient
 }
 /** Bloc « prochaine occasion » du calendrier : la plus proche à partir d'aujourd'hui (jours blancs et occasions, pas le vendredi) */
 function renderNextOcc() {
@@ -2110,9 +2113,18 @@ const compass = new Compass({
     }
     if (s === 'calibrate') setSensor('poor');
     $('#compassStart').hidden = s === 'ok' || s === 'calibrate';
+    $('#sensorHelpBtn').hidden = !['blocked', 'nodata', 'denied'].includes(s);        // capteurs bloqués ou muets : aide pas à pas
   },
 });
 
+/** Appli installée (Play / « ajouter à l'écran d'accueil ») : pas de barre d'adresse, donc on passe par les réglages de Chrome. */
+const inInstalledApp = () => matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches
+  || /[?&]source=twa\b/.test(location.search) || (document.referrer || '').startsWith('android-app://');
+function showSensorHelp() {
+  const steps = t(inInstalledApp() ? 'sensorHelpApp' : 'sensorHelpBrowser');
+  $('#sensorHelpList').replaceChildren(...steps.map(s => { const li = document.createElement('li'); li.textContent = s; return li; }));
+  $('#sensorHelpDlg').showModal();
+}
 function setCompassMsg(text, cls) {
   const m = $('#compassMsg'); if (!m) return;
   m.textContent = text; m.className = `compass-msg ${cls || ''}`;
@@ -2123,6 +2135,7 @@ function setSensor(q) {
   state.sensorQ = q;
   $('#sensorRow').hidden = q === 'good';                    // capteur précis : rien à signaler
   $('#sensorDot').dataset.q = q;
+  $('#calibrateBtn').hidden = q === 'off';                   // capteur muet : « calibrer » n'a pas de sens, l'aide d'activation suffit
   $('#sensorText').textContent = t({ good: 'sensorGood', fair: 'sensorFair', poor: 'sensorPoor', off: 'sensorOff' }[q]);
 }
 
@@ -2492,6 +2505,7 @@ function bind() {
   on('#citySearch', 'input', onSearch);
   on('#compassStart', 'click', async () => { unlockAudio(); await compass.start(); });
   on('#calibrateBtn', 'click', () => $('#calDialog').showModal());
+  on('#sensorHelpBtn', 'click', showSensorHelp);
   on('#adhanStop', 'click', () => { stopAdhan(); hideAdhanAlert(); });
   on('#adhanSilent', 'click', () => { stopAdhan(); hideAdhanAlert(); renderSilent(); $('#silentDialog').showModal(); });
   on('#silentBtn', 'click', () => { renderSilent(); $('#silentDialog').showModal(); });
@@ -2555,7 +2569,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.12.5';
+export const APP_VERSION = '2.12.8';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
