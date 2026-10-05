@@ -69,14 +69,15 @@ final class Reminders {
     static void schedule(Context ctx) {
         AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
         am.cancel(pending(ctx));
-        long next = nextDue(AlarmScheduler.config(ctx), doneIds(ctx), System.currentTimeMillis());
+        long next = nextDue(AlarmScheduler.config(ctx), doneIds(ctx), Clock.now(ctx));
         if (next == Long.MAX_VALUE) return;
+        long trigger = Clock.toDevice(ctx, next);   // alarme sur l'horloge du téléphone, corrigée de l'écart mesuré
         boolean exact = Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms();
         try {
-            if (exact) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next, pending(ctx));
-            else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next, pending(ctx));   // sans autorisation : à quelques minutes près
+            if (exact) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pending(ctx));
+            else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pending(ctx));   // sans autorisation : à quelques minutes près
         } catch (SecurityException e) {
-            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next, pending(ctx));
+            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pending(ctx));
         }
     }
 
@@ -133,7 +134,7 @@ final class Reminders {
         final JSONObject cfg = AlarmScheduler.config(ctx);
         if (cfg == null) return;
         Set<String> done = doneIds(ctx);
-        for (JSONObject e : due(cfg, done, System.currentTimeMillis(), new Starts() {
+        for (JSONObject e : due(cfg, done, Clock.now(ctx), new Starts() {
             @Override public Set<String> get() { return fetchStarts(cfg.optString("base", "")); }
         })) {
             show(ctx, cfg, e);
@@ -202,7 +203,7 @@ final class Reminders {
 
     @SuppressWarnings("deprecation")
     static void show(Context ctx, JSONObject cfg, JSONObject e) {
-        boolean silent = cfg.optLong("su", 0) > System.currentTimeMillis();
+        boolean silent = cfg.optLong("su", 0) > Clock.now(ctx);
         boolean vib = cfg.optBoolean("vib", true) && !silent;
         String title = e.optString("title", ""), body = e.optString("body", "");
         String first = body.indexOf('\n') > 0 ? body.substring(0, body.indexOf('\n')) : body;

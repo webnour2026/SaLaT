@@ -677,3 +677,5 @@ body.booting .topbar, body.booting main, body.booting .tabbar { visibility: hidd
 .ct-cap, .ct-cap b, .ct-cap span { white-space: normal; overflow-wrap: anywhere; }
 .next-occ .btn { white-space: nowrap; }
 .cal-day.white .gd { color: var(--muted); }     /* date grégorienne sur le beige des jours blancs : 5,5:1 */
+.clock-warn { align-items: flex-start; background: color-mix(in srgb, var(--danger) 11%, var(--paper)); color: var(--ink); border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent); font-weight: 400; font-size: .86rem; line-height: 1.55; padding: 10px 14px; }
+.clock-warn[hidden] { display: none; }

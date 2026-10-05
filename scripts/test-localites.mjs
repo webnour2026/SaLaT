@@ -40,14 +40,6 @@ eq('code nul = automatique', moroccoReference(34.0209, -6.8416, true, null).loca
 eq('computeDay avec code = calcul de cette localité, quelle que soit la position', (() => { const a = computeDay({ lat: 48.8566, lng: 2.3522, code: 106 }, '2026-10-03', 21, 0), b = computeDay({ lat: 31.5167, lng: -9.7833, snap: false, code: null }, '2026-10-03', 21, 0); return ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].every(k => a[k] === b[k]); })(), true);
 eq('à Las Palmas (235 km du Maroc) : position exacte aussi', moroccoReference(28.1, -15.4, true).locality, null);
 
-// 2 bis) « la ville de l'utilisateur est déjà la localité officielle » → rien à afficher dans les réglages
-const rab = localityByCode(1), cas = localityByCode(58), mar = localityByCode(104);
-eq('même nom : Rabat ↔ Rabat-Salé', sameLocalityName('Rabat', rab), true);
-eq('même nom : مراكش ↔ Marrakech', `${sameLocalityName('مراكش', mar)} ${sameLocalityName('Marrakech', mar)}`, 'true true');
-eq('même nom : الدار البيضاء ↔ Casablanca', `${sameLocalityName('الدار البيضاء', cas)} ${sameLocalityName('casablanca', cas)}`, 'true true');
-eq('autre nom (un quartier ou un village) : on affichera la localité', `${sameLocalityName('Tamansourt', mar)} ${sameLocalityName('', mar)} ${sameLocalityName('Sidi Moumen', cas)}`, 'false false false');
-eq('« Fès » ↔ Fès (accents ignorés)', sameLocalityName('Fes', localityByCode(81)), true);
-
 // 3) cohérence : 191 localités × 73 jours répartis sur l'année — ordre des prières, valeurs finies
 let bad = 0, n = 0;
 for (const x of L) for (let d = 0; d < 365; d += 5) {

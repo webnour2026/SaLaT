@@ -33,7 +33,7 @@ final class Ongoing {
             JSONObject cfg = AlarmScheduler.config(ctx);
             if (cfg == null || !cfg.optBoolean("on", false)) { nm.cancel(NOTIF_ID); return; }
 
-            long now = System.currentTimeMillis();
+            long now = Clock.now(ctx);
             // juste après l'heure d'une prière : on reste dessus (temps écoulé), sinon prochaine prière
             AlarmScheduler.Next cur = AlarmScheduler.elapsedPrayer(cfg, now);
             AlarmScheduler.Next next = cur != null ? cur : AlarmScheduler.nextPrayer(cfg, now);

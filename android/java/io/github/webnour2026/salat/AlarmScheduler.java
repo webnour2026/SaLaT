@@ -44,6 +44,7 @@ final class AlarmScheduler {
         ed.putString("cfg", cfg.toString());
         ed.putLong("syncedAt", System.currentTimeMillis());
         ed.apply();
+        Clock.store(ctx, cfg.optLong("off", 0));   // écart entre l'horloge du téléphone et l'heure réelle (téléphone déréglé)
     }
 
     /** Horaires (ms) d'un jour : d'abord la liste officielle, sinon le calcul local. */
@@ -82,6 +83,7 @@ final class AlarmScheduler {
     static Next nextPrayer(JSONObject cfg, long now) {
         String tz = cfg.optString("tz", TimeZone.getDefault().getID());
         Calendar day = Calendar.getInstance(TimeZone.getTimeZone(tz));
+        day.setTimeInMillis(now);
         for (int i = 0; i < 3; i++) {
             Calendar d = (Calendar) day.clone();
             d.add(Calendar.DAY_OF_MONTH, i);
@@ -102,6 +104,7 @@ final class AlarmScheduler {
         if (grace <= 0) return null;
         String tz = cfg.optString("tz", TimeZone.getDefault().getID());
         Calendar d = Calendar.getInstance(TimeZone.getTimeZone(tz));
+        d.setTimeInMillis(now);
         Calendar utc = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         utc.clear();
         utc.set(d.get(Calendar.YEAR), d.get(Calendar.MONTH), d.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
@@ -138,10 +141,11 @@ final class AlarmScheduler {
         boolean ongoing = cfg.optBoolean("on", false);   // notification permanente : à rafraîchir à chaque prière
         if (!adhan && !at && before <= 0 && !ongoing) return;
 
-        long now = System.currentTimeMillis();
+        long now = Clock.now(ctx);                      // heure réelle (horloge du téléphone + écart mesuré)
         long bestTime = Long.MAX_VALUE; String bestKey = null, bestType = null;
         String tz = cfg.optString("tz", TimeZone.getDefault().getID());
         Calendar day = Calendar.getInstance(TimeZone.getTimeZone(tz));
+        day.setTimeInMillis(now);
         for (int i = 0; i < 3 && bestKey == null; i++) {
             Calendar d = (Calendar) day.clone();
             d.add(Calendar.DAY_OF_MONTH, i);
@@ -165,13 +169,31 @@ final class AlarmScheduler {
         }
         if (bestKey == null) return;
         pi = alarmIntent(ctx, bestKey, bestType, bestTime);
+        long trigger = Clock.toDevice(ctx, bestTime);   // l'alarme suit l'horloge du téléphone : on la décale de l'écart mesuré
         boolean exact = Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms();
         try {
-            if (exact) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, bestTime, pi);
-            else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, bestTime, pi);   // sans autorisation : à quelques minutes près
+            if (exact) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pi);
+            else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pi);   // sans autorisation : à quelques minutes près
         } catch (SecurityException e) {
-            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, bestTime, pi);
+            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pi);
         }
+        // contrôle d'horloge 12 min avant : on remesure l'heure réelle et on recale l'alarme si le téléphone a dérivé entre-temps
+        PendingIntent check = clockCheckIntent(ctx);
+        am.cancel(check);
+        long checkAt = trigger - CLOCK_CHECK_MS;
+        long nowDev = System.currentTimeMillis();
+        if (checkAt < nowDev + 60000L && !Clock.measuredThisBoot(ctx) && trigger > nowDev + 3 * 60000L) checkAt = nowDev + 90000L;   // jamais mesuré depuis le démarrage et la prière approche : contrôle dans 90 s
+        if (checkAt > nowDev + 60000L) {
+            try { am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, checkAt, check); } catch (SecurityException ignored) { }
+        }
+    }
+
+    static final long CLOCK_CHECK_MS = 12 * 60000L;
+
+    private static PendingIntent clockCheckIntent(Context ctx) {
+        Intent i = new Intent(ctx, AlarmReceiver.class).setAction("io.github.webnour2026.salat.CLOCKCHECK");
+        i.putExtra(EXTRA_TYPE, "clock");
+        return PendingIntent.getBroadcast(ctx, 4, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     private static PendingIntent alarmIntent(Context ctx, String key, String type, long when) {

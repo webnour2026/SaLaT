@@ -385,7 +385,20 @@ function renderBar(tNow) {
 }
 
 // Seule action contextuelle de l'accueil : l'Adhan est désactivé → une ligne pour le réactiver
+const fmtSpan = ms => { const s = Math.round(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); return h ? `${h} ${t('hShort')} ${m} ${t('minShort')}` : `${m} ${t('minShort')} ${s % 60} s`; };
 function renderCta() {
+  const cw = $('#clockWarn');
+  if (cw) {                                              // téléphone déréglé (≥ 1 min) : la cause n°1 d'un Adhan décalé
+    const off = getOffset(); cw.hidden = Math.abs(off) < 60000;
+    if (!cw.hidden) {
+      // écart d'un nombre rond d'heures (± 3 min) : l'horloge interne est faussée par le fuseau que le réseau mobile impose, l'affichage est juste ;
+      // « activer la date automatique » serait un mauvais conseil (c'est elle la cause) : l'appli et le module corrigent d'eux-mêmes
+      const half = 1800000, networkTz = Math.abs(off) >= half && Math.abs(Math.abs(off) - Math.round(Math.abs(off) / half) * half) <= 180000;
+      const words = { ar: ['متأخرة', 'متقدمة'], fr: ['retarde', 'avance'], en: ['behind', 'ahead'] }[getLang()] || ['behind', 'ahead'];
+      $('#clockWarnTxt').textContent = networkTz ? t('clockNet', { d: fmtSpan(Math.abs(off)), w: words[off > 0 ? 0 : 1] })
+        : t(off > 0 ? 'clockBehind' : 'clockAhead', { d: fmtSpan(Math.abs(off)) });
+    }
+  }
   const box = $('#ctaAdhan'); if (!box) return;
   box.hidden = viewing() || !S().location || !!S().adhan.enabled;
 }
@@ -1846,6 +1859,7 @@ async function nativePayload() {
   });
   return {
     v: 2, base: new URL('.', location.href).href, rem, lat: +loc.lat.toFixed(5), lng: +loc.lng.toFixed(5), tz: tz(), method: S().method, school: S().school,
+    off: getOffset(),   // téléphone déréglé : écart (ms) entre l'horloge du téléphone et l'heure réelle ; le module décale ses alarmes d'autant
     ol: S().officialLocality !== false, olc: S().officialLocalityCode ?? null,   // Maroc : localité officielle (collage automatique / choix manuel), pour le calcul de secours du module
     adj: S().adjust, en: !!a.enabled, na: !!a.notifyAt, nb: a.notifyBefore || 0, vib: !!a.vibrate, su, on: !!S().ongoing, gr: GRACE_MIN,
     hj: Array.from({ length: 31 }, (_, i) => fmtDates(Date.parse(`${addDays(today, i)}T12:00:00Z`)).hijri),
@@ -1860,6 +1874,7 @@ async function syncNative({ ask = false, quiet = false, test = false } = {}) {
   if (!isTwa()) return;
   const payload = await nativePayload(); if (!payload) return;
   localStorage.setItem('priere.nativeAt', String(Date.now()));
+  localStorage.setItem('priere.nativeOff', String(payload.off || 0));
   localStorage.removeItem('priere.nativeDirty');
   const q = `d=${encodeURIComponent(JSON.stringify(payload))}${ask ? '&ask=1' : ''}${quiet ? '&quiet=1' : ''}${test ? '&test=1' : ''}`;
   // si le module est absent, Android revient ici (native=0) au lieu d'ouvrir le Play Store
@@ -1869,6 +1884,13 @@ async function syncNative({ ask = false, quiet = false, test = false } = {}) {
 }
 // Android n'accepte l'ouverture du module que lors d'un geste de l'utilisateur :
 // sinon on note qu'une mise à jour est à faire, et on la fait au prochain toucher.
+// L'horloge vient d'être (re)mesurée : on prévient l'utilisateur si son téléphone est déréglé, et on renvoie l'écart au module Android s'il a changé
+function afterClockSync() {
+  if (state.today) computeNext();
+  renderCta();
+  const last = Number(localStorage.getItem('priere.nativeOff') || 0);
+  if (nativeActive() && Math.abs(getOffset() - last) > 5000) { localStorage.setItem('priere.nativeDirty', '1'); requestNativeSync(); }
+}
 function requestNativeSync() {
   if (!nativeActive()) return;
   if (navigator.userActivation ? navigator.userActivation.isActive : true) syncNative({ quiet: true });
@@ -1876,7 +1898,7 @@ function requestNativeSync() {
 }
 function nativeNeedsSync() {
   if (!nativeActive()) return false;
-  if (localStorage.getItem('priere.nativeV') !== '3') { localStorage.setItem('priere.nativeV', '3'); localStorage.setItem('priere.nativeDirty', '1'); }
+  if (localStorage.getItem('priere.nativeV') !== '4') { localStorage.setItem('priere.nativeV', '4'); localStorage.setItem('priere.nativeDirty', '1'); }   // 4 : la charge utile contient l'écart d'horloge
   const at = +localStorage.getItem('priere.nativeAt') || 0;
   return localStorage.getItem('priere.nativeDirty') === '1' || Date.now() - at > 5 * 864e5;
 }
@@ -2272,7 +2294,7 @@ function bindSettings() {
   on('#sHijriSrc', 'change', e => { S().hijriSource = e.target.value; save(); rerenderHijri(); renderSettings(); });
   on('#sDecl', 'change', e => { S().declination = Math.max(-30, Math.min(30, Number(String(e.target.value).replace(',', '.')) || 0)); save(); state.decl = currentDeclination(); });
   on('#sDeclAuto', 'change', e => { S().declAuto = e.target.checked; save(); state.decl = currentDeclination(); renderSettings(); });
-  on('#syncBtn', 'click', async () => { await syncClock(); computeNext(); renderSettings(); });
+  on('#syncBtn', 'click', async () => { await syncClock(); afterClockSync(); renderSettings(); });
   on('#clearBtn', 'click', () => $('#clearDialog').showModal());
   on('#clearConfirm', 'click', () => { clearMonths(); toast(t('cleared')); refresh(); });   // le bouton « Annuler » ferme simplement la boîte
   on('#settingsHub', 'click', e => { const r = e.target.closest('.hub-row'); if (r) showSettingsPage(r.dataset.page, { push: true }); });
@@ -2350,7 +2372,7 @@ function bind() {
   bindSwipe();
   // l'audio ne peut démarrer qu'après un premier geste de l'utilisateur
   document.addEventListener('pointerdown', unlockAudio, { once: true });
-  window.addEventListener('online', () => { state.online = true; refresh(); syncClock(); });
+  window.addEventListener('online', () => { state.online = true; refresh(); syncClock().then(afterClockSync); });
   window.addEventListener('offline', () => { state.online = false; renderHome(); });
   on('#noLocCity', 'click', openLocationDialog);
   on('#noLocGps', 'click', useGps);
@@ -2383,7 +2405,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.11.4';
+export const APP_VERSION = '2.11.8';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
@@ -2452,7 +2474,7 @@ function init() {
       }).catch(() => {});
     }
   }
-  syncClock().then(() => { if (state.today) computeNext(); });
+  syncClock().then(afterClockSync);
   checkHabous();       // nouveau début de mois annoncé ? (au plus une vérification toutes les 3 h)
   checkOfficiel();
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkHabous(); checkOfficiel(); } });
@@ -2472,4 +2494,4 @@ try { init(); } finally {
   requestAnimationFrame(() => document.body.classList.remove('booting'));   // retire l'écran de démarrage
 }
 
-export { buildGreetingCard, cardSpecs, greetKey };   // utilisés aussi par les tests visuels
+export { buildGreetingCard, cardSpecs, greetKey, nativePayload };   // utilisés aussi par les tests visuels

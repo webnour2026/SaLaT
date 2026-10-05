@@ -14,12 +14,18 @@ import org.json.JSONObject;
 public class AlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context ctx, Intent intent) {
+        final Context app = ctx.getApplicationContext();
+        String type0 = intent.getStringExtra(AlarmScheduler.EXTRA_TYPE);
+        if ("clock".equals(type0)) {          // contrôle d'horloge peu avant la prière : on remesure l'heure réelle, puis on reprogramme
+            checkClock(app, 0);
+            return;
+        }
         try {
             JSONObject cfg = AlarmScheduler.config(ctx);
             String key = intent.getStringExtra(AlarmScheduler.EXTRA_KEY);
             String type = intent.getStringExtra(AlarmScheduler.EXTRA_TYPE);
             long when = intent.getLongExtra(AlarmScheduler.EXTRA_TIME, 0);
-            long now = System.currentTimeMillis();
+            long now = Clock.now(ctx);
             // alarme très en retard (téléphone éteint, etc.) : on ne joue pas un Adhan périmé
             if (cfg != null && key != null && !"tick".equals(type) && Math.abs(now - when) < 20 * 60000L) notify(ctx, cfg, key, type, when);
         } catch (Exception ignored) {
@@ -27,17 +33,41 @@ public class AlarmReceiver extends BroadcastReceiver {
             AlarmScheduler.scheduleNext(ctx);
             Ongoing.update(ctx);
         }
+        checkClock(app, 2 * 3600000L);        // après chaque alarme : écart remesuré s'il date de plus de 2 h
+    }
+
+    /** Remesure l'écart en arrière-plan (réseau) ; s'il a changé, les alarmes sont reprogrammées. */
+    private void checkClock(final Context app, final long minAgeMs) {
+        final PendingResult result = goAsync();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    int r = Clock.refresh(app, minAgeMs);
+                    if (r == Clock.REFRESH_CHANGED) {
+                        AlarmScheduler.scheduleNext(app);
+                        Reminders.schedule(app);
+                        Ongoing.update(app);
+                    } else if (minAgeMs == 0) {
+                        AlarmScheduler.scheduleNext(app);          // rien à corriger : on réarme le prochain contrôle d'horloge
+                    }
+                } catch (Throwable ignored) {
+                } finally {
+                    result.finish();
+                }
+            }
+        }).start();
     }
 
     static void notify(Context ctx, JSONObject cfg, String key, String type) {
-        notify(ctx, cfg, key, type, System.currentTimeMillis());
+        notify(ctx, cfg, key, type, Clock.now(ctx));
     }
 
     static void notify(Context ctx, JSONObject cfg, String key, String type, long when) {
         NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
         String name = AlarmScheduler.prayerName(cfg, key, when);
         boolean vib = cfg.optBoolean("vib", true);
-        boolean silent = cfg.optLong("su", 0) > System.currentTimeMillis();
+        boolean silent = cfg.optLong("su", 0) > Clock.now(ctx);
 
         if ("before".equals(type)) {
             String ch = AlarmScheduler.channel(ctx, null, vib && !silent, AlarmScheduler.text(cfg, "chBefore", "Rappels"));
