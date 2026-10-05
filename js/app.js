@@ -1577,9 +1577,10 @@ const warsh = px => `400 ${px}px WarshQ, Amiri, serif`;             // texte cor
     const lead = key === 'hadith' ? (txt.lead || t('hadithLead')) : '';   // « قال رسول الله ﷺ » : on voit tout de suite que c'est un hadith
     const leadH = lead ? 76 : 0;
     const waqf = hasWaqf(txt.t);                              // signes de pause : un peu plus d'espace entre les lignes
-    let size = 72, fs = 72, lines, lh, boxH, b0;
+    const QB = !!txt.q;                                       // verset : police Warsh, un peu plus grande et épaissie pour égaler le poids des textes en Amiri gras
+    let size = QB ? 84 : 72, fs = size, lines, lh, boxH, b0;
     do {
-      g.font = txt.q ? warsh(size) : amiri(700, size); fs = size; lines = wrapLines(g, txt.q ? `﴿ ${txt.t} ﴾` : `« ${txt.t} »`, W - 200);
+      g.font = txt.q ? warsh(size) : amiri(700, size); fs = size; lines = wrapLines(g, txt.q ? `﴿ ${txt.t} ﴾` : `« ${txt.t} »`, W - (QB ? 250 : 200));   // verset : marges plus larges (le trait épaissi ne doit pas frôler le cadre)
       // b0 = distance haut de boîte → 1re ligne (marge haute confortable) ; 50 = reste sous la référence
       lh = Math.round((size + 4) * (waqf ? 1.75 : 1.5)); b0 = 46 + leadH + Math.round(size * .95); boxH = b0 + lines.length * lh + 50; size -= 4;
     } while ((lines.length > 6 || boxH > 640) && size > 36);
@@ -1590,7 +1591,7 @@ const warsh = px => `400 ${px}px WarshQ, Amiri, serif`;             // texte cor
     if (isSky) { g.strokeStyle = 'rgba(15,44,69,.14)'; g.lineWidth = 2; g.stroke(); }
     if (lead) { g.save(); g.font = amiri(400, 44); g.fillStyle = isSky ? '#1B6E80' : accent; g.fillText(lead, W / 2, bt + 74); g.restore(); }
     g.fillStyle = ink; g.font = txt.q ? warsh(fs) : amiri(700, fs);
-    lines.forEach((ln, i) => drawArabicLine(g, ln, W / 2, bt + b0 + i * lh, fs, px => (txt.q ? warsh(px) : amiri(400, px)), isSky ? '#1B6E80' : accent));
+    lines.forEach((ln, i) => drawArabicLine(g, ln, W / 2, bt + b0 + i * lh, fs, px => (txt.q ? warsh(px) : amiri(400, px)), isSky ? '#1B6E80' : accent, QB ? Math.max(1.4, fs * 0.022) : 0));
     // la source, et pour le Coran la riwaya (le texte de l'appli est en Warsh 'an Nafi') ; la police baisse si la ligne est longue
     const refLine = txt.q ? `${txt.r}  ·  ${t('riwayaWarsh')}` : txt.r;
     let rs = 40; g.font = amiri(400, rs);
@@ -2527,7 +2528,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.12.0';
+export const APP_VERSION = '2.12.1';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

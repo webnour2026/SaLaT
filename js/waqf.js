@@ -33,17 +33,19 @@ export function lastLetterCenter(g, clean, at, cx) {
  * markFont(px) → police du signe ; markColor → sa couleur. Retombe sur le dessin normal si le navigateur ne
  * sait pas mesurer l'encre d'un signe isolé.
  */
-export function drawArabicLine(g, line, cx, base, size, markFont, markColor) {
+export function drawArabicLine(g, line, cx, base, size, markFont, markColor, boldPx = 0) {
   const { clean, marks } = splitWaqf(line);
-  if (!marks.length) { g.fillText(line, cx, base); return; }
+  // `boldPx` : police à une seule graisse (Warsh) — on épaissit le trait en le contournant de la même couleur
+  const paint = txt => { g.fillText(txt, cx, base); if (boldPx > 0 && g.strokeText) { const lw = g.lineWidth, lj = g.lineJoin; g.strokeStyle = g.fillStyle; g.lineWidth = boldPx; g.lineJoin = 'round'; g.strokeText(txt, cx, base); g.lineWidth = lw; g.lineJoin = lj; } };
+  if (!marks.length) { paint(line); return; }
   const textFont = g.font, align = g.textAlign, fill = g.fillStyle;
   const ms = Math.round(size * .75);
   g.font = markFont(ms); g.textAlign = 'center';
   const probe = g.measureText(marks[0].ch);
   const inkOk = typeof probe.actualBoundingBoxDescent === 'number' && probe.actualBoundingBoxLeft + probe.actualBoundingBoxRight > 0;
   g.font = textFont; g.textAlign = align;
-  if (!inkOk) { g.fillText(line, cx, base); return; }               // ancien navigateur : rendu natif
-  g.fillText(clean, cx, base);
+  if (!inkOk) { paint(line); return; }                              // ancien navigateur : rendu natif
+  paint(clean);
   const xs = marks.map(m => lastLetterCenter(g, clean, m.at, cx));  // mesures avec la police du texte
   g.font = markFont(ms); g.textAlign = 'center'; g.fillStyle = markColor;
   marks.forEach((m, i) => {
