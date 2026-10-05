@@ -2212,8 +2212,12 @@ function renderSun() {
   const sp = sunPosition(tNow, loc.lat, loc.lng);
   if (sp.elevation > 0) {
     $('#sunNow').textContent = t('sunNow', { az: fmtDeg(sp.azimuth), el: fmtDeg(sp.elevation) });
-    const d = ((state.qibla - sp.azimuth + 540) % 360) - 180;
-    $('#sunRel').textContent = t('sunRel', { d: fmtDeg(Math.abs(d)), side: d > 0 ? t('toRight') : t('toLeft') });
+    const d = ((state.qibla - sp.azimuth + 540) % 360) - 180;         // > 0 : la Qibla est à droite du soleil
+    if (Math.abs(d) >= 135) {
+      // soleil presque dans le dos (typiquement au Maroc : coucher du soleil, Qibla vers l'est) : plus parlant de lui tourner le dos
+      const r = ((state.qibla - (sp.azimuth + 180) + 540) % 360) - 180;
+      $('#sunRel').textContent = Math.abs(r) < 3 ? t('sunBack') : t(r > 0 ? 'sunBehindR' : 'sunBehindL', { d: fmtDeg(Math.abs(r)) });
+    } else $('#sunRel').textContent = t('sunRel', { d: fmtDeg(Math.abs(d)), side: d > 0 ? t('toRight') : t('toLeft') });
   } else {
     $('#sunNow').textContent = t('sunDown'); $('#sunRel').textContent = t('sunNightTip');
   }
@@ -2577,7 +2581,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.12.9';
+export const APP_VERSION = '2.12.10';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
