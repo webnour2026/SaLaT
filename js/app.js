@@ -386,10 +386,15 @@ function renderBar(tNow) {
 
 // Seule action contextuelle de l'accueil : l'Adhan est désactivé → une ligne pour le réactiver
 const fmtSpan = ms => { const s = Math.round(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); return h ? `${h} ${t('hShort')} ${m} ${t('minShort')}` : `${m} ${t('minShort')} ${s % 60} s`; };
+// Fermeture du bandeau d'horloge : mémorisée 24 h (et rouverte si l'écart change de plus de 5 min, par ex. si le téléphone se remet à l'heure)
+const CW_KEY = 'priere.clockWarnClosed';
+function clockWarnDismissed(off) {
+  try { const v = JSON.parse(localStorage.getItem(CW_KEY) || 'null'); return !!v && Date.now() - v.at < 864e5 && Math.abs(v.off - off) < 300000; } catch { return false; }
+}
 function renderCta() {
   const cw = $('#clockWarn');
   if (cw) {                                              // téléphone déréglé (≥ 1 min) : la cause n°1 d'un Adhan décalé
-    const off = getOffset(); cw.hidden = Math.abs(off) < 60000;
+    const off = getOffset(); cw.hidden = Math.abs(off) < 60000 || clockWarnDismissed(off);
     if (!cw.hidden) {
       // écart d'un nombre rond d'heures (± 3 min) : l'horloge interne est faussée par le fuseau que le réseau mobile impose, l'affichage est juste ;
       // « activer la date automatique » serait un mauvais conseil (c'est elle la cause) : l'appli et le module corrigent d'eux-mêmes
@@ -2420,6 +2425,7 @@ function bindSettings() {
   on('#syncBtn', 'click', async () => { await syncClock(); afterClockSync(); renderSettings(); });
   on('#clearBtn', 'click', () => $('#clearDialog').showModal());
   on('#clearConfirm', 'click', () => { clearMonths(); toast(t('cleared')); refresh(); });   // le bouton « Annuler » ferme simplement la boîte
+  on('#clockWarnClose', 'click', () => { try { localStorage.setItem(CW_KEY, JSON.stringify({ at: Date.now(), off: getOffset() })); } catch { /* sans stockage : fermé jusqu'au prochain affichage */ } $('#clockWarn').hidden = true; });
   on('#settingsHub', 'click', e => { const r = e.target.closest('.hub-row'); if (r) showSettingsPage(r.dataset.page, { push: true }); });
   document.querySelectorAll('.spage-back').forEach(b => b.addEventListener('click', () => { if (history.state?.spage) history.back(); else showSettingsPage(null); }));
   window.addEventListener('popstate', () => {
@@ -2528,7 +2534,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.12.1';
+export const APP_VERSION = '2.12.2';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

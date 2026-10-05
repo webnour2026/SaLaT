@@ -683,3 +683,8 @@ body.booting .topbar, body.booting main, body.booting .tabbar { visibility: hidd
 /* ===== Texte coranique : riwaya de Warsh, police du Complexe du Roi Fahd (KFGQPC Warsh v10) ===== */
 @font-face { font-family: "WarshQ"; src: url("../fonts/warsh.10.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
 .quran { font-family: WarshQ, Amiri, serif; }
+.clock-warn { align-items: center; gap: 4px; padding-block: 6px; padding-inline: 14px 4px; font-size: .88rem; line-height: 1.4; }
+.clock-warn #clockWarnTxt { flex: 1; min-width: 0; }
+.cw-close { flex: none; display: grid; place-items: center; width: 44px; height: 44px; margin-block: -6px; border: 0; border-radius: 50%; background: none; color: inherit; cursor: pointer; }
+.cw-close svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.cw-close:active { background: color-mix(in srgb, currentColor 14%, transparent); }
