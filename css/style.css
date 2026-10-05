@@ -701,3 +701,5 @@ body.fit .cal-events::-webkit-scrollbar { display: none; }
 .sh-list li + li { margin-top: 4px; }
 #sensorHelpBtn { margin: 4px auto 0; display: block; }
 #sensorHelpBtn[hidden] { display: none; }
+.sh-none { margin: 4px 0 10px; font-size: .9rem; }
+.sh-sun { margin-bottom: 8px; }

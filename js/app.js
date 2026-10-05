@@ -2114,6 +2114,7 @@ const compass = new Compass({
     if (s === 'calibrate') setSensor('poor');
     $('#compassStart').hidden = s === 'ok' || s === 'calibrate';
     $('#sensorHelpBtn').hidden = !['blocked', 'nodata', 'denied'].includes(s);        // capteurs bloqués ou muets : aide pas à pas
+    if (['blocked', 'nodata', 'denied', 'unsupported'].includes(s)) showQiblaAlternatives();   // sans boussole : soleil et angle sur boussole classique, déjà ouverts
   },
 });
 
@@ -2124,6 +2125,12 @@ function showSensorHelp() {
   const steps = t(inInstalledApp() ? 'sensorHelpApp' : 'sensorHelpBrowser');
   $('#sensorHelpList').replaceChildren(...steps.map(s => { const li = document.createElement('li'); li.textContent = s; return li; }));
   $('#sensorHelpDlg').showModal();
+}
+/** Pas de capteur : on ouvre d'office « Plus de détails » (angle pour une boussole classique + vérification par le soleil). */
+function showQiblaAlternatives(scroll = false) {
+  const d = document.querySelector('.qibla-more'); if (!d) return;
+  d.open = true; renderSun();
+  requestAnimationFrame(() => { setFit(); if (scroll) document.querySelector('.sun-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
 }
 function setCompassMsg(text, cls) {
   const m = $('#compassMsg'); if (!m) return;
@@ -2208,7 +2215,7 @@ function renderSun() {
     const d = ((state.qibla - sp.azimuth + 540) % 360) - 180;
     $('#sunRel').textContent = t('sunRel', { d: fmtDeg(Math.abs(d)), side: d > 0 ? t('toRight') : t('toLeft') });
   } else {
-    $('#sunNow').textContent = t('sunDown'); $('#sunRel').textContent = '';
+    $('#sunNow').textContent = t('sunDown'); $('#sunRel').textContent = t('sunNightTip');
   }
   // journée dans le fuseau du lieu : de Fajr à Isha si connus, sinon ±12 h
   const day = state.today?.times;
@@ -2506,6 +2513,7 @@ function bind() {
   on('#compassStart', 'click', async () => { unlockAudio(); await compass.start(); });
   on('#calibrateBtn', 'click', () => $('#calDialog').showModal());
   on('#sensorHelpBtn', 'click', showSensorHelp);
+  on('#sensorHelpSun', 'click', () => { $('#sensorHelpDlg').close(); showQiblaAlternatives(true); });
   on('#adhanStop', 'click', () => { stopAdhan(); hideAdhanAlert(); });
   on('#adhanSilent', 'click', () => { stopAdhan(); hideAdhanAlert(); renderSilent(); $('#silentDialog').showModal(); });
   on('#silentBtn', 'click', () => { renderSilent(); $('#silentDialog').showModal(); });
@@ -2569,7 +2577,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.12.8';
+export const APP_VERSION = '2.12.9';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
