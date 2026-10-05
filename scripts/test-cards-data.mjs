@@ -44,5 +44,8 @@ eq('hadiths : « كان رسول الله ﷺ إذا أصبح قال » seulemen
 const all = [...T.morning, ...T.hadith, ...T.dua].map(x => plain(x.t));
 eq('aucun texte en double (mot pour mot) entre versets, douas et hadiths', all.filter((x, k) => all.indexOf(x) !== k).length, 0);
 eq('douas : pas de verset sans q ni hadith sans source', T.dua.filter(x => !x.q && !SOURCE.test(x.r.trim())).map(x => x.r), []);
+const i18n = fs.readFileSync(new URL('../js/i18n.js', import.meta.url), 'utf8');
+const riw = [...i18n.matchAll(/riwayaWarsh: '((?:[^'\\]|\\.)*)'/g)].map(m => JSON.parse(`"${m[1]}"`));
+eq('mention sur les cartes : « ورش عن نافع » + « العدّ المدني الأخير » + « المصحف المغربي » dans les 3 langues', riw.map(s => ['ورش عن نافع', 'العدّ المدني الأخير', 'المصحف المغربي'].every(w => s.includes(w))), [true, true, true]);
 console.log(fails ? `\n${fails} échec(s)` : '\nTous les tests réussis');
 process.exit(fails ? 1 : 0);

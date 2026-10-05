@@ -1587,8 +1587,8 @@ const warsh = px => `400 ${px}px WarshQ, Amiri, serif`;             // texte cor
     do {
       g.font = txt.q ? warsh(size) : amiri(700, size); fs = size; lines = wrapLines(g, txt.q ? `﴿ ${txt.t} ﴾` : `« ${txt.t} »`, W - (QB ? 250 : 200));   // verset : marges plus larges (le trait épaissi ne doit pas frôler le cadre)
       // b0 = distance haut de boîte → 1re ligne (marge haute confortable) ; 50 = reste sous la référence
-      lh = Math.round((size + 4) * (waqf ? 1.75 : 1.5)); b0 = 46 + leadH + Math.round(size * .95); boxH = b0 + lines.length * lh + 50; size -= 4;
-    } while ((lines.length > 6 || boxH > 640) && size > 36);
+      lh = Math.round((size + 4) * (waqf ? 1.75 : 1.5)); b0 = 46 + leadH + Math.round(size * .95); boxH = b0 + lines.length * lh + 50 + (txt.q ? 46 : 0); size -= 4;   // verset : une ligne de plus (riwaya et décompte)
+    } while ((lines.length > 6 || boxH > (txt.q ? 690 : 640)) && size > 36);
     // cartes du jour : le texte sourcé est centré entre l'en-tête (titre) et le pied de carte
     if (spec.evergreen) y = Math.max(y, Math.round((340 + (H - 260)) / 2 - boxH / 2) + 10);
     const bt = y - 10;   // haut de la boîte
@@ -1598,10 +1598,16 @@ const warsh = px => `400 ${px}px WarshQ, Amiri, serif`;             // texte cor
     g.fillStyle = ink; g.font = txt.q ? warsh(fs) : amiri(700, fs);
     lines.forEach((ln, i) => drawArabicLine(g, ln, W / 2, bt + b0 + i * lh, fs, px => (txt.q ? warsh(px) : amiri(400, px)), isSky ? '#1B6E80' : accent, QB ? Math.max(1.4, fs * 0.022) : 0));
     // la source, et pour le Coran la riwaya (le texte de l'appli est en Warsh 'an Nafi') ; la police baisse si la ligne est longue
-    const refLine = txt.q ? `${txt.r}  ·  ${t('riwayaWarsh')}` : txt.r;
+    const refLine = txt.q ? txt.r : txt.r;
     let rs = 40; g.font = amiri(400, rs);
     while (rs > 26 && g.measureText(refLine).width > W - 240) { rs -= 2; g.font = amiri(400, rs); }
-    g.fillStyle = isSky ? '#1B6E80' : accent; g.fillText(refLine, W / 2, bt + boxH - 44);
+    g.fillStyle = isSky ? '#1B6E80' : accent;
+    g.fillText(refLine, W / 2, bt + boxH - 44 - (txt.q ? 46 : 0));
+    if (txt.q) {                                                // 2e ligne : « برواية ورش عن نافع — العدّ المدني الأخير المعتمد في المصحف المغربي »
+      let ns = 31; g.font = amiri(400, ns);
+      while (ns > 22 && g.measureText(t('riwayaWarsh')).width > W - 260) { ns -= 1; g.font = amiri(400, ns); }
+      g.globalAlpha = .9; g.fillText(t('riwayaWarsh'), W / 2, bt + boxH - 44); g.globalAlpha = 1;
+    }
     y += boxH + 50;
   }
   const sub = cardSubLocal(key);
@@ -1689,6 +1695,7 @@ const preview = (text, n = 6) => { const w = noWaqf(text).split(/\s+/); return w
 /** Liste complète des textes d'une catégorie (fenêtre) : un toucher = aperçu de la carte */
 function openPickAll(sp) {
   $('#pdTitle').textContent = categoryTitle(sp.key);
+  $('#pdNote').hidden = !CARD_TEXTS[sp.key].some(x => x.q);          // listes de versets : rappel de la riwaya et du décompte
   const ul = $('#pdList'); ul.replaceChildren();
   CARD_TEXTS[sp.key].forEach((x, i) => {
     const item = document.createElement('li'), btn = document.createElement('button');
@@ -2534,7 +2541,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.12.2';
+export const APP_VERSION = '2.12.3';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

@@ -688,3 +688,5 @@ body.booting .topbar, body.booting main, body.booting .tabbar { visibility: hidd
 .cw-close { flex: none; display: grid; place-items: center; width: 44px; height: 44px; margin-block: -6px; border: 0; border-radius: 50%; background: none; color: inherit; cursor: pointer; }
 .cw-close svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .cw-close:active { background: color-mix(in srgb, currentColor 14%, transparent); }
+.pd-note { margin: 0 0 8px; padding: 8px 12px; border-radius: var(--r-md); background: var(--pc); color: var(--ink); font-size: .82rem; line-height: 1.5; }
+.pd-note[hidden] { display: none; }
