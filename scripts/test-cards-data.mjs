@@ -55,5 +55,9 @@ const DUA_LEADS = ['مما دعا به رسول الله ﷺ', 'مما علّم�
 eq('doua prophétiques : chacune a une introduction parmi les 3 formules admises', T.dua.filter(x => !x.q && !DUA_LEADS.includes(x.lead)).map(x => x.r), []);
 eq('doua coraniques : aucune introduction (le verset reste tel quel)', T.dua.filter(x => x.q && x.lead).length, 0);
 eq('versets : aucune introduction, pas de basmala en tête', [T.morning.filter(x => x.lead).length, T.morning.filter(x => /^بسم الله الرحمن الرحيم/.test(plain(x.t))).length], [0, 0]);
+// cartes d'occasion (قريبًا : Joumou'a, Achoura, Arafa, Nuit du Destin, début de mois…) : tout texte NON coranique a une introduction
+const occ = Object.entries(T).filter(([k]) => !['morning', 'hadith', 'dua'].includes(k));
+eq('cartes d\'occasion : tout hadith ou doua porte une introduction (قال / مما علّمه / كان … قال)', occ.flatMap(([k, l]) => l.filter(x => !x.q && !x.lead).map(x => `${k}: ${x.r}`)), []);
+eq('cartes d\'occasion : aucun verset ne porte d\'introduction', occ.flatMap(([k, l]) => l.filter(x => x.q && x.lead).map(x => `${k}: ${x.r}`)), []);
 console.log(fails ? `\n${fails} échec(s)` : '\nTous les tests réussis');
 process.exit(fails ? 1 : 0);

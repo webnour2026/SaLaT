@@ -3,6 +3,11 @@
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les dates précises ne sont consignées qu'à partir de la 2.12.16 ;
 les versions antérieures portent seulement le mois. ⚠ = nécessite de reconstruire l'AAB (module Android).
 
+## [2.12.19] – 2026-10-06
+### Ajouté
+- Cartes d'occasion (rangée « قريبًا ») : introduction en tête des hadiths et doua, comme pour les hadiths et les doua : « قال رسول الله ﷺ » (Joumou'a ×2, Arafa, Achoura) et « مما علّمه رسول الله ﷺ من الدعاء » (Nuit du Destin). Les versets restent sans introduction.
+- `test-cards-data.mjs` : plus aucun hadith ou doua d'une carte d'occasion ne peut être publié sans introduction.
+
 ## [2.12.18] – 2026-10-06
 ### Ajouté
 - Doua prophétiques (catégorie « دعاء ») : une introduction en tête de carte, comme pour les hadiths.
