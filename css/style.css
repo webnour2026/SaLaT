@@ -723,3 +723,7 @@ body.fit .cal-events::-webkit-scrollbar { display: none; }
 .walk-card { margin-top: 12px; }
 #walkMsg { margin: 6px 0 10px; line-height: 1.6; min-height: 1.6em; }
 #walkMsg:empty { display: none; }
+.manual-north { margin: 8px 0 4px; padding: 12px; border-radius: var(--r-md); background: var(--paper); border: 1px solid var(--rule); text-align: start; }
+.manual-north[hidden] { display: none; }
+.mn-btns { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
+.mn-btns .btn { flex: 1 1 140px; }

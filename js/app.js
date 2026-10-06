@@ -2115,6 +2115,7 @@ const compass = new Compass({
     if (s === 'calibrate') setSensor('poor');
     $('#compassStart').hidden = s === 'ok' || s === 'calibrate';
     $('#sensorHelpBtn').hidden = !['blocked', 'nodata', 'denied'].includes(s);        // capteurs bloqués ou muets : aide pas à pas
+    $('#manualNorth').hidden = !(s === 'relative' || compass.manual);                 // gyroscope seul : le nord se règle à la main (et se ré-règle)
     if (['blocked', 'nodata', 'denied', 'unsupported'].includes(s)) showQiblaAlternatives();   // sans boussole : soleil et angle sur boussole classique, déjà ouverts
   },
 });
@@ -2588,6 +2589,13 @@ function bind() {
   on('#compassStart', 'click', async () => { unlockAudio(); await compass.start(); });
   on('#calibrateBtn', 'click', () => $('#calDialog').showModal());
   on('#sensorHelpBtn', 'click', showSensorHelp);
+  const setNorth = ref => { const ok = compass.calibrateTo(ref); $('#mnState').textContent = ok ? t('mnDone') : t('mnRetry'); if (ok) $('#manualNorth').hidden = false; };
+  on('#mnNorth', 'click', () => setNorth(0));
+  on('#mnSun', 'click', () => {
+    const loc = S().location, sp = loc && sunPosition(now(), loc.lat, loc.lng);
+    if (!sp || sp.elevation < 3) { $('#mnState').textContent = t('mnNoSun'); return; }              // trop bas ou sous l'horizon : le calcul n'aide pas
+    setNorth(sp.azimuth);
+  });
   on('#walkBtn', 'click', toggleWalk);
   document.querySelector('.qibla-more')?.addEventListener('toggle', () => requestAnimationFrame(setFit));   // le contenu change de hauteur : on re-vérifie
   on('#sensorHelpSun', 'click', () => { $('#sensorHelpDlg').close(); showQiblaAlternatives(true); });
@@ -2654,7 +2662,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.12.13';
+export const APP_VERSION = '2.12.14';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

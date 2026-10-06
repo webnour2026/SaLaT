@@ -37,6 +37,8 @@ export class Compass {
     this.lastAbs = 0;
     this.gotHeading = false;
     this.sawRelative = false;
+    this.manual = null;                         // nord réglé à la main (gyroscope sans magnétomètre) : le repère relatif repart à zéro à chaque démarrage
+    this.lastRel = null;
     this.blocked = false;
     // on écoute les deux : selon l'appareil, le nord absolu arrive par l'un ou l'autre
     window.addEventListener('deviceorientationabsolute', this.onAbs, true);
@@ -49,7 +51,7 @@ export class Compass {
       if (this.gotHeading) return;
       if (!ask) { this.onStatus('needTap'); return; }   // iOS : il faut un toucher sur « Activer »
       if (!this.startSensor()) this.onStatus(this.sawRelative ? 'relative' : 'nodata');
-      else setTimeout(() => { if (!this.gotHeading) this.onStatus(this.blocked ? 'blocked' : this.sawRelative ? 'relative' : 'nodata'); }, 2500);
+      else setTimeout(() => { if (!this.gotHeading) this.onStatus(this.sawRelative ? 'relative' : this.blocked ? 'blocked' : 'nodata'); }, 2500);   // des événements relatifs arrivent : les capteurs ne sont pas bloqués
     }, 1500);
     return true;
   }
@@ -82,6 +84,15 @@ export class Compass {
     this.running = false;
   }
 
+  /** L'utilisateur dit : « le haut du téléphone pointe maintenant vers `ref`° ». Renvoie faux si le gyroscope n'a rien envoyé à l'instant. */
+  calibrateTo(ref) {
+    if (!this.lastRel || Date.now() - this.lastRel.at > 1500) return false;
+    this.manual = { offset: (ref - this.lastRel.final + 720) % 360 };
+    this.gotHeading = true;
+    return true;
+  }
+  clearManual() { this.manual = null; }
+
   handle(e, kind) {
     if (typeof e.webkitCompassHeading === 'number' && e.webkitCompassHeading >= 0) {
       return this.emit(e.webkitCompassHeading, { beta: e.beta, gamma: e.gamma, accuracy: e.webkitCompassAccuracy, source: 'ios' });
@@ -90,7 +101,13 @@ export class Compass {
     const absolute = kind === 'absolute' || e.absolute === true;
     if (!absolute) {
       this.sawRelative = true;
-      return; // alpha relatif (orientation au démarrage) : inutilisable pour le nord
+      // alpha relatif (repère arbitraire fixé au démarrage) : inutilisable tel quel pour le nord,
+      // mais utilisable si l'utilisateur donne un repère (« je regarde le nord / le soleil »)
+      const rh = tiltHeading(e.alpha, e.beta || 0, e.gamma || 0, this);
+      const screenAngle = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+      this.lastRel = { h: rh.heading, final: rh.mode === 'back' ? rh.heading : (rh.heading + screenAngle + 360) % 360, at: Date.now() };
+      if (this.manual) this.emit((rh.heading + this.manual.offset + 360) % 360, { beta: e.beta, gamma: e.gamma, accuracy: null, source: 'manual', screenCorrected: rh.mode === 'back', mode: rh.mode });
+      return;
     }
     if (kind === 'orientation' && Date.now() - this.lastAbs < 500) return; // doublon
     if (kind === 'absolute') this.lastAbs = Date.now();
