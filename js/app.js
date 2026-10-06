@@ -2215,7 +2215,14 @@ function renderQibla() {
 function drawSunFigure(mode, angle, label, svg = $('#sunFig')) {
   if (!svg) return;
   const R = 60, RS = 90, rad = angle * Math.PI / 180, kx = 100 + R * Math.sin(rad), ky = 100 - R * Math.cos(rad);   // Kaaba sur l'anneau, soleil en dehors
-  const ax = 100 + 36 * Math.sin(rad), ay = 100 - 36 * Math.cos(rad), mx = 100 + 62 * Math.sin(rad / 2) + (angle > 0 ? 27 : -27), my = 100 - 62 * Math.cos(rad / 2) + 4;
+  const ax = 100 + 36 * Math.sin(rad), ay = 100 - 36 * Math.cos(rad);
+  const angDist = (p, q) => Math.abs(((p - q + 540) % 360) - 180);
+  let mx = 100, my = 52, bestD = 1e9;                                   // étiquette d'angle : position libre la plus proche de la bissectrice
+  for (let c = 0; c < 360; c += 45) {
+    const px = 100 + 50 * Math.sin(toRad(c)), py = 100 - 50 * Math.cos(toRad(c));
+    if (angDist(c, 0) < 30 || angDist(c, angle) < 30 || Math.hypot(px - kx, py - ky) < 30) continue;   // ni sur la flèche, ni sur le pointillé, ni sur la Kaaba
+    const d = angDist(c, angle / 2); if (d < bestD) { bestD = d; mx = px; my = py + 4; }
+  }
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, val = Math.round(angle * 10) / 10;
   const sunY = mode === 'back' ? 100 + RS : 100 - RS;
   const rays = Array.from({ length: 8 }, (_, i) => `<line x1="0" y1="-12" x2="0" y2="-17" transform="rotate(${i * 45})"/>`).join('');
@@ -2226,7 +2233,7 @@ function drawSunFigure(mode, angle, label, svg = $('#sunFig')) {
     <g class="sf-sun" transform="translate(100 ${sunY})"><circle r="9"/><g>${rays}</g></g>`}
     ${Math.abs(val) >= 3 ? `<path class="sf-arc" d="M100 ${100 - 36}A36 36 0 0 ${val > 0 ? 1 : 0} ${ax.toFixed(1)} ${ay.toFixed(1)}"/>` : ''}
     <line class="sf-dash" x1="100" y1="100" x2="${kx.toFixed(1)}" y2="${ky.toFixed(1)}"/>
-    <g class="sf-kaaba" transform="translate(${kx.toFixed(1)} ${ky.toFixed(1)}) rotate(${-val})"><circle r="13"/><path d="M0-7 9-2.5 0 2-9-2.5Z" fill="#4A4F54"/><path d="M-9-2.5 0 2V10L-9 5.5Z" fill="#2B2E31"/><path d="M9-2.5 0 2V10L9 5.5Z" fill="#1B1D1F"/><path d="M-9 0 0 4.5 9 0v2L0 6.5-9 2Z" fill="#C9962B"/></g>
+    <g class="sf-kaaba" transform="translate(${kx.toFixed(1)} ${ky.toFixed(1)})"><circle r="13"/><path d="M0-7 9-2.5 0 2-9-2.5Z" fill="#4A4F54"/><path d="M-9-2.5 0 2V10L-9 5.5Z" fill="#2B2E31"/><path d="M9-2.5 0 2V10L9 5.5Z" fill="#1B1D1F"/><path d="M-9 0 0 4.5 9 0v2L0 6.5-9 2Z" fill="#C9962B"/></g>
     ${Math.abs(val) >= 3 ? `<text class="sf-deg" x="${mx.toFixed(1)}" y="${my.toFixed(1)}" text-anchor="middle" direction="ltr">${Math.abs(val).toLocaleString(locale(), { maximumFractionDigits: 1 })}\u00b0</text>` : ''}
     <g class="sf-man" ${reduce ? `transform="rotate(${val} 100 100)"` : ''}>${anim}
       <rect class="sf-body" x="76" y="98" width="48" height="20" rx="10"/>
@@ -2234,6 +2241,7 @@ function drawSunFigure(mode, angle, label, svg = $('#sunFig')) {
       <path class="sf-nose" d="M100 91.5l-4.5 6.5h9z"/>
       <path class="sf-gaze" d="M100 86V60M92 69l8-10 8 10"/>
     </g>`;
+  svg.setAttribute('viewBox', mode === 'walk' ? '0 14 200 172' : mode === 'back' ? '-8 32 216 176' : '-8 -8 216 176');   // cadre resserré : pas de grand vide autour du dessin
   svg.setAttribute('aria-label', label || ''); svg.removeAttribute('hidden');       // (la propriété `hidden` n'existe pas sur un <svg> : il faut l'attribut)
 }
 
@@ -2255,6 +2263,7 @@ function walkOnFix(pos) {
   if (h === null) { $('#walkMsg').textContent = Date.now() - walk.t0 < 4000 ? t('walkWait') : t('walkMove'); return; }
   walk.heads.push(h); if (walk.heads.length > 3) walk.heads.shift();
   const heading = circMean(walk.heads), turn = ((state.qibla - heading + 540) % 360) - 180;                    // < 0 : la Qibla est à gauche
+  walk.last = { h: heading, at: Date.now() };                                                                    // sert aussi à régler le nord d'un téléphone à gyroscope
   const line2 = Math.abs(turn) < 8 ? t('walkAligned') : t(turn > 0 ? 'walkTurnR' : 'walkTurnL', { d: fmtDeg(Math.abs(turn)) });
   const text = `${t('walkNow', { h: Math.round(heading) })} ${line2}`;
   $('#walkMsg').textContent = text;
@@ -2263,13 +2272,13 @@ function walkOnFix(pos) {
 function stopWalk() {
   if (walk.id !== null) navigator.geolocation.clearWatch(walk.id);
   clearTimeout(walk.timer); walk.id = null;
-  const b = $('#walkBtn'); if (b) b.textContent = t('walkStart');
+  const b = $('#walkBtn'); if (b) { b.textContent = t('walkStart'); b.classList.add('btn-primary'); }
 }
 function toggleWalk() {
   if (walk.id !== null) { stopWalk(); return; }
   if (!navigator.geolocation) { $('#walkMsg').textContent = t('walkDenied'); return; }
-  walk.fixes = []; walk.heads = []; walk.t0 = Date.now();
-  $('#walkMsg').textContent = t('walkWait'); $('#walkBtn').textContent = t('walkStop');
+  walk.fixes = []; walk.heads = []; walk.last = null; walk.t0 = Date.now();
+  $('#walkMsg').textContent = t('walkWait'); $('#walkBtn').textContent = t('walkStop'); $('#walkBtn').classList.remove('btn-primary');
   walk.id = navigator.geolocation.watchPosition(walkOnFix, e => { stopWalk(); $('#walkMsg').textContent = t('walkDenied'); }, { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
   walk.timer = setTimeout(stopWalk, 3 * 60 * 1000);                                                              // s'arrête seul après 3 min (batterie)
 }
@@ -2591,6 +2600,10 @@ function bind() {
   on('#sensorHelpBtn', 'click', showSensorHelp);
   const setNorth = ref => { const ok = compass.calibrateTo(ref); $('#mnState').textContent = ok ? t('mnDone') : t('mnRetry'); if (ok) $('#manualNorth').hidden = false; };
   on('#mnNorth', 'click', () => setNorth(0));
+  on('#mnWalk', 'click', () => {                                                                       // « je fais face à mon sens de marche » (cap GPS récent)
+    if (!walk.last || Date.now() - walk.last.at > 90000) { $('#mnState').textContent = t('mnNoWalk'); return; }
+    setNorth(walk.last.h);
+  });
   on('#mnSun', 'click', () => {
     const loc = S().location, sp = loc && sunPosition(now(), loc.lat, loc.lng);
     if (!sp || sp.elevation < 3) { $('#mnState').textContent = t('mnNoSun'); return; }              // trop bas ou sous l'horizon : le calcul n'aide pas
@@ -2662,7 +2675,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.12.14';
+export const APP_VERSION = '2.12.15';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

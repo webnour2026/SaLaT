@@ -706,7 +706,7 @@ body.fit .cal-events::-webkit-scrollbar { display: none; }
 .sh-sun { margin-bottom: 8px; }
 
 /* Petit bonhomme du « soleil dans le dos » (vue de dessus) */
-.sun-fig { display: block; width: 190px; height: 190px; margin: 2px auto 6px; direction: ltr; overflow: visible; }
+.sun-fig { display: block; width: 190px; height: auto; margin: 2px auto 6px; direction: ltr; overflow: visible; }
 .sun-fig[hidden] { display: none; }
 .sf-ring { fill: none; stroke: var(--rule); stroke-width: 1.5; stroke-dasharray: 3 5; }
 .sf-sun circle { fill: #F2B134; }
@@ -727,3 +727,8 @@ body.fit .cal-events::-webkit-scrollbar { display: none; }
 .manual-north[hidden] { display: none; }
 .mn-btns { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
 .mn-btns .btn { flex: 1 1 140px; }
+
+/* Cartes « soleil », « marche » et réglage du nord : mêmes boutons, pleine largeur, jamais rognés */
+.sun-card .btn.wide, .manual-north .btn { display: flex; width: 100%; max-width: 100%; box-sizing: border-box; margin: 8px 0 4px; }
+.manual-north .mn-btns { display: grid; grid-template-columns: 1fr; gap: 8px; margin: 8px 0 4px; }
+.manual-north .mn-btns .btn { margin: 0; }
