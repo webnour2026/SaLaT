@@ -202,6 +202,19 @@ export function unlockAudio() {
   } catch {}
 }
 
+/** Petit bip (≈ 0,15 s, 880 Hz) : confirme que la boussole pointe vers la Qibla. Ne joue rien si le navigateur n'a pas encore déverrouillé l'audio. */
+export function playBeep() {
+  try {
+    unlockAudio();
+    if (!ctx || ctx.state !== 'running') return false;
+    const t0 = ctx.currentTime, osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = 'sine'; osc.frequency.value = 880;
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.2, t0 + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.15);   // attaque et fin douces : pas de « clac »
+    osc.connect(g); g.connect(ctx.destination); osc.start(t0); osc.stop(t0 + 0.17);
+    return true;
+  } catch { return false; }
+}
+
 export function stopAdhan() {
   clearTimeout(shortTimer);
   if (audio) { audio.pause(); audio.src = ''; audio = null; }

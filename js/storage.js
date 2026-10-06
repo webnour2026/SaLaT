@@ -27,6 +27,7 @@ export const DEFAULTS = {
   silentUntil: 0,               // mode silencieux : timestamp de fin (Infinity = jusqu'à désactivation)
   declAuto: true,               // déclinaison calculée par WMM2025
   declination: 0,               // valeur manuelle (degrés, Est positif)
+  qiblaBeep: true,              // petit bip quand la boussole pointe vers la Qibla
   adhan: {
     enabled: true,
     mode: 'global',             // global | perPrayer

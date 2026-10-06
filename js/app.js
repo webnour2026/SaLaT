@@ -13,7 +13,7 @@ import { hasWaqf, drawArabicLine } from './waqf.js';
 import { nearestLocality, moroccoReference, localityName, allLocalities, localityByCode, sameLocalityName, SNAP_KM } from './localites.js';
 import { declination as wmmDeclination } from './wmm.js';
 import { sunPosition, timesAtAzimuth } from './sun.js';
-import { ADHANS, playAdhan, stopAdhan, unlockAudio, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, removeCustomAdhan, loadCustomAdhans, customAdhans, loadSiteAdhans, DEFAULT_ADHAN, RETIRED } from './adhan.js';
+import { ADHANS, playAdhan, stopAdhan, unlockAudio, playBeep, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, removeCustomAdhan, loadCustomAdhans, customAdhans, loadSiteAdhans, DEFAULT_ADHAN, RETIRED } from './adhan.js';
 import { hijriMonth, upcomingWhiteDays, civilNoon, hijriOf, OCCASIONS, isWhiteDay, reminderFor } from './calendar.js';
 import { PRESET_CITIES, METHOD_BY_COUNTRY, getGpsPosition, reverseGeocode, searchCity } from './location.js';
 
@@ -2099,7 +2099,7 @@ const compass = new Compass({
     uprightQibla();
     const msg = $('#compassMsg');
     if (!flat) { msg.textContent = t('notFlat'); msg.className = 'compass-msg alert-s'; }
-    else if (aligned) { msg.textContent = t('aligned'); msg.className = 'compass-msg ok-s'; if (!compass.wasAligned) vibrate(60); }
+    else if (aligned) { msg.textContent = t('aligned'); msg.className = 'compass-msg ok-s'; if (!compass.wasAligned) { vibrate(60); if (S().qiblaBeep !== false) playBeep(); } }
     else { msg.textContent = (mode === 'back' ? t('backMode') + ' · ' : '') + `${diff > 0 ? t('turnRight') : t('turnLeft')} \u2066${Math.round(Math.abs(diff))}°\u2069`; msg.className = 'compass-msg'; }
     compass.wasAligned = aligned;
   },
@@ -2396,6 +2396,7 @@ function renderSettings() {
   }
   $('#sTz').value = s.tzMode || 'auto';
   $('#sOngoing').checked = !!s.ongoing;
+  $('#sQiblaBeep').checked = s.qiblaBeep !== false;
   $('#sDeclAuto').checked = s.declAuto;
   $('#sDecl').disabled = s.declAuto;
   const dv = Number(currentDeclination());
@@ -2547,6 +2548,8 @@ function bindSettings() {
   on('#sHijri', 'change', e => { S().hijriOffset = Number(e.target.value); save(); rerenderHijri(); });
   on('#sHijriSrc', 'change', e => { S().hijriSource = e.target.value; save(); rerenderHijri(); renderSettings(); });
   on('#sDecl', 'change', e => { S().declination = Math.max(-30, Math.min(30, Number(String(e.target.value).replace(',', '.')) || 0)); save(); state.decl = currentDeclination(); });
+  on('#sQiblaBeep', 'change', e => { S().qiblaBeep = e.target.checked; save(); if (e.target.checked) playBeep(); });   // aperçu du bip à l'activation
+  document.addEventListener('pointerdown', () => unlockAudio(), { once: true, capture: true });                        // le navigateur exige un geste avant le premier son
   on('#sDeclAuto', 'change', e => { S().declAuto = e.target.checked; save(); state.decl = currentDeclination(); renderSettings(); });
   on('#syncBtn', 'click', async () => { await syncClock(); afterClockSync(); renderSettings(); });
   on('#clearBtn', 'click', () => $('#clearDialog').showModal());
@@ -2675,7 +2678,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.12.16';
+export const APP_VERSION = '2.12.17';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

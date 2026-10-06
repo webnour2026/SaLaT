@@ -3,6 +3,12 @@
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les dates précises ne sont consignées qu'à partir de la 2.12.16 ;
 les versions antérieures portent seulement le mois. ⚠ = nécessite de reconstruire l'AAB (module Android).
 
+## [2.12.17] – 2026-10-06
+### Ajouté
+- Petit bip (880 Hz, 0,15 s, généré par WebAudio : aucun fichier) quand la boussole entre dans l'alignement sur la Qibla, avec la vibration existante. Une seule fois par alignement (hystérésis ±2° / ±4°).
+- Réglages → Avancé → Boussole : interrupteur « Petit bip quand la boussole pointe vers la Qibla » (activé par défaut ; un bip d'aperçu à l'activation).
+- `scripts/test-qibla-beep.mjs`.
+
 ## [2.12.16] – 2026-10-06
 ### Sécurité
 - Politique de sécurité (CSP) en balise `<meta>` dans `index.html` : aucun script inline, aucun `eval`, hôtes externes limités à ceux réellement utilisés.
