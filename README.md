@@ -43,3 +43,21 @@ Servir en HTTPS (obligatoire pour GPS, boussole, service worker). À chaque mise
 - `.nojekyll` à la racine (GitHub Pages).
 - `twa/assetlinks.json` : modèle à compléter (voir `twa/LISEZ-MOI.md`).
 - Captures dans `screenshots/` : à refaire si l'interface change (Play Console en exige au moins 2).
+
+## Sécurité (CSP) et dépendances externes
+
+GitHub Pages n'envoie aucun en-tête HTTP : la politique de sécurité est une balise `<meta http-equiv="Content-Security-Policy">`
+placée en tête de `index.html` (avant toute ressource). Elle interdit tout script inline, tout `eval()` et tout hôte non listé.
+`scripts/test-csp.mjs` vérifie qu'elle reste cohérente avec le code (hôtes cités = hôtes autorisés, pas d'inline, pré-cache complet).
+
+| Hôte | Pour quoi | Directive | Si indisponible |
+|---|---|---|---|
+| `api.aladhan.com` | horaires de prière (API par défaut, `setProvider()` pour en changer) | `connect-src` | repli sur le calcul local (`js/prayer-calc.js`) |
+| `nominatim.openstreetmap.org` | recherche d'une ville | `connect-src` | recherche impossible ; les localités officielles du Maroc restent disponibles hors ligne |
+| `api.github.com` | liste des adhans disponibles dans le dépôt | `connect-src` | la liste locale `audio/adhan/list.json` prend le relais |
+| `fonts.googleapis.com`, `fonts.gstatic.com` | polices IBM Plex Sans Arabic, Reem Kufi, Amiri | `style-src`, `font-src` | polices système (la police Warsh des versets est locale : `fonts/`) |
+
+- **Ajouter un service externe** : ajouter son hôte dans la balise CSP **et** dans `scripts/test-csp.mjs`, sinon le navigateur bloque la requête sans message à l'écran.
+- **Limites d'une balise `<meta>`** : `frame-ancestors`, `report-uri` et `sandbox` ne sont pas pris en charge (il faudrait un en-tête HTTP).
+- **`'unsafe-inline'`** n'est admis que pour les styles : le tableau du mois à imprimer est écrit dans une iframe avec son propre `<style>`.
+- Le script de démarrage (« vider le cache » si l'appli ne démarre pas) est dans `js/boot-guard.js`, pas en inline.

@@ -2,6 +2,10 @@
 <html lang="fr" dir="ltr">
 <head>
   <meta charset="utf-8">
+  <!-- CSP : GitHub Pages ne permet pas d'en-têtes HTTP, la politique passe par cette balise (placée avant toute ressource).
+       Limites d'une balise : frame-ancestors, report-uri et sandbox n'y sont pas pris en charge. 'unsafe-inline' n'est admis que pour les STYLES
+       (document d'impression du mois, écrit dans une iframe) ; aucun script inline, aucun eval. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://api.aladhan.com https://nominatim.openstreetmap.org https://api.github.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>SaLaTi – صلاتي</title>
   <meta name="description" content="SaLaTi – صلاتي : horaires de prière précis par GPS, Qibla, Adhan et calendrier hégirien.">
@@ -546,20 +550,7 @@
     <p>L’application n’a pas pu démarrer (mise à jour incomplète).<br><span lang="ar" dir="rtl">تعذّر تشغيل التطبيق (تحديث غير مكتمل).</span></p>
     <button class="btn btn-primary" type="button" id="bootFix">Réparer et recharger / إصلاح</button>
   </div>
-  <script>
-    // Garde-fou : si le script principal ne démarre pas en 5 s, on propose de vider le cache.
-    setTimeout(function () {
-      if (window.__appStarted) return;
-      var box = document.getElementById('bootFail'); box.hidden = false; document.body.classList.remove('booting');
-      document.getElementById('bootFix').onclick = async function () {
-        try {
-          if ('serviceWorker' in navigator) for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
-          if (window.caches) for (const k of await caches.keys()) await caches.delete(k);
-        } catch (e) {}
-        location.reload();
-      };
-    }, 5000);
-  </script>
+  <script src="js/boot-guard.js" defer></script>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
