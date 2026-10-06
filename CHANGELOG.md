@@ -1,0 +1,95 @@
+# Changelog
+
+Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les dates précises ne sont consignées qu'à partir de la 2.12.16 ;
+les versions antérieures portent seulement le mois. ⚠ = nécessite de reconstruire l'AAB (module Android).
+
+## [2.12.16] – 2026-10-06
+### Sécurité
+- Politique de sécurité (CSP) en balise `<meta>` dans `index.html` : aucun script inline, aucun `eval`, hôtes externes limités à ceux réellement utilisés.
+- Le script de démarrage (« vider le cache ») passe dans `js/boot-guard.js`.
+### Ajouté
+- `scripts/test-csp.mjs` (cohérence CSP / code / pré-cache), `scripts/run-tests.mjs` et `npm test`.
+- Workflow GitHub `Tests` : syntaxe de tous les fichiers + tous les jeux de tests à chaque envoi de code.
+- `CHANGELOG.md` ; README : sections « Tests » et « Sécurité (CSP) et dépendances externes ».
+
+## [2.12.15] – 2026-10
+### Modifié
+- Cartes « soleil » et « marche » : affichage homogène (Kaaba toujours droite, boutons pleine largeur non rognés, étiquette d'angle dans une zone libre, dessins recadrés).
+### Ajouté
+- Réglage du nord avec le sens de marche (« أواجه اتجاه مشيي »), 3ᵉ repère du réglage manuel.
+
+## [2.12.14] – 2026-10
+### Ajouté
+- Réglage manuel du nord pour les téléphones à gyroscope sans magnétomètre : face au nord ou face au soleil (azimut calculé), puis la boussole suit la rotation.
+### Corrigé
+- Quand seuls des événements d'orientation relatifs arrivent, le statut est « relatif » et non « bloqué ».
+
+## [2.12.13] – 2026-10
+### Ajouté
+- « Qibla en marchant (GPS) » : le cap vient du sens de déplacement (GPS), avec consigne gauche/droite et bonhomme animé ; arrêt automatique après 3 min et en quittant l'écran.
+
+## [2.12.12] – 2026-10
+### Corrigé
+- Message de la boussole sans mention d'iPhone (le navigateur Android peut aussi exiger un geste).
+- Cadran coupé en haut quand « Plus de détails » est ouvert à la main : mise en page recalculée, contenu centré sans débordement vers le haut.
+
+## [2.12.11] – 2026-10
+### Ajouté
+- Petit bonhomme animé (vue de dessus) dans la vérification par le soleil.
+
+## [2.12.10] – 2026-10
+### Modifié
+- Soleil presque dans le dos (coucher du soleil) : « donnez-lui le dos puis pivotez de N° » au lieu de « 169° à gauche du soleil ».
+
+## [2.12.9] – 2026-10
+### Ajouté
+- Sans capteur, « Plus de détails » s'ouvre tout seul (angle pour boussole classique, soleil) ; bouton « essayer la vérification par le soleil » ; conseil de nuit.
+### Modifié
+- Aide aux capteurs : plus de nom de site cité.
+
+## [2.12.8] – 2026-10
+### Ajouté
+- Bouton « Comment activer les capteurs ? » (étapes Chrome pour l'appli installée ou le navigateur).
+### Corrigé
+- Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
+
+## [2.12.7] – 2026-10
+### Corrigé
+- Barre de défilement qui clignotait sur les mois de 6 lignes du calendrier (cases réduites, ajustement re-vérifié à chaque mois).
+
+## [2.12.6] – 2026-10
+### Modifié
+- Calendrier : seuls les événements à venir sont listés sous la grille.
+
+## [2.12.5] – 2026-10
+### Modifié
+- Doua du croissant : texte du Tirmidhi 3451 (« باليمن »), identique sur la carte et dans les rappels (test d'identité).
+
+## [2.12.4] – 2026-10
+### Ajouté
+- « فاتح الشهر » : occasion de chaque mois hégirien, carte dédiée avec la doua du croissant, prochain événement du calendrier.
+
+## [2.12.3] – 2026-10
+### Ajouté
+- Cartes de versets : mention « برواية ورش عن نافع — العدّ المدني الأخير المعتمد في المصحف المغربي », note dans la liste, source dans « À propos ».
+
+## [2.12.2] – 2026-10
+### Modifié
+- Bandeau d'écart d'horloge plus court et fermable (24 h).
+
+## [2.12.1] – 2026-10
+### Modifié
+- Texte coranique des cartes plus grand et plus épais, marges élargies.
+
+## [2.12.0] – 2026-10
+### Modifié
+- Versets en **riwaya de Warsh 'an Nāfiʿ**, décompte médinois récent (6214 versets, comme le Mushaf Mohammedi) ; texte du Complexe du Roi Fahd, police KFGQPC Warsh.
+- 331 versets orientés vers tawhid, bonne nouvelle et Paradis, louange, patience, miséricorde, espoir ; 114 numéros de verset changent par rapport à Hafs.
+- Test automatique : chaque texte coranique se retrouve dans les versets Warsh de sa référence.
+
+## [2.11.8] – 2026-10 ⚠
+### Corrigé
+- Alarme de l'Adhan en retard d'une heure quand le réseau mobile impose un mauvais fuseau : le module Android mesure lui-même l'heure réelle (en-tête `Date` du site) au démarrage, avant chaque prière et après chaque alarme. Garde-fous : mesure bornée à 24 h, une seule tentative au démarrage.
+
+## 2.10.0 – 2.11.7 – 2026-10
+Refonte complète de l'interface : accueil, réglages en 6 pages, Qibla à cadran unique, cartes à partager (carrousels d'aperçus), calendrier, accessibilité (cibles ≥ 44 px, contrastes AA), fuseau légal du Maroc, catégories de cartes (versets / hadiths / doua).

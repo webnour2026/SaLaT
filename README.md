@@ -44,6 +44,18 @@ Servir en HTTPS (obligatoire pour GPS, boussole, service worker). À chaque mise
 - `twa/assetlinks.json` : modèle à compléter (voir `twa/LISEZ-MOI.md`).
 - Captures dans `screenshots/` : à refaire si l'interface change (Play Console en exige au moins 2).
 
+## Tests
+
+Aucune dépendance à installer : Node seul (Java pour les deux tests du module Android).
+
+```
+npm test              # syntaxe de tous les fichiers .js/.mjs + tous les scripts/test-*.mjs
+npm test -- csp       # seulement ce qui contient « csp »
+```
+
+Le workflow GitHub **Tests** (`.github/workflows/tests.yml`) lance la même commande à chaque envoi de code et à chaque demande de fusion.
+Un fichier oublié, une erreur de syntaxe ou une CSP incohérente font échouer le workflow.
+
 ## Sécurité (CSP) et dépendances externes
 
 GitHub Pages n'envoie aucun en-tête HTTP : la politique de sécurité est une balise `<meta http-equiv="Content-Security-Policy">`
