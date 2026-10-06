@@ -50,5 +50,10 @@ eq('mention sur les cartes : « ورش عن نافع » + « العدّ المد
 const monthDua = [...i18n.matchAll(/monthDua: '((?:[^'\\]|\\.)*)'/g)].map(m => JSON.parse(`"${m[1]}"`));
 eq('doua du croissant : le texte de la carte = celui des rappels, dans les 3 langues', monthDua.map(s => plain(s) === plain(T.occMonth[0].t)), [true, true, true]);
 eq('doua du croissant : formulation du Tirmidhi 3451 (« باليمن »), sans « هلال رشد وخير »', [/باليمن/.test(plain(T.occMonth[0].t)), /هلال رشد/.test(plain(T.occMonth[0].t)), T.occMonth[0].r], [true, false, 'رواه الترمذي (3451)']);
+// introductions des doua : « مما دعا به » (il l'a dite), « مما علّمه » (il l'a enseignée), « قال … في سيد الاستغفار » ; aucune pour le Coran
+const DUA_LEADS = ['مما دعا به رسول الله ﷺ', 'مما علّمه رسول الله ﷺ من الدعاء', 'قال رسول الله ﷺ في سيد الاستغفار'];
+eq('doua prophétiques : chacune a une introduction parmi les 3 formules admises', T.dua.filter(x => !x.q && !DUA_LEADS.includes(x.lead)).map(x => x.r), []);
+eq('doua coraniques : aucune introduction (le verset reste tel quel)', T.dua.filter(x => x.q && x.lead).length, 0);
+eq('versets : aucune introduction, pas de basmala en tête', [T.morning.filter(x => x.lead).length, T.morning.filter(x => /^بسم الله الرحمن الرحيم/.test(plain(x.t))).length], [0, 0]);
 console.log(fails ? `\n${fails} échec(s)` : '\nTous les tests réussis');
 process.exit(fails ? 1 : 0);
