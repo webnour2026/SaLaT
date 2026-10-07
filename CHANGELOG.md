@@ -3,6 +3,16 @@
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les dates précises ne sont consignées qu'à partir de la 2.12.16 ;
 les versions antérieures portent seulement le mois. ⚠ = nécessite de reconstruire l'AAB (module Android).
 
+## [2.12.21] – 2026-10-07
+### Modifié
+- Écran Cartes : la rangée « قريبًا » ne passe plus en tête dès le mercredi à cause de la Joumou'a (hebdomadaire). Pour la Joumou'a elle passe devant le jeudi et le vendredi ; pour les autres occasions (Achoura, début de mois, Ramadan, Aïds…), jusqu'à 2 jours avant.
+
+## [2.12.20] – 2026-10-06
+### Modifié
+- Politique de confidentialité réécrite (français, arabe, anglais), alignée sur le code : AlAdhan et Nominatim (ce qui leur est envoyé, quand), téléchargements depuis GitHub (site, calendrier des Habous, horaires officiels, adhans, API GitHub, relecture de l'heure par le module Android), Google Fonts, permissions Android, partage des cartes, enfants. Mise à jour : 6 octobre 2026.
+- Lien « Politique de confidentialité » dans Réglages → À propos ; page ajoutée au pré-cache hors ligne.
+- Captures d'écran du manifeste (PWA) refaites avec le nouveau design : horaires, Qibla, calendrier, cartes, réglages, version large.
+
 ## [2.12.19] – 2026-10-06
 ### Ajouté
 - Cartes d'occasion (rangée « قريبًا ») : introduction en tête des hadiths et doua, comme pour les hadiths et les doua : « قال رسول الله ﷺ » (Joumou'a ×2, Arafa, Achoura) et « مما علّمه رسول الله ﷺ من الدعاء » (Nuit du Destin). Les versets restent sans introduction.

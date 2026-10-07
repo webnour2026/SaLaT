@@ -65,31 +65,45 @@
   "screenshots": [
     {
       "src": "screenshots/mobile-horaires.png",
-      "sizes": "1080x1920",
+      "sizes": "1080x2220",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Horaires du jour et compte à rebours"
+      "label": "Horaires de prière et compte à rebours"
     },
     {
       "src": "screenshots/mobile-qibla.png",
-      "sizes": "1080x1920",
+      "sizes": "1080x2220",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Direction de la Qibla"
+      "label": "Qibla à la boussole"
+    },
+    {
+      "src": "screenshots/mobile-calendrier.png",
+      "sizes": "1080x2220",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Calendrier hégirien"
+    },
+    {
+      "src": "screenshots/mobile-cartes.png",
+      "sizes": "1080x2220",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Cartes à partager"
     },
     {
       "src": "screenshots/mobile-reglages.png",
-      "sizes": "1080x1920",
+      "sizes": "1080x2220",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Réglages en mode sombre"
+      "label": "Réglages de l’Adhan"
     },
     {
       "src": "screenshots/large-horaires.png",
       "sizes": "1280x800",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Horaires sur grand écran"
+      "label": "Horaires de prière"
     }
   ],
   "shortcuts": [

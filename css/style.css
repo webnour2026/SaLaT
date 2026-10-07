@@ -732,3 +732,4 @@ body.fit .cal-events::-webkit-scrollbar { display: none; }
 .sun-card .btn.wide, .manual-north .btn { display: flex; width: 100%; max-width: 100%; box-sizing: border-box; margin: 8px 0 4px; }
 .manual-north .mn-btns { display: grid; grid-template-columns: 1fr; gap: 8px; margin: 8px 0 4px; }
 .manual-north .mn-btns .btn { margin: 0; }
+.spage .note a[href="confidentialite.html"] { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }   /* cible tactile ≥ 44 px */

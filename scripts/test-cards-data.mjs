@@ -59,5 +59,7 @@ eq('versets : aucune introduction, pas de basmala en tête', [T.morning.filter(x
 const occ = Object.entries(T).filter(([k]) => !['morning', 'hadith', 'dua'].includes(k));
 eq('cartes d\'occasion : tout hadith ou doua porte une introduction (قال / مما علّمه / كان … قال)', occ.flatMap(([k, l]) => l.filter(x => !x.q && !x.lead).map(x => `${k}: ${x.r}`)), []);
 eq('cartes d\'occasion : aucun verset ne porte d\'introduction', occ.flatMap(([k, l]) => l.filter(x => x.q && x.lead).map(x => `${k}: ${x.r}`)), []);
+// ordre des rangées (écran Cartes) : « قريبًا » devant seulement si l'occasion est proche ; la Joumou'a (hebdomadaire) seulement la veille et le jour même
+eq('priorité de « قريبًا » : 2 jours pour une occasion, 1 jour pour la Joumou\'a', /sp\.key === 'jumuah' \? 1 : 2\) \* DAY_MS/.test(src), true);
 console.log(fails ? `\n${fails} échec(s)` : '\nTous les tests réussis');
 process.exit(fails ? 1 : 0);

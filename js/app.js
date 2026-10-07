@@ -1829,9 +1829,10 @@ function renderCards() {
     all.addEventListener('click', () => openPickAll(sp)); row.append(all);
     blocks.daily.push(sec);
   }
-  // les plus utilisées d'abord ; une occasion imminente (aujourd'hui, demain, après-demain) passe devant
+  // les plus utilisées d'abord ; une occasion imminente passe devant : aujourd'hui, demain ou après-demain pour une vraie occasion,
+  // aujourd'hui ou demain seulement pour la Joumou'a (hebdomadaire : sinon « قريبًا » serait en tête trois jours sur sept)
   const today = civilNoon(now(), tz());
-  const urgent = soon.some(sp => sp.key !== 'imsakiya' && sp.noon - today <= 2 * DAY_MS);
+  const urgent = soon.some(sp => sp.key !== 'imsakiya' && sp.noon - today <= (sp.key === 'jumuah' ? 1 : 2) * DAY_MS);
   const ordered = urgent ? [blocks.soon, ...blocks.daily] : [...blocks.daily, blocks.soon];
   body.append(...ordered.filter(Boolean));
   $('#cardFrom').value = S().cardFrom || '';
@@ -2678,7 +2679,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.12.19';
+export const APP_VERSION = '2.12.21';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

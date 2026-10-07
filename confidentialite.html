@@ -5,45 +5,168 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SaLaTi – Politique de confidentialité</title>
 <style>
-  body{font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;max-width:760px;margin:0 auto;padding:24px 18px;color:#17222B;background:#EDF1F3}
-  h1{color:#0E6B58;font-size:1.6rem;margin-top:0} h2{font-size:1.15rem;margin-top:28px}
-  section{background:#fff;border-radius:12px;padding:6px 18px 12px;margin:18px 0}
-  [dir=rtl]{text-align:right} .muted{color:#5A6B78;font-size:.9rem}
+  body{font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;max-width:780px;margin:0 auto;padding:24px 18px;color:#17222B;background:#EDF1F3}
+  h1{color:#0E6B58;font-size:1.6rem;margin:0 0 4px} h2{font-size:1.1rem;margin:24px 0 6px;color:#0B5B4B}
+  section{background:#fff;border-radius:12px;padding:6px 18px 14px;margin:18px 0}
+  ul{padding-inline-start:1.2em;margin:6px 0} li{margin:4px 0}
+  [dir=rtl]{text-align:right} .muted{color:#5A6B78;font-size:.9rem;margin:0 0 6px}
+  nav{margin:10px 0 0;font-size:.95rem} nav a{margin-inline-end:14px;color:#0E6B58;font-weight:600}
+  a{color:#0E6B58} code{background:#EDF1F3;border-radius:4px;padding:1px 5px;font-size:.92em}
 </style>
 </head>
 <body>
-<h1>SaLaTi – Politique de confidentialité</h1>
-<p class="muted">Dernière mise à jour : 26 septembre 2026 · Éditeur : Noureddine BELCAID · Contact : webnour@gmail.com</p>
+<h1>SaLaTi – صلاتي</h1>
+<p class="muted">Dernière mise à jour : 6 octobre 2026 · Éditeur : Noureddine BELCAID · Contact : <a href="mailto:webnour@gmail.com">webnour@gmail.com</a></p>
+<nav><a href="#fr">Français</a><a href="#ar">العربية</a><a href="#en">English</a></nav>
 
-<section>
-<h2>En bref</h2>
-<p>SaLaTi est une application gratuite, <strong>sans publicité, sans compte utilisateur et sans suivi</strong>. Nous ne vendons ni ne conservons aucune donnée personnelle sur un serveur.</p>
+<!-- ===================== FRANÇAIS ===================== -->
+<section id="fr" lang="fr">
+<h2>Politique de confidentialité</h2>
+<p>SaLaTi est une application gratuite, <strong>sans publicité, sans compte utilisateur, sans outil de suivi ni d’analyse</strong>. Je n’ai aucun serveur : je ne reçois et ne conserve aucune donnée personnelle vous concernant. Quelques services tiers reçoivent des informations techniques quand l’application fonctionne ; tout est détaillé ci-dessous.</p>
+
+<h2>Ce qui reste sur votre téléphone</h2>
+<p>Vos réglages (ville, méthode de calcul, langue, Adhan choisi, rappels, nom d’expéditeur des cartes, bip de la boussole…), les horaires du mois en mémoire et les fichiers audio que vous importez restent <strong>uniquement sur votre appareil</strong>. Ils sont effacés si vous désinstallez l’application ou videz ses données.</p>
 
 <h2>Position (localisation)</h2>
-<p>Si vous l’autorisez, l’application lit la position de votre téléphone pour calculer les horaires de prière et la direction de la Qibla. Vous pouvez aussi refuser et choisir une ville dans une liste.</p>
-<p>Pour obtenir les horaires, les coordonnées (latitude et longitude) sont envoyées de façon chiffrée (HTTPS) au service public <strong>AlAdhan</strong> (api.aladhan.com). La recherche d’une ville par son nom utilise <strong>OpenStreetMap Nominatim</strong>. Ces services reçoivent uniquement les informations nécessaires à la réponse ; nous ne les enregistrons pas.</p>
+<ul>
+<li>Si vous l’autorisez, l’application lit la position du téléphone pour calculer les horaires de prière et la direction de la Qibla. Vous pouvez refuser et choisir une ville dans une liste.</li>
+<li>La fonction « Qibla en marchant » lit la position en continu pendant que vous marchez (3 minutes au plus). Elle sert uniquement à calculer votre sens de déplacement sur le téléphone : rien n’est enregistré ni envoyé.</li>
+<li><strong>AlAdhan</strong> (api.aladhan.com) reçoit, par connexion chiffrée (HTTPS), la latitude et la longitude (6 décimales), l’année, le mois, la méthode et l’école de calcul, quand les horaires gardés en mémoire ont plus de 7 jours ou quand vous changez de ville ou de méthode. Cela donne le fuseau horaire et, hors du Maroc, les horaires. Au Maroc, les horaires sont calculés sur le téléphone avec les horaires officiels des localités.</li>
+<li><strong>OpenStreetMap Nominatim</strong> (nominatim.openstreetmap.org) reçoit les coordonnées pour retrouver le nom de votre ville, ou le texte que vous tapez quand vous cherchez une ville.</li>
+</ul>
 
-<h2>Données gardées sur votre téléphone</h2>
-<p>Vos réglages (ville, méthode de calcul, langue, Adhan choisi…), les horaires du mois et les fichiers audio que vous importez restent <strong>uniquement sur votre appareil</strong>. Ils sont effacés si vous désinstallez l’application ou videz ses données.</p>
+<h2>Téléchargements depuis GitHub</h2>
+<p>L’application est hébergée sur GitHub Pages (<code>webnour2026.github.io</code>). Elle y télécharge :</p>
+<ul>
+<li>ses propres fichiers (pages, scripts, images) et leurs mises à jour ;</li>
+<li>le calendrier hégirien du ministère des Habous (début des mois) et les horaires officiels des localités ;</li>
+<li>les fichiers audio d’Adhan que vous choisissez (les sons d’Adhan sont aussi inclus dans l’application Android) ;</li>
+<li>la liste des Adhans disponibles, demandée à l’API de GitHub (<code>api.github.com</code>).</li>
+</ul>
+<p>Le module Android relit ce calendrier le soir où le début d’un mois est annoncé, et lit l’en-tête de date du site pour vérifier l’heure du téléphone, afin que l’Adhan sonne à la bonne heure. <strong>Aucune de ces requêtes ne contient de donnée vous concernant.</strong> Comme tout serveur web, GitHub (Microsoft) voit l’adresse IP et le type d’appareil de la requête, selon sa propre politique de confidentialité.</p>
 
-<h2>Capteurs et notifications</h2>
-<p>La boussole utilise les capteurs d’orientation du téléphone, uniquement sur l’appareil. Les notifications (heure de prière, jours blancs) sont créées localement ; aucune donnée n’est envoyée pour cela.</p>
+<h2>Polices (Google Fonts)</h2>
+<p>Les polices d’écriture (IBM Plex Sans Arabic, Reem Kufi, Amiri) sont chargées depuis Google Fonts : Google reçoit l’adresse IP et le navigateur, comme pour tout site qui les utilise. La police des versets est incluse dans l’application.</p>
+
+<h2>Capteurs, notifications et alarmes</h2>
+<ul>
+<li>La boussole utilise les capteurs d’orientation du téléphone, uniquement sur l’appareil. Le bip et la vibration d’alignement sont produits localement.</li>
+<li>Les notifications et alarmes (Adhan, rappels, jours blancs, début de mois) sont créées sur le téléphone ; aucune donnée n’est envoyée pour cela.</li>
+<li>Autorisations Android utilisées : notifications ; alarmes exactes (pour que l’Adhan sonne à l’heure) ; démarrage du téléphone (pour reprogrammer les alarmes après un redémarrage) ; vibration ; accès à Internet (téléchargements ci-dessus). L’autorisation de position est demandée par l’application ou par Chrome, selon votre téléphone.</li>
+<li>L’application n’utilise ni caméra, ni microphone, ni contacts, ni photos, ni identifiant publicitaire.</li>
+</ul>
+
+<h2>Partage de cartes</h2>
+<p>Les cartes (versets, douas, hadiths) sont dessinées sur votre téléphone. Quand vous partagez, c’est l’application que vous choisissez (WhatsApp, etc.) qui les reçoit. Votre nom n’est ajouté que si vous cochez « Envoyer avec le nom ». Je ne reçois rien.</p>
+
+<h2>Vos choix</h2>
+<p>Refuser la position et choisir une ville ; effacer les horaires enregistrés dans Réglages → Avancé ; vider les données ou désinstaller l’application. Comme je ne conserve aucune donnée, il n’y a rien à supprimer chez moi. Pour les services tiers, voir leurs politiques : <a href="https://aladhan.com/">AlAdhan</a>, <a href="https://osmfoundation.org/wiki/Privacy_Policy">OpenStreetMap</a>, <a href="https://docs.github.com/fr/site-policy/privacy-policies/github-general-privacy-statement">GitHub</a>, <a href="https://developers.google.com/fonts/faq/privacy">Google Fonts</a>.</p>
 
 <h2>Enfants</h2>
-<p>L’application ne collecte pas sciemment de données personnelles d’enfants.</p>
+<p>L’application n’est pas destinée aux enfants de moins de 13 ans et ne collecte sciemment aucune donnée personnelle d’enfants.</p>
 
-<h2>Contact</h2>
-<p>Pour toute question : <a href="mailto:webnour@gmail.com">webnour@gmail.com</a></p>
+<h2>Modifications</h2>
+<p>Si cette politique change, la date en haut de page est mise à jour, avec la liste des changements dans le <code>CHANGELOG.md</code> du projet.</p>
 </section>
 
-<section dir="rtl" lang="ar">
-<h2>سياسة الخصوصية (ملخص)</h2>
-<p>تطبيق «صلاتي» مجاني، بدون إعلانات وبدون حساب وبدون تتبّع. عند السماح بتحديد الموقع، تُرسَل الإحداثيات بشكل مشفّر إلى خدمة AlAdhan لحساب مواقيت الصلاة فقط، ولا نحتفظ بها. يمكنك بدلًا من ذلك اختيار مدينتك يدويًا. الإعدادات والأذانات المستوردة تبقى على هاتفك فقط. للتواصل: webnour@gmail.com</p>
+<!-- ===================== العربية ===================== -->
+<section id="ar" dir="rtl" lang="ar">
+<h2>سياسة الخصوصية</h2>
+<p>«صلاتي» تطبيق مجاني، <strong>بلا إعلانات ولا حساب مستخدم ولا أدوات تتبّع أو تحليل</strong>. ليس لدي أي خادم: لا أتلقى ولا أحتفظ بأي بيانات شخصية عنك. تتلقى بعض الخدمات الخارجية معلومات تقنية أثناء عمل التطبيق، وتفاصيلها كلها أدناه.</p>
+
+<h2>ما يبقى على هاتفك</h2>
+<p>إعداداتك (المدينة وطريقة الحساب واللغة والأذان المختار والتذكيرات واسم المرسل على البطاقات وصوت البوصلة…) ومواقيت الشهر المحفوظة وملفات الصوت التي تستوردها <strong>تبقى على جهازك فقط</strong>، وتُمحى بحذف التطبيق أو مسح بياناته.</p>
+
+<h2>الموقع</h2>
+<ul>
+<li>إن سمحتَ بذلك، يقرأ التطبيق موقع الهاتف لحساب مواقيت الصلاة واتجاه القبلة. ويمكنك الرفض واختيار مدينة من القائمة.</li>
+<li>ميزة «تحديد القبلة بالمشي» تقرأ الموقع باستمرار أثناء مشيك (ثلاث دقائق على الأكثر) لحساب اتجاه سيرك على الهاتف فقط: لا يُحفظ شيء ولا يُرسل.</li>
+<li>خدمة <strong>AlAdhan</strong> (api.aladhan.com) تتلقى بربط مشفّر (HTTPS) خط العرض وخط الطول (6 منازل عشرية) والسنة والشهر وطريقة الحساب والمذهب، حين تتجاوز المواقيت المحفوظة 7 أيام أو حين تغيّر المدينة أو الطريقة. وهي تعطي المنطقة الزمنية، وخارج المغرب المواقيت. أما في المغرب فتُحسب المواقيت على الهاتف مع المواقيت الرسمية للمدن.</li>
+<li>خدمة <strong>OpenStreetMap Nominatim</strong> (nominatim.openstreetmap.org) تتلقى الإحداثيات لمعرفة اسم مدينتك، أو النص الذي تكتبه حين تبحث عن مدينة.</li>
+</ul>
+
+<h2>التنزيلات من GitHub</h2>
+<p>التطبيق مستضاف على GitHub Pages (<code>webnour2026.github.io</code>) وينزّل منه:</p>
+<ul>
+<li>ملفاته (الصفحات والبرامج والصور) وتحديثاتها؛</li>
+<li>التقويم الهجري لوزارة الأوقاف (بدايات الشهور) والمواقيت الرسمية للمدن؛</li>
+<li>ملفات الأذان الصوتية التي تختارها (وأصوات الأذان مضمّنة أيضًا في تطبيق أندرويد)؛</li>
+<li>قائمة الأذانات المتاحة، يطلبها من واجهة GitHub (<code>api.github.com</code>).</li>
+</ul>
+<p>تعيد وحدة أندرويد قراءة هذا التقويم مساء إعلان بداية الشهر، وتقرأ ترويسة التاريخ في الموقع للتحقق من ساعة الهاتف، حتى يرفع الأذان في وقته. <strong>لا يحتوي أي من هذه الطلبات على بيانات عنك.</strong> وكأي خادم ويب، يرى GitHub (مايكروسوفت) عنوان IP ونوع الجهاز وفق سياسته الخاصة.</p>
+
+<h2>الخطوط (Google Fonts)</h2>
+<p>تُحمَّل خطوط الكتابة (IBM Plex Sans Arabic وReem Kufi وAmiri) من Google Fonts، فتتلقى Google عنوان IP والمتصفح كما في أي موقع يستعملها. أما خط الآيات فمضمّن في التطبيق.</p>
+
+<h2>المستشعرات والإشعارات والمنبّهات</h2>
+<ul>
+<li>تستعمل البوصلة مستشعرات اتجاه الهاتف، على الجهاز فقط. وصوت المحاذاة والاهتزاز يصدران محليًا.</li>
+<li>تُنشأ الإشعارات والمنبّهات (الأذان والتذكيرات والأيام البيض وبداية الشهر) على الهاتف، ولا تُرسل بيانات من أجلها.</li>
+<li>أذونات أندرويد المستعملة: الإشعارات؛ المنبّهات الدقيقة (ليرفع الأذان في وقته)؛ تشغيل الهاتف (لإعادة برمجة المنبّهات بعد إعادة التشغيل)؛ الاهتزاز؛ الوصول إلى الإنترنت (للتنزيلات أعلاه). ويُطلب إذن الموقع من التطبيق أو من Chrome بحسب هاتفك.</li>
+<li>لا يستعمل التطبيق الكاميرا ولا الميكروفون ولا جهات الاتصال ولا الصور ولا معرّف الإعلانات.</li>
+</ul>
+
+<h2>مشاركة البطاقات</h2>
+<p>تُرسم البطاقات (آيات وأدعية وأحاديث) على هاتفك. وعند المشاركة يتلقاها التطبيق الذي تختاره (واتساب وغيره). ولا يُضاف اسمك إلا إذا فعّلتَ «إرسال مع الاسم». ولا أتلقى شيئًا.</p>
+
+<h2>خياراتك</h2>
+<p>يمكنك رفض الموقع واختيار مدينة؛ ومسح المواقيت المحفوظة من الإعدادات ← متقدّم؛ أو مسح البيانات أو حذف التطبيق. وبما أنني لا أحتفظ بأي بيانات فليس عندي ما يُحذف. وللاطلاع على سياسات الخدمات الخارجية: <a href="https://aladhan.com/">AlAdhan</a> و<a href="https://osmfoundation.org/wiki/Privacy_Policy">OpenStreetMap</a> و<a href="https://docs.github.com/ar/site-policy/privacy-policies/github-general-privacy-statement">GitHub</a> و<a href="https://developers.google.com/fonts/faq/privacy">Google Fonts</a>.</p>
+
+<h2>الأطفال</h2>
+<p>التطبيق غير موجّه للأطفال دون 13 سنة، ولا يجمع عمدًا أي بيانات شخصية للأطفال.</p>
+
+<h2>التعديلات</h2>
+<p>إذا تغيّرت هذه السياسة يُحدَّث التاريخ في أعلى الصفحة، وتُذكر التغييرات في ملف <code>CHANGELOG.md</code> للمشروع.</p>
 </section>
 
-<section lang="en">
-<h2>Privacy policy (summary)</h2>
-<p>SaLaTi is free, with no ads, no account and no tracking. If you allow location access, your coordinates are sent over HTTPS to the AlAdhan service only to compute prayer times, and are not stored by us. You may instead pick your city manually. Settings and imported Adhan files stay on your device. Contact: webnour@gmail.com</p>
+<!-- ===================== ENGLISH ===================== -->
+<section id="en" lang="en">
+<h2>Privacy policy</h2>
+<p>SaLaTi is free, with <strong>no ads, no user account, and no tracking or analytics tools</strong>. I run no server: I neither receive nor keep any personal data about you. A few third-party services receive technical information while the app works; everything is detailed below.</p>
+
+<h2>What stays on your phone</h2>
+<p>Your settings (city, calculation method, language, chosen Adhan, reminders, sender name for cards, compass beep…), the cached prayer times and any audio files you import stay <strong>only on your device</strong>. They are erased if you uninstall the app or clear its data.</p>
+
+<h2>Location</h2>
+<ul>
+<li>If you allow it, the app reads your phone’s position to compute prayer times and the Qibla direction. You can refuse and pick a city from a list.</li>
+<li>“Find the Qibla by walking” reads your position continuously while you walk (3 minutes at most) only to work out your walking direction on the phone: nothing is saved or sent.</li>
+<li><strong>AlAdhan</strong> (api.aladhan.com) receives, over HTTPS, your latitude and longitude (6 decimals), the year, month, calculation method and school, when the cached times are older than 7 days or when you change city or method. It provides the time zone and, outside Morocco, the prayer times. In Morocco, times are computed on the phone using the official times of each locality.</li>
+<li><strong>OpenStreetMap Nominatim</strong> (nominatim.openstreetmap.org) receives coordinates to find your city name, or the text you type when searching for a city.</li>
+</ul>
+
+<h2>Downloads from GitHub</h2>
+<p>The app is hosted on GitHub Pages (<code>webnour2026.github.io</code>). It downloads from there:</p>
+<ul>
+<li>its own files (pages, scripts, images) and their updates;</li>
+<li>the Hijri calendar of Morocco’s Ministry of Habous (month starts) and the official times of each locality;</li>
+<li>the Adhan audio files you choose (Adhan sounds are also bundled in the Android app);</li>
+<li>the list of available Adhans, requested from GitHub’s API (<code>api.github.com</code>).</li>
+</ul>
+<p>The Android module re-reads this calendar on the evening a month start is announced, and reads the site’s date header to check the phone’s clock, so the Adhan rings on time. <strong>None of these requests contains any data about you.</strong> Like any web server, GitHub (Microsoft) sees the request’s IP address and device type, under its own privacy policy.</p>
+
+<h2>Fonts (Google Fonts)</h2>
+<p>The text fonts (IBM Plex Sans Arabic, Reem Kufi, Amiri) are loaded from Google Fonts: Google receives the IP address and browser, as for any site that uses them. The Quran font is bundled in the app.</p>
+
+<h2>Sensors, notifications and alarms</h2>
+<ul>
+<li>The compass uses the phone’s orientation sensors, on the device only. The alignment beep and vibration are produced locally.</li>
+<li>Notifications and alarms (Adhan, reminders, white days, month start) are created on the phone; no data is sent for them.</li>
+<li>Android permissions used: notifications; exact alarms (so the Adhan rings on time); phone start-up (to reschedule alarms after a reboot); vibration; Internet access (the downloads above). Location permission is requested by the app or by Chrome, depending on your phone.</li>
+<li>The app uses no camera, microphone, contacts, photos or advertising ID.</li>
+</ul>
+
+<h2>Sharing cards</h2>
+<p>Cards (verses, supplications, hadiths) are drawn on your phone. When you share, the app you pick (WhatsApp, etc.) receives them. Your name is added only if you tick “Send with my name”. I receive nothing.</p>
+
+<h2>Your choices</h2>
+<p>Refuse location and pick a city; clear saved times in Settings → Advanced; clear the app’s data or uninstall it. Since I keep no data, there is nothing to delete on my side. For third-party services see their policies: <a href="https://aladhan.com/">AlAdhan</a>, <a href="https://osmfoundation.org/wiki/Privacy_Policy">OpenStreetMap</a>, <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub</a>, <a href="https://developers.google.com/fonts/faq/privacy">Google Fonts</a>.</p>
+
+<h2>Children</h2>
+<p>The app is not aimed at children under 13 and does not knowingly collect any personal data from children.</p>
+
+<h2>Changes</h2>
+<p>If this policy changes, the date at the top is updated, with the changes listed in the project’s <code>CHANGELOG.md</code>.</p>
 </section>
 </body>
 </html>
