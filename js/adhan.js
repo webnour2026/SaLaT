@@ -1,11 +1,10 @@
 // Adhan (audio), vibration et notifications.
 // Sons disponibles. Tous sont téléchargés automatiquement par le workflow GitHub
 // « Télécharger les Adhans » (Freesound + Wikimedia Commons, licences libres vérifiées).
-export const DEFAULT_ADHAN = 'adhan-moroccan';   // Adhan marocain par défaut
+export const DEFAULT_ADHAN = 'anas_tazi';   // « مغربي، أنس التازي » par défaut (accord écrit d'Anas Tazi)
 // Adhans connus (libellés traduits). Les autres fichiers déposés dans audio/adhan/ sont ajoutés
 // automatiquement grâce à audio/adhan/list.json (généré par les workflows GitHub).
 export const ADHANS = [
-  { id: 'adhan-moroccan', labelKey: 'adhanMoroccan', file: 'audio/adhan/adhan-moroccan.mp3' },
   { id: 'anas_tazi', labelKey: 'adhanAnasTazi', file: 'audio/adhan/anas_tazi.mp3' },   // Anas Tazi, avec son accord écrit
   { id: 'aaqib',   labelKey: 'adhanAaqib',   file: 'audio/adhan/aaqib.mp3' },
   { id: 'madinah', labelKey: 'adhanMadinah', file: 'audio/adhan/madinah.mp3' },
@@ -18,8 +17,8 @@ export const ADHANS = [
   { id: 'none',    labelKey: 'noneAdhan' },
 ];
 // anciens Adhans retirés (trop de bruit ou droits pas assez clairs)
-export const RETIRED = ['makkah', 'makkah2', 'casablanca', 'sham', 'adhan2', 'morocco', 'adhan-moroccan2'];   // morocco (Atlas) et adhan-moroccan2 : qualité insuffisante
-const FALLBACK_ORDER = ['adhan-moroccan', 'aaqib', 'madinah', 'adhan1'];
+export const RETIRED = ['makkah', 'makkah2', 'casablanca', 'sham', 'adhan2', 'morocco', 'adhan-moroccan2', 'adhan-moroccan'];   // adhan-moroccan : remplacé par Anas Tazi (droits connus)   // morocco (Atlas) et adhan-moroccan2 : qualité insuffisante
+const FALLBACK_ORDER = ['anas_tazi', 'aaqib', 'madinah', 'adhan1'];
 let siteList = null;
 
 const AUDIO_RE = /\.(mp3|m4a|aac|ogg|oga|opus|wav)$/i;

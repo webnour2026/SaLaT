@@ -160,7 +160,7 @@ jobs:
           write_list(OUT)
           PY
           # retirés : La Mecque x2 et Hassan II (bruit), adhan2 (trop court), sham (droits pas assez clairs)
-          rm -f audio/adhan/adhan2.mp3 audio/adhan/sham.mp3 audio/adhan/makkah.mp3 audio/adhan/makkah2.mp3 audio/adhan/casablanca.mp3 audio/adhan/morocco.mp3 audio/adhan/adhan-moroccan2.mp3
+          rm -f audio/adhan/adhan2.mp3 audio/adhan/sham.mp3 audio/adhan/makkah.mp3 audio/adhan/makkah2.mp3 audio/adhan/casablanca.mp3 audio/adhan/morocco.mp3 audio/adhan/adhan-moroccan2.mp3 audio/adhan/adhan-moroccan.mp3
           python3 /tmp/adhans.py
           ls -la audio/adhan
       - name: Enregistrer dans le dépôt

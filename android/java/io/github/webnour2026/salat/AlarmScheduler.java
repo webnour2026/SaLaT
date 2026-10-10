@@ -30,7 +30,8 @@ final class AlarmScheduler {
     static final String[] KEYS = {"Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"};
     static final String EXTRA_KEY = "k", EXTRA_TYPE = "t", EXTRA_TIME = "w";
     static final int NOTIF_ADHAN = 1001, NOTIF_BEFORE = 1002, NOTIF_INFO = 1003;
-    static final String DEFAULT_ADHAN = "adhan_moroccan";   // Adhan marocain (res/raw/adhan_moroccan.mp3)
+    static final String DEFAULT_ADHAN = "anas_tazi";   // « مغربي، أنس التازي » (res/raw/anas_tazi.mp3)
+    static final String SECOND_ADHAN = "aaqib";        // secours si le son par défaut manque à l'APK
 
     static JSONObject config(Context ctx) {
         try {
@@ -228,6 +229,7 @@ final class AlarmScheduler {
     static int rawId(Context ctx, String id) {
         int r = id == null ? 0 : ctx.getResources().getIdentifier(id, "raw", ctx.getPackageName());
         if (r == 0) r = ctx.getResources().getIdentifier(DEFAULT_ADHAN, "raw", ctx.getPackageName());
+        if (r == 0) r = ctx.getResources().getIdentifier(SECOND_ADHAN, "raw", ctx.getPackageName());
         return r;
     }
 

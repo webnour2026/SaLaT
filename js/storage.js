@@ -32,8 +32,8 @@ export const DEFAULTS = {
   adhan: {
     enabled: true,
     mode: 'global',             // global | perPrayer
-    global: 'adhan-moroccan',   // Adhan marocain par défaut
-    perPrayer: { Fajr: 'adhan-moroccan', Dhuhr: 'adhan-moroccan', Asr: 'adhan-moroccan', Maghrib: 'adhan-moroccan', Isha: 'adhan-moroccan' },
+    global: 'anas_tazi',        // « مغربي، أنس التازي » par défaut
+    perPrayer: { Fajr: 'anas_tazi', Dhuhr: 'anas_tazi', Asr: 'anas_tazi', Maghrib: 'anas_tazi', Isha: 'anas_tazi' },
     volume: 0.8,
     vibrate: true,
     notifyAt: true,

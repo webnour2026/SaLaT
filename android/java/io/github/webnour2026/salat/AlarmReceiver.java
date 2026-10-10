@@ -93,6 +93,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                     sound = sound.endsWith("_court") ? AlarmScheduler.DEFAULT_ADHAN + "_court" : AlarmScheduler.DEFAULT_ADHAN;
                 }
                 if (ctx.getResources().getIdentifier(sound, "raw", ctx.getPackageName()) == 0) sound = AlarmScheduler.DEFAULT_ADHAN;
+                if (ctx.getResources().getIdentifier(sound, "raw", ctx.getPackageName()) == 0) sound = AlarmScheduler.SECOND_ADHAN;   // son par défaut absent : Aaqib
                 if (AlarmScheduler.rawId(ctx, sound) == 0) sound = null;   // aucun son intégré : notification simple
             }
         }
