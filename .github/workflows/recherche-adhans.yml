@@ -1,5 +1,5 @@
-# Recherche d'Adhans sous licence libre sur Wikimedia Commons (branche de travail, ne touche pas à l'appli).
-# Écrit recherche/adhans-commons.json : titre, licence, auteur, durée, description, lien.
+# Branche de travail : extraits à écouter des Adhans candidats (licences libres), avec mesure du bruit de fond.
+# Écrit recherche/ecoute/<id>.mp3 et recherche/ecoute/mesures.json. Ne touche pas à l'appli.
 name: Recherche Adhans
 on:
   push:
@@ -8,48 +8,45 @@ on:
 permissions:
   contents: write
 jobs:
-  search:
+  ecoute:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Interroger Commons
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
+      - name: Télécharger, convertir, mesurer
         run: |
           python3 - <<'PY'
-          import json, urllib.request, urllib.parse, re, os
+          import json, os, re, subprocess, urllib.request
           UA = 'SaLaT-recherche/1.0 (https://github.com/webnour2026/SaLaT)'
-          API = 'https://commons.wikimedia.org/w/api.php'
-          def q(params):
-              params = {**params, 'format': 'json', 'formatversion': '2'}
-              req = urllib.request.Request(API + '?' + urllib.parse.urlencode(params), headers={'User-Agent': UA})
-              return json.load(urllib.request.urlopen(req, timeout=60))
-          titles = set()
-          for term in ['ezan', 'adhan', 'azan', 'adzan', 'call to prayer', 'أذان', 'ezan istanbul', 'adhan mecca', 'adhan makkah', 'adhan medina', 'masjid al haram adhan', 'masjid an nabawi adhan', 'muezzin']:
-              for mime in ['audio', 'video']:
-                  try:
-                      r = q({'action': 'query', 'list': 'search', 'srsearch': f'{term} filemime:{mime}', 'srnamespace': 6, 'srlimit': 50})
-                      titles.update(x['title'] for x in r['query']['search'])
-                  except Exception as e: print('ERR', term, e)
-          for cat in ['Category:Adhan', 'Category:Ezan', 'Category:Audio files of adhan', 'Category:Videos of adhan', 'Category:Call to prayer']:
+          C = 'https://upload.wikimedia.org/wikipedia/commons/'
+          SRC = [
+            ('mecque-2013', C + 'a/a7/Adhan%2C_Great_Mosque_of_Mecca_-_Jan_21%2C_2013.webm', 'CC BY 3.0 — Seyfula Islam (Commons)'),
+            ('mecque-2018', C + '7/75/Time_of_Adhan%2C_Great_Mosque_of_Mecca_-_Jan_6%2C_2018_.webm', 'CC BY 3.0 — M SOHAIL Ahmad (Commons)'),
+            ('mecque-2012-maghrib', C + '6/6d/Maghrib_Adhan_at_the_Masjid_al_Haram%2C_Mecca_-_25_Feb%2C_2012.webm', 'CC BY 3.0 — 3omar Faruq (Commons)'),
+            ('istanbul', C + '3/3d/Adhan_in_Istanbul.webm', 'CC0 — Viceskeeni2 (Commons)'),
+            ('konya', C + '2/2e/Hminsec150_Konya.webm', 'CC BY 3.0 — Frans van der Vaart (Commons)'),
+            ('doha-dhuhr', 'https://archive.org/download/adhan.recordings.from.doha.qatar/Adhan_Doha_Qatar_02_Dhuhr_Adhan.mp3', 'Public Domain Mark — archive.org'),
+            ('doha-fajr', 'https://archive.org/download/adhan.recordings.from.doha.qatar/Adhan_Doha_Qatar_01_Fajr_Adhan.mp3', 'Public Domain Mark — archive.org'),
+          ]
+          os.makedirs('recherche/ecoute', exist_ok=True); res = []
+          for id_, url, lic in SRC:
               try:
-                  r = q({'action': 'query', 'list': 'categorymembers', 'cmtitle': cat, 'cmtype': 'file', 'cmlimit': 200})
-                  titles.update(x['title'] for x in r['query']['categorymembers'])
-              except Exception as e: print('ERR', cat, e)
-          titles = sorted(titles); out = []
-          for i in range(0, len(titles), 40):
-              r = q({'action': 'query', 'titles': '|'.join(titles[i:i+40]), 'prop': 'imageinfo|videoinfo', 'iiprop': 'url|mime|size|extmetadata', 'viprop': 'url|mime|size|extmetadata'})
-              for p in r['query']['pages']:
-                  info = (p.get('videoinfo') or p.get('imageinfo') or [{}])[0]
-                  m = info.get('extmetadata', {})
-                  g = lambda k: re.sub('<[^>]+>', '', str(m.get(k, {}).get('value', '')))[:300]
-                  if not str(info.get('mime', '')).startswith(('audio', 'video', 'application/ogg')): continue
-                  out.append({'title': p['title'], 'mime': info.get('mime'), 'duration': info.get('duration'), 'size': info.get('size'),
-                              'license': g('LicenseShortName'), 'artist': g('Artist'), 'desc': g('ImageDescription'), 'date': g('DateTimeOriginal'),
-                              'url': info.get('descriptionurl'), 'file': info.get('url')})
-          os.makedirs('recherche', exist_ok=True)
-          json.dump(out, open('recherche/adhans-commons.json', 'w'), ensure_ascii=False, indent=1)
-          print(len(out), 'fichiers')
+                  raw = f'/tmp/{id_}.src'
+                  with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': UA}), timeout=180) as r: open(raw, 'wb').write(r.read())
+                  out = f'recherche/ecoute/{id_}.mp3'
+                  subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', raw, '-vn', '-ac', '1', '-b:a', '96k', out], check=True)
+                  # niveau de la voix (95e centile) et du fond (10e centile) par tranches de 0,5 s
+                  st = subprocess.run(['ffmpeg', '-i', out, '-af', 'astats=metadata=1:reset=22050,ametadata=print:key=lavfi.astats.Overall.RMS_level', '-f', 'null', '-'], capture_output=True, text=True).stderr
+                  lv = sorted(float(x) for x in re.findall(r'RMS_level=(-?[\d.]+)', st) if float(x) > -120)
+                  dur = float(re.search(r'Duration: (\d+):(\d+):([\d.]+)', subprocess.run(['ffmpeg', '-i', out], capture_output=True, text=True).stderr).groups()[2]) if lv else 0
+                  p = lambda q: round(lv[int(len(lv) * q)], 1) if lv else None
+                  res.append({'id': id_, 'license': lic, 'source': url, 'voice_db': p(.95), 'floor_db': p(.10), 'contrast_db': round(p(.95) - p(.10), 1) if lv else None, 'seconds': round(len(lv) * .5)})
+              except Exception as e:
+                  res.append({'id': id_, 'license': lic, 'source': url, 'error': str(e)})
+          json.dump(res, open('recherche/ecoute/mesures.json', 'w'), ensure_ascii=False, indent=1)
+          print(json.dumps(res, indent=1))
           PY
-      - name: Publier le résultat sur la branche
+      - name: Publier
         run: |
           git config user.name github-actions; git config user.email github-actions@users.noreply.github.com
-          git add recherche && git commit -m "Recherche Adhans : résultats Commons" && git push || echo rien
+          git add recherche && git commit -m "Recherche Adhans : extraits à écouter" && git push || echo rien
