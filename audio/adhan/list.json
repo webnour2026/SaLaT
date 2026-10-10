@@ -28,5 +28,10 @@
   "id": "madinah",
   "file": "audio/adhan/madinah.mp3",
   "label": "Madinah"
+ },
+ {
+  "id": "sirajul",
+  "file": "audio/adhan/sirajul.mp3",
+  "label": "Sirajul"
  }
 ]
