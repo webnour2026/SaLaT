@@ -397,6 +397,7 @@ function clockWarnDismissed(off) {
   try { const v = JSON.parse(localStorage.getItem(CW_KEY) || 'null'); return !!v && Date.now() - v.at < 864e5 && Math.abs(v.off - off) < 300000; } catch { return false; }
 }
 function renderCta() {
+  renderUpdate();
   const cw = $('#clockWarn');
   if (cw) {                                              // téléphone déréglé (≥ 1 min) : la cause n°1 d'un Adhan décalé
     const off = getOffset(); cw.hidden = Math.abs(off) < 60000 || clockWarnDismissed(off);
@@ -560,6 +561,20 @@ function mqMode(tNow = now()) {
   return m;
 }
 const nativeMqCapable = () => isTwa() && localStorage.getItem('priere.nativeMq') === '1';
+// Version du module Android installé (paramètre « native » de l'adresse de démarrage de l'appli Play Store)
+const NATIVE_LATEST = 4;                                    // 4 = module 2.14 : rappels du croissant autonomes
+const STORE_URL = 'https://play.google.com/store/apps/details?id=io.github.webnour2026.salat';
+const nativeLevel = () => Number(localStorage.getItem('priere.nativeLvl') || 0);
+const UPD_KEY = 'priere.updDismiss';
+function renderUpdate() {
+  const box = $('#updBanner'); if (!box) return;
+  let until = 0; try { until = Number(localStorage.getItem(UPD_KEY) || 0); } catch {}
+  box.hidden = !(isTwa() && nativeLevel() > 0 && nativeLevel() < NATIVE_LATEST && Date.now() > until);
+}
+function openPlay() {
+  // fiche Google Play dans l'appli Play Store (sinon dans le navigateur)
+  location.href = `intent://details?id=io.github.webnour2026.salat#Intent;scheme=market;package=com.android.vending;S.browser_fallback_url=${encodeURIComponent(STORE_URL)};end`;
+}
 const mqName = (key, ts) => prayerLabel(key, dateKeyInTz(ts, tz()));
 const shortHMS = ms => formatHMS(Math.max(0, ms)).replace(/^00:/, '');
 
@@ -2114,9 +2129,11 @@ function detectTwa() {
   const n = new URLSearchParams(location.search).get('native');
   if (n === '1') localStorage.setItem('priere.native', '1');
   if (n === '2' || n === '3') { localStorage.setItem('priere.native', '1'); localStorage.setItem('priere.nativeRem', '1'); }   // module ≥ v10 : rappels appli fermée
-  if (n === '3') localStorage.setItem('priere.nativeMq', '1');                    // module ≥ 2.13 : Mode Mosquée (sonneries coupées)
+  if (n === '4') { localStorage.setItem('priere.native', '1'); localStorage.setItem('priere.nativeRem', '1'); }
+  if (n === '3' || n === '4') localStorage.setItem('priere.nativeMq', '1');       // module ≥ 2.13 : Mode Mosquée (sonneries coupées)
   else if (n === '1' || n === '2') localStorage.removeItem('priere.nativeMq');
-  if (n === '0') { localStorage.removeItem('priere.native'); localStorage.removeItem('priere.nativeRem'); localStorage.removeItem('priere.nativeMq'); }       // retour sans module : désactivé
+  if (/^[1-9]$/.test(n || '')) localStorage.setItem('priere.nativeLvl', n);       // version du module : bandeau « mise à jour » s'il est ancien
+  if (n === '0') { localStorage.removeItem('priere.native'); localStorage.removeItem('priere.nativeRem'); localStorage.removeItem('priere.nativeMq'); localStorage.removeItem('priere.nativeLvl'); }       // retour sans module : désactivé
   if (!isTwa()) { localStorage.removeItem('priere.nativeAt'); localStorage.removeItem('priere.nativeDirty'); localStorage.removeItem('priere.nativeRem'); localStorage.removeItem('priere.nativeMq'); }
   localStorage.removeItem('priere.twa');                     // ancien indicateur (v2.5.0)
 }
@@ -2758,6 +2775,8 @@ function bind() {
   on('#sensorHelpSun', 'click', () => { $('#sensorHelpDlg').close(); showQiblaAlternatives(true); });
   on('#adhanStop', 'click', () => { stopAdhan(); hideAdhanAlert(); });
   on('#adhanSilent', 'click', () => { stopAdhan(); hideAdhanAlert(); renderSilent(); $('#silentDialog').showModal(); });
+  on('#updBtn', 'click', openPlay);
+  on('#updClose', 'click', () => { try { localStorage.setItem(UPD_KEY, String(Date.now() + 3 * 864e5)); } catch {} renderUpdate(); });   // rappel dans 3 jours
   on('#silentOpen', 'click', () => { renderSilent(); $('#silentDialog').showModal(); });
   // Mode Mosquée
   ['#mosqueBtn', '#mqBadge', '#hubMosque'].forEach(sel => on(sel, 'click', openMosque));
@@ -2827,7 +2846,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.14.0';
+export const APP_VERSION = '2.14.1';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

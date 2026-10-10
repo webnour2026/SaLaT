@@ -39,7 +39,7 @@ on:
 env:
   PACKAGE_ID: io.github.webnour2026.salat
   HOST: webnour2026.github.io
-  START_URL: /SaLaT/?source=twa&native=3   # native=3 : module avec rappels (mois, Aïds, jours blancs) + Mode Mosquée (sonneries coupées après l'Adhan)
+  START_URL: /SaLaT/?source=twa&native=4   # version du module : 3 = Mode Mosquée, 4 = rappels du croissant autonomes. À augmenter (et NATIVE_LATEST dans js/app.js) à chaque changement du module Android
   APP_NAME: SaLaTi
   SITE: https://webnour2026.github.io/SaLaT
 

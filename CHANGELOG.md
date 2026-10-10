@@ -81,6 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.14.1] – 2026-10 ⚠ nouvel AAB (version code 16)
+### Ajouté
+- Bandeau « نسخة جديدة من SaLaTi متوفرة — تحديث » quand le module Android installé est plus ancien que le dernier publié ; le bouton ouvre la fiche Google Play. Fermable (rappel 3 jours plus tard).
+- Version du module transmise par l'adresse de démarrage (`native=4`). **À chaque changement du module Android : augmenter `native=` dans le workflow Android ET `NATIVE_LATEST` dans js/app.js.**
+
 ## [2.14.0] – 2026-10 ⚠ nouvel AAB à publier (module Android)
 ### Modifié
 - Rappels du croissant (observation, « vu », « non vu », début de mois, Aïds) **autonomes** : le module Android retient le dernier début de mois officiel, lit les annonces du ministère le soir du 29 et prépare lui-même le mois suivant — même si l'appli n'est plus jamais ouverte, comme l'Adhan.

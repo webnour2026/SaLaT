@@ -32,6 +32,7 @@ icons/  audio/adhan/
 
 ## Déploiement
 Servir en HTTPS (obligatoire pour GPS, boussole, service worker). À chaque mise en ligne, incrémenter `VERSION` dans `sw.js`.
+Module Android modifié (dossier `android/`) : augmenter `native=` dans `START_URL` (`.github/workflows/android.yml`) **et** `NATIVE_LATEST` (`js/app.js`), puis publier l'AAB : les anciennes versions affichent alors le bandeau de mise à jour.
 
 ## Limites connues (navigateur)
 - Adhan et notifications fiables seulement quand l'appli est ouverte. Fermée ou en veille, le système suspend la page ; aucune API web standard ne permet de programmer une alarme garantie. Pour cela : version Android native (ou TWA + module natif).
