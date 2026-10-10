@@ -541,7 +541,7 @@ const isRamadanTs = ts => { try { return hijriOf(civilNoon(ts, tz()), S().hijriO
 function adhanEstimate(key) {
   const a = S().adhan;
   if (!a.enabled || isSilent() || adhanFor(key) === 'none') return 0;
-  return a.short || adhanFor(key) === 'beep' ? 20000 : 240000;
+  return a.short || adhanFor(key) === 'beep' ? 40000 : 240000;
 }
 function mqPrayers() {
   const out = [];
@@ -562,7 +562,7 @@ function mqMode(tNow = now()) {
 }
 const nativeMqCapable = () => isTwa() && localStorage.getItem('priere.nativeMq') === '1';
 // Version du module Android installé (paramètre « native » de l'adresse de démarrage de l'appli Play Store)
-const NATIVE_LATEST = 5;                                    // 4 = module 2.14 : rappels du croissant autonomes ; 5 = 2.15 : Adhans de Doha intégrés
+const NATIVE_LATEST = 6;                                    // 4 = module 2.14 : rappels du croissant autonomes ; 5 = 2.15 : Adhans de Doha intégrés
 const STORE_URL = 'https://play.google.com/store/apps/details?id=io.github.webnour2026.salat';
 const nativeLevel = () => Number(localStorage.getItem('priere.nativeLvl') || 0);
 const UPD_KEY = 'priere.updDismiss';
@@ -2151,8 +2151,8 @@ function detectTwa(url = location.href) {
 const rawName = id => { let n = String(id).toLowerCase().replace(/[^a-z0-9_]/g, '_'); if (/^[0-9]/.test(n)) n = 'a_' + n; return n; };
 function nativeSound(id) {
   if (id === 'none') return 'none';                                   // « Aucun » : notification sans son
-  if (id === 'beep') return 'aaqib_court';                            // bip → Adhan court
-  if (!id || String(id).startsWith('u:')) id = 'aaqib';               // Adhans importés → Adhan intégré
+  if (id === 'beep') return rawName(DEFAULT_ADHAN) + '_court';         // bip → Adhan court
+  if (!id || String(id).startsWith('u:')) id = DEFAULT_ADHAN;         // Adhans importés → Adhan intégré
   return rawName(id) + (S().adhan.short ? '_court' : '');
 }
 async function nativePayload() {
@@ -2859,7 +2859,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.15.0';
+export const APP_VERSION = '2.16.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

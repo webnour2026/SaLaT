@@ -81,6 +81,13 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.16.0] – 2026-10 ⚠ nouvel AAB (version code 18, native=6)
+### Modifié
+- « أذان مغربي » (Adhan marocain) : nouveau nom, et Adhan par défaut (nouvelles installations, secours si un son manque).
+- Adhan court : 40 s au lieu de 20 s (appli ouverte et appli fermée).
+### Retiré
+- « Atlas » (morocco) et « Adhan moroccan2 » : qualité insuffisante. Ceux qui les avaient choisis passent à l'Adhan marocain.
+
 ## [2.15.0] – 2026-10 ⚠ nouvel AAB (version code 17, native=5)
 ### Ajouté
 - Deux Adhans de Doha (Qatar, domaine public, Internet Archive) : « أذان الدوحة » et « أذان الفجر (الصلاة خير من النوم) ».

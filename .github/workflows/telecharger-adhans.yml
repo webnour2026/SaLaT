@@ -31,13 +31,11 @@ jobs:
               ('madinah',    '33937_ejaz215_call-to-prayer-from-the-prophet-s-mo.ogg',            200, None),
               ('aaqib',      'The_Adhan_-_Muslim_Call_to_Prayer_-_Aaqib_Azeez.mp3',               100, None),
               ('adhan1',     'Beautiful_adhan.ogg',                                               160, None),
-              ('morocco',    'https://cdn.freesound.org/previews/807/807484_3655844-hq.mp3',      80,  None),
               ('doha',       'https://archive.org/download/adhan.recordings.from.doha.qatar/Adhan_Doha_Qatar_02_Dhuhr_Adhan.mp3', 300, None),
               ('doha_fajr',  'https://archive.org/download/adhan.recordings.from.doha.qatar/Adhan_Doha_Qatar_01_Fajr_Adhan.mp3',  300, None),   # « الصلاة خير من النوم » : Fajr seulement
           ]
           # crédits des sources hors Commons (adresse directe)
           URL_CREDITS = {
-              'morocco':   {'author': 'Iain McCurdy (Aroumd, Haut Atlas)', 'license': 'CC BY 4.0', 'source': 'Freesound', 'url': 'https://freesound.org/people/iainmccurdy/sounds/807484/'},
               'doha':      {'author': 'Doha (Qatar), 2013-2014 — auteur non nommé', 'license': 'Public Domain Mark 1.0', 'source': 'Internet Archive', 'url': 'https://archive.org/details/adhan.recordings.from.doha.qatar'},
               'doha_fajr': {'author': 'Doha (Qatar), 2013-2014 — auteur non nommé', 'license': 'Public Domain Mark 1.0', 'source': 'Internet Archive', 'url': 'https://archive.org/details/adhan.recordings.from.doha.qatar'},
           }
@@ -144,7 +142,7 @@ jobs:
           write_list(OUT)
           PY
           # retirés : La Mecque x2 et Hassan II (bruit), adhan2 (trop court), sham (droits pas assez clairs)
-          rm -f audio/adhan/adhan2.mp3 audio/adhan/sham.mp3 audio/adhan/makkah.mp3 audio/adhan/makkah2.mp3 audio/adhan/casablanca.mp3
+          rm -f audio/adhan/adhan2.mp3 audio/adhan/sham.mp3 audio/adhan/makkah.mp3 audio/adhan/makkah2.mp3 audio/adhan/casablanca.mp3 audio/adhan/morocco.mp3 audio/adhan/adhan-moroccan2.mp3
           python3 /tmp/adhans.py
           ls -la audio/adhan
       - name: Enregistrer dans le dépôt

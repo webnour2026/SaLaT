@@ -30,7 +30,7 @@ final class AlarmScheduler {
     static final String[] KEYS = {"Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"};
     static final String EXTRA_KEY = "k", EXTRA_TYPE = "t", EXTRA_TIME = "w";
     static final int NOTIF_ADHAN = 1001, NOTIF_BEFORE = 1002, NOTIF_INFO = 1003;
-    static final String DEFAULT_ADHAN = "aaqib";
+    static final String DEFAULT_ADHAN = "adhan_moroccan";   // Adhan marocain (res/raw/adhan_moroccan.mp3)
 
     static JSONObject config(Context ctx) {
         try {

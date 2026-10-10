@@ -1,13 +1,13 @@
 // Adhan (audio), vibration et notifications.
 // Sons disponibles. Tous sont téléchargés automatiquement par le workflow GitHub
 // « Télécharger les Adhans » (Freesound + Wikimedia Commons, licences libres vérifiées).
-export const DEFAULT_ADHAN = 'aaqib';
+export const DEFAULT_ADHAN = 'adhan-moroccan';   // Adhan marocain par défaut
 // Adhans connus (libellés traduits). Les autres fichiers déposés dans audio/adhan/ sont ajoutés
 // automatiquement grâce à audio/adhan/list.json (généré par les workflows GitHub).
 export const ADHANS = [
+  { id: 'adhan-moroccan', labelKey: 'adhanMoroccan', file: 'audio/adhan/adhan-moroccan.mp3' },
   { id: 'aaqib',   labelKey: 'adhanAaqib',   file: 'audio/adhan/aaqib.mp3' },
   { id: 'madinah', labelKey: 'adhanMadinah', file: 'audio/adhan/madinah.mp3' },
-  { id: 'morocco', labelKey: 'adhanAtlas',   file: 'audio/adhan/morocco.mp3' },
   { id: 'adhan1',  labelKey: 'adhanCalm',    file: 'audio/adhan/adhan1.mp3' },
   { id: 'doha',    labelKey: 'adhanDoha',    file: 'audio/adhan/doha.mp3' },
   // « الصلاة خير من النوم » : proposé seulement pour le Fajr ; « Doha » choisi pour toutes les prières le prend au Fajr
@@ -16,8 +16,8 @@ export const ADHANS = [
   { id: 'none',    labelKey: 'noneAdhan' },
 ];
 // anciens Adhans retirés (trop de bruit ou droits pas assez clairs)
-export const RETIRED = ['makkah', 'makkah2', 'casablanca', 'sham', 'adhan2'];
-const FALLBACK_ORDER = ['aaqib', 'madinah', 'adhan1', 'morocco'];
+export const RETIRED = ['makkah', 'makkah2', 'casablanca', 'sham', 'adhan2', 'morocco', 'adhan-moroccan2'];   // morocco (Atlas) et adhan-moroccan2 : qualité insuffisante
+const FALLBACK_ORDER = ['adhan-moroccan', 'aaqib', 'madinah', 'adhan1'];
 let siteList = null;
 
 const AUDIO_RE = /\.(mp3|m4a|aac|ogg|oga|opus|wav)$/i;
@@ -264,7 +264,7 @@ export async function playAdhan(id, volume = 0.8, { title = '', ended = null, sh
     try {
       audio = await tryFile(await sourceFor(it), volume);
       audio.addEventListener('ended', () => stopAdhan(), { once: true });
-      if (short) {                                   // version courte : 20 s avec fondu de fin
+      if (short) {                                   // version courte : 40 s avec fondu de fin
         const a0 = audio, v0 = audio.volume;
         shortTimer = setTimeout(() => {
           let k = 0; const f = setInterval(() => {
@@ -272,7 +272,7 @@ export async function playAdhan(id, volume = 0.8, { title = '', ended = null, sh
             a0.volume = Math.max(0, v0 * (1 - ++k / 15));
             if (k >= 15) { clearInterval(f); stopAdhan(); }
           }, 200);
-        }, 17000);
+        }, 37000);
       }
       setupMediaSession(title || 'Adhan');
       return i === 0 ? 'played' : 'fallback';

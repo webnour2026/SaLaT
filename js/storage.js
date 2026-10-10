@@ -32,13 +32,13 @@ export const DEFAULTS = {
   adhan: {
     enabled: true,
     mode: 'global',             // global | perPrayer
-    global: 'aaqib',
-    perPrayer: { Fajr: 'aaqib', Dhuhr: 'aaqib', Asr: 'aaqib', Maghrib: 'aaqib', Isha: 'aaqib' },
+    global: 'adhan-moroccan',   // Adhan marocain par défaut
+    perPrayer: { Fajr: 'adhan-moroccan', Dhuhr: 'adhan-moroccan', Asr: 'adhan-moroccan', Maghrib: 'adhan-moroccan', Isha: 'adhan-moroccan' },
     volume: 0.8,
     vibrate: true,
     notifyAt: true,
     notifyBefore: 0,            // 0 | 5 | 10 | 15
-    short: false,               // Adhan court (20 s)
+    short: false,               // Adhan court (40 s)
     mute: {},                   // { Fajr: true, … } : cloche barrée = pas d'Adhan pour cette prière
   },
 };

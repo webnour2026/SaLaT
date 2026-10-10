@@ -39,7 +39,7 @@ on:
 env:
   PACKAGE_ID: io.github.webnour2026.salat
   HOST: webnour2026.github.io
-  START_URL: /SaLaT/?source=twa&native=5   # version du module : 3 = Mode Mosquée, 4 = rappels du croissant autonomes, 5 = Adhans de Doha intégrés. À augmenter (et NATIVE_LATEST dans js/app.js) à chaque changement du module Android
+  START_URL: /SaLaT/?source=twa&native=6   # version du module : 3 = Mode Mosquée, 4 = rappels du croissant autonomes, 5 = Adhans de Doha, 6 = Adhan marocain par défaut, Adhan court de 40 s. À augmenter (et NATIVE_LATEST dans js/app.js) à chaque changement du module Android
   APP_NAME: SaLaTi
   SITE: https://webnour2026.github.io/SaLaT
 
@@ -135,12 +135,12 @@ jobs:
           cp ../repo/android/java/io/github/webnour2026/salat/*.java $MOD/java/io/github/webnour2026/salat/
           cp ../repo/android/res/drawable/*.xml $MOD/res/drawable/
           python3 ../repo/android/patch_manifest.py app
-          # Adhans intégrés à l'APK : version complète + version courte (20 s), mono 96 kbit/s
+          # Adhans intégrés à l'APK : version complète + version courte (40 s), mono 96 kbit/s
           for f in ../repo/audio/adhan/*.mp3; do
             [ -e "$f" ] || continue
             id=$(basename "$f" .mp3 | tr 'A-Z' 'a-z' | sed 's/[^a-z0-9_]/_/g'); case "$id" in [0-9]*) id="a_$id";; esac
             ffmpeg -y -loglevel error -i "$f" -ac 1 -b:a 96k "$MOD/res/raw/$id.mp3"
-            ffmpeg -y -loglevel error -i "$f" -t 20 -af "afade=t=out:st=17:d=3" -ac 1 -b:a 96k "$MOD/res/raw/${id}_court.mp3"
+            ffmpeg -y -loglevel error -i "$f" -t 40 -af "afade=t=out:st=37:d=3" -ac 1 -b:a 96k "$MOD/res/raw/${id}_court.mp3"
           done
           ls -la $MOD/res/raw
           bubblewrap build --skipPwaValidation < /dev/null

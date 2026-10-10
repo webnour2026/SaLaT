@@ -99,9 +99,9 @@ final class MosqueMode {
         return AutoMonth.isRamadan(ctx, t);                 // au-delà des 31 jours : calendrier appris par le module
     }
 
-    /** Durée réelle du fichier de l'Adhan ; à défaut, estimation (20 s pour la version courte, 4 min sinon). */
+    /** Durée réelle du fichier de l'Adhan ; à défaut, estimation (40 s pour la version courte, 4 min sinon). */
     static long durationOf(Context ctx, String sound) {
-        long guess = sound.endsWith("_court") ? 20000L : 240000L;
+        long guess = sound.endsWith("_court") ? 40000L : 240000L;
         MediaMetadataRetriever r = new MediaMetadataRetriever();
         try {
             Uri u = AlarmScheduler.soundUri(ctx, sound);

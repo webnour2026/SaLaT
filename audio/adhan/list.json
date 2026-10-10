@@ -10,11 +10,6 @@
   "label": "Adhan moroccan"
  },
  {
-  "id": "adhan-moroccan2",
-  "file": "audio/adhan/adhan-moroccan2.mp3",
-  "label": "Adhan moroccan2"
- },
- {
   "id": "adhan1",
   "file": "audio/adhan/adhan1.mp3",
   "label": "Adhan1"
@@ -33,10 +28,5 @@
   "id": "madinah",
   "file": "audio/adhan/madinah.mp3",
   "label": "Madinah"
- },
- {
-  "id": "morocco",
-  "file": "audio/adhan/morocco.mp3",
-  "label": "Morocco"
  }
 ]
