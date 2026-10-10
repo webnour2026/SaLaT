@@ -1,0 +1,55 @@
+# Recherche d'Adhans sous licence libre sur Wikimedia Commons (branche de travail, ne touche pas à l'appli).
+# Écrit recherche/adhans-commons.json : titre, licence, auteur, durée, description, lien.
+name: Recherche Adhans
+on:
+  push:
+    branches: [recherche-adhans]
+    paths: ['.github/workflows/recherche-adhans.yml']
+permissions:
+  contents: write
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Interroger Commons
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request, urllib.parse, re, os
+          UA = 'SaLaT-recherche/1.0 (https://github.com/webnour2026/SaLaT)'
+          API = 'https://commons.wikimedia.org/w/api.php'
+          def q(params):
+              params = {**params, 'format': 'json', 'formatversion': '2'}
+              req = urllib.request.Request(API + '?' + urllib.parse.urlencode(params), headers={'User-Agent': UA})
+              return json.load(urllib.request.urlopen(req, timeout=60))
+          titles = set()
+          for term in ['ezan', 'adhan', 'azan', 'adzan', 'call to prayer', 'أذان', 'ezan istanbul', 'adhan mecca', 'adhan makkah', 'adhan medina', 'masjid al haram adhan', 'masjid an nabawi adhan', 'muezzin']:
+              for mime in ['audio', 'video']:
+                  try:
+                      r = q({'action': 'query', 'list': 'search', 'srsearch': f'{term} filemime:{mime}', 'srnamespace': 6, 'srlimit': 50})
+                      titles.update(x['title'] for x in r['query']['search'])
+                  except Exception as e: print('ERR', term, e)
+          for cat in ['Category:Adhan', 'Category:Ezan', 'Category:Audio files of adhan', 'Category:Videos of adhan', 'Category:Call to prayer']:
+              try:
+                  r = q({'action': 'query', 'list': 'categorymembers', 'cmtitle': cat, 'cmtype': 'file', 'cmlimit': 200})
+                  titles.update(x['title'] for x in r['query']['categorymembers'])
+              except Exception as e: print('ERR', cat, e)
+          titles = sorted(titles); out = []
+          for i in range(0, len(titles), 40):
+              r = q({'action': 'query', 'titles': '|'.join(titles[i:i+40]), 'prop': 'imageinfo|videoinfo', 'iiprop': 'url|mime|size|extmetadata', 'viprop': 'url|mime|size|extmetadata'})
+              for p in r['query']['pages']:
+                  info = (p.get('videoinfo') or p.get('imageinfo') or [{}])[0]
+                  m = info.get('extmetadata', {})
+                  g = lambda k: re.sub('<[^>]+>', '', str(m.get(k, {}).get('value', '')))[:300]
+                  if not str(info.get('mime', '')).startswith(('audio', 'video', 'application/ogg')): continue
+                  out.append({'title': p['title'], 'mime': info.get('mime'), 'duration': info.get('duration'), 'size': info.get('size'),
+                              'license': g('LicenseShortName'), 'artist': g('Artist'), 'desc': g('ImageDescription'), 'date': g('DateTimeOriginal'),
+                              'url': info.get('descriptionurl'), 'file': info.get('url')})
+          os.makedirs('recherche', exist_ok=True)
+          json.dump(out, open('recherche/adhans-commons.json', 'w'), ensure_ascii=False, indent=1)
+          print(len(out), 'fichiers')
+          PY
+      - name: Publier le résultat sur la branche
+        run: |
+          git config user.name github-actions; git config user.email github-actions@users.noreply.github.com
+          git add recherche && git commit -m "Recherche Adhans : résultats Commons" && git push || echo rien
