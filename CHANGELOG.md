@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.13.1] – 2026-10
+### Modifié
+- Bouton du Mode Mosquée : libellé « المسجد » sous l'icône, pour le distinguer des réglages.
+
 ## [2.13.0] – 2026-10 ⚠ nouvel AAB à publier (module Android)
 ### Ajouté
 - **Mode Mosquée** (وضع المسجد) : bouton mosquée dans l'en-tête, deux choix « هذه الصلاة فقط » / « كل الصلوات », durée réglable (25 min par défaut, pas de 5 min, 10 à 90 min).
