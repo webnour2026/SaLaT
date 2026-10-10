@@ -107,9 +107,11 @@ jobs:
               try:
                   if name.startswith('page:'):
                       page = get(name[5:]).decode('utf-8', 'replace')
-                      m = re.search(r'<meta[^>]+property="og:audio(?::secure_url)?"[^>]+content="([^"]+)"', page) or re.search(r'content="([^"]+)"[^>]+property="og:audio', page)
-                      if not m: raise RuntimeError('lien audio introuvable sur la page')
-                      get(html.unescape(m.group(1)), '/tmp/src')
+                      page = html.unescape(page).replace('\\u0026', '&').replace('\\/', '/')
+                      m = re.search(r'https://[a-z0-9.-]*ustatik\.com/[^"\'\s<>]+?\.(?:mp3|m4a|wav)[^"\'\s<>]*', page) \
+                          or re.search(r'og:audio[^>]*?content="([^"]+)"', page)
+                      if not m: raise RuntimeError(f'lien audio introuvable sur la page ({len(page)} caractères)')
+                      get(m.group(1) if m.lastindex else m.group(0), '/tmp/src')
                   elif name.startswith('http'):
                       get(name, '/tmp/src')
                   else:
@@ -117,7 +119,7 @@ jobs:
                       get(f'https://commons.wikimedia.org/wiki/Special:FilePath/{q}', '/tmp/src')
                   encode('/tmp/src', key, maxdur, forced)
               except Exception as e:
-                  print('  ✗', e); continue
+                  print('  ✗', e); print(f'::warning title=Adhan {key}::{e}'); continue
               if name.startswith(('http', 'page:')):
                   if key in URL_CREDITS: credits.append({'id': key, **URL_CREDITS[key]})
                   continue
