@@ -32,7 +32,7 @@ const code = files.map(f => [f, f === 'index.html' ? html.replace(meta ? meta[0]
 eq('aucun eval(), new Function() ni setTimeout/setInterval(chaîne) dans le code', code.flatMap(([f, s]) => (s.match(/\beval\s*\(|new\s+Function\s*\(|set(?:Timeout|Interval)\s*\(\s*['"`]/g) || []).map(m => `${f}: ${m}`)), []);
 
 // hôtes cités : xmlns (jamais chargés) et lien de partage (jamais chargé) mis à part
-const IGNORED = new Set(['www.w3.org', 'tinyurl.com']);
+const IGNORED = new Set(['www.w3.org', 'tinyurl.com', 'play.google.com']);   // liens ouverts (navigation), jamais chargés par la page : hors CSP
 const hosts = [...new Set(code.flatMap(([, s]) => [...s.matchAll(/https?:\/\/([a-z0-9.-]+)/gi)].map(m => m[1].toLowerCase())))].filter(h => !IGNORED.has(h)).sort();
 eq('hôtes externes cités dans le code (à connaître, et à ouvrir dans la CSP)', hosts, ['api.aladhan.com', 'api.github.com', 'fonts.googleapis.com', 'fonts.gstatic.com', 'nominatim.openstreetmap.org']);
 eq('chacun de ces hôtes est autorisé par la CSP', hosts.filter(h => !csp.includes(`https://${h}`)), []);
