@@ -108,6 +108,42 @@ eq('vendredi : sans lever du soleil connu → pas de rappel', String(planNativeR
 }
 eq('vendredi : coexiste avec les jours blancs (ids distincts)', String(new Set(plan('2026-09-20', { prefs: { friday: true } }).map(e => e.id)).size === plan('2026-09-20', { prefs: { friday: true } }).length), 'true');
 
+// Mouharram, Ramadan, Chawwal, Dhou al-Hijja : « ce soir, observation » à l'Asr du 29, puis « croissant non vu » (surveillance du surlendemain)
+{
+  useHabous(true);
+  const lastIs = (m, y, start) => setHabous({ updated: start, months: [{ y, m, start }] });
+  const planA = (today, prefs = {}) => planNativeReminders({ today, t, addDays, now: Date.parse(today + 'T00:00:00Z'), offset: 0,
+    prefs: { eid: true, month: true, white: false, friday: false, ...prefs },
+    dayInfo: k => ({ Sunrise: Date.parse(k + 'T06:00:00Z'), Asr: Date.parse(k + 'T15:30:00Z'), Maghrib: Date.parse(k + 'T18:30:00Z'), Isha: Date.parse(k + 'T20:00:00Z') }) });
+  lastIs(8, 1447, '2026-01-21');                         // Chaabane 1447 : 29 = 18 février
+  let q = planA('2026-02-10');
+  const obs = q.find(e => e.kind === 'obs'), no = q.find(e => e.kind === 'nosight');
+  eq('Ramadan : observation annoncée le 29 Chaabane (18 févr.)', obs && obs.id, '2026-02-18-obs');
+  eq('Ramadan : à l\'heure de l\'Asr', obs && new Date(obs.at).toISOString(), '2026-02-18T15:30:00.000Z');
+  eq('Ramadan : observation sans réseau (pas de surveillance)', String(obs && obs.watch), 'undefined');
+  eq('Ramadan : « non vu » le même soir', no && no.id, '2026-02-18-nosight');
+  eq('Ramadan : « non vu » seulement si le mois commence le surlendemain (20 févr.)', no && no.watch, '2026-02-20');
+  eq('Ramadan : « vu » toujours surveillé pour le lendemain (19 févr.)', q.find(e => e.id === '2026-02-18-month')?.watch, '2026-02-19');
+  eq('Ramadan : ids distincts', String(new Set(q.map(e => e.id)).size === q.length), 'true');
+  eq('Ramadan : texte « non vu »', no && no.body, 'nosightRamadanBody{"m":"Ramadan","p":"Chaabane"}');
+  lastIs(9, 1447, '2026-02-19');                         // Ramadan → Chawwal (Aïd)
+  q = planA('2026-03-10');
+  eq('Aïd al-Fitr : observation + non vu', q.filter(e => e.kind === 'obs' || e.kind === 'nosight').map(e => e.id).join(' '), '2026-03-19-obs 2026-03-19-nosight');
+  eq('Aïd al-Fitr : texte « jour de jeûne »', q.find(e => e.kind === 'nosight').body.startsWith('nosightFitrBody'), true);
+  eq('Aïd al-Fitr : avec les seuls rappels des Aïds', String(planA('2026-03-10', { month: false }).some(e => e.kind === 'obs')), 'true');
+  lastIs(12, 1447, '2026-05-18');                        // Dhou al-Hijja → Mouharram 1448
+  q = planA('2026-06-10');
+  eq('Mouharram : observation annoncée', String(q.some(e => e.id === '2026-06-15-obs')), 'true');
+  eq('Mouharram : mois précédent au génitif', q.find(e => e.kind === 'nosight').body, 'nosightNotifBody{"m":"Mouharram","p":"Dhou al-Hijja"}');
+  eq('Mouharram : titre « nouvel an » si vu', q.find(e => e.id === '2026-06-15-month')?.title, 'newYearNotifTitle{"y":1448}');
+  eq('Mouharram : désactivé avec les rappels de mois', String(planA('2026-06-10', { month: false }).some(e => e.kind === 'obs')), 'false');
+  lastIs(11, 1447, '2026-04-19');                        // Dhou al-Qi'da → Dhou al-Hijja
+  eq('Dhou al-Hijja : observation annoncée', String(planA('2026-05-10').some(e => e.kind === 'obs')), 'true');
+  lastIs(4, 1448, '2026-09-13');                         // Rabi' II → Joumada I : mois ordinaire
+  eq('mois ordinaire (Joumada I) : ni observation ni « non vu »', String(planA('2026-10-05').some(e => e.kind === 'obs' || e.kind === 'nosight')), 'false');
+  setHabous(HABOUS_BUILTIN);
+}
+
 // taille de la charge utile envoyée au module (limite 60 000 caractères une fois décodée, mais on reste très en dessous)
 useHabous(true);
 const size = JSON.stringify(plan('2026-09-30')).length;

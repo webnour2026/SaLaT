@@ -81,6 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.13.2] – 2026-10
+### Ajouté
+- Mouharram, Ramadan, Chawwal, Dhou al-Hijja : notification « الليلة ترقّب هلال شهر … » à l'Asr du 29 ; puis, si le croissant n'est pas vu, « لم يثبت هلال شهر … » le soir même (le mois en cours compte 30 jours). Fonctionne appli fermée avec le module actuel (pas de nouvel AAB).
+- Veille du 1er Mouharram : « غدًا فاتح محرم — رأس السنة الهجرية ».
+
 ## [2.13.1] – 2026-10
 ### Modifié
 - Bouton du Mode Mosquée : libellé « المسجد » sous l'icône, pour le distinguer des réglages.

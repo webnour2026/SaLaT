@@ -8,6 +8,9 @@ const DAY = 864e5;
 export const WINDOW_FIXED = 6 * 3600e3;    // rappel « certain » : on peut le recevoir jusqu'à 6 h après l'heure prévue
 export const WINDOW_FRIDAY = 3 * 3600e3;   // rappel du vendredi (09:30) : utile jusqu'à la prière de la Joumou'a
 export const WINDOW_WATCH = 4 * 3600e3;    // rappel « à surveiller » : le module interroge le calendrier pendant 4 h
+export const WINDOW_OBS = 3 * 3600e3;      // « ce soir, observation du croissant » : jusqu'au Maghrib environ
+/** Mois dont l'observation du croissant est annoncée à l'avance (et dont le « non vu » est signalé) : Mouharram, Ramadan, Chawwal, Dhou al-Hijja. */
+export const WATCHED_MONTHS = [1, 9, 10, 12];
 const iso = day => new Date(day * DAY).toISOString().slice(0, 10);
 export const FRIDAY_AT = [9, 30];          // rappel du vendredi : 09:30, heure du lieu
 
@@ -31,13 +34,19 @@ export function wallTime(key, h, m, tz) {
 /** Titre et corps d'un rappel { type: 'white' | 'month' | 'eid', kind?, h } */
 export function reminderText(t, ev) {
   if (ev.type === 'friday') return { title: t('fridayNotifTitle'), body: t('fridayNotifBody') };
+  const gen = x => String(x).replace(/^ذو /, 'ذي ');                         // « هلال شهر ذي الحجة » (génitif arabe)
   const month = t('hijriMonths')[ev.h.m - 1];
+  const prev = gen(t('hijriMonths')[(ev.h.m + 10) % 12]);                   // mois en cours (celui qui se termine)
+  // soir du 29 : le ministère observe le croissant ; puis, s'il n'est pas vu, le mois en cours compte 30 jours
+  if (ev.type === 'obs') return { title: t('obsNotifTitle', { m: gen(month) }), body: t('obsNotifBody', { m: gen(month) }) };
+  if (ev.type === 'nosight') return { title: t('nosightNotifTitle', { m: gen(month) }),
+    body: t(ev.h.m === 10 ? 'nosightFitrBody' : ev.h.m === 9 ? 'nosightRamadanBody' : 'nosightNotifBody', { m: gen(month), p: prev }) };
   if (ev.type === 'white') return { title: t('whiteNotifTitle'), body: t('whiteNotifBody', { d: ev.h.d, m: month }) };
   if (ev.type === 'eid') {
     const fitr = ev.kind === 'fitr';
     return { title: t(fitr ? 'fitrNotifTitle' : 'adhaNotifTitle'), body: [t('takbir'), t('eidGreeting'), fitr ? t('fitrZakat') : ''].filter(Boolean).join('\n') };
   }
-  return { title: ev.h.m === 9 ? t('ramadanNotifTitle') : t('monthNotifTitle', { m: month }), body: [t('monthDua'), t('monthDuaTr')].filter(Boolean).join('\n') };
+  return { title: ev.h.m === 9 ? t('ramadanNotifTitle') : ev.h.m === 1 ? t('newYearNotifTitle', { y: ev.h.y }) : t('monthNotifTitle', { m: month }), body: [t('monthDua'), t('monthDuaTr')].filter(Boolean).join('\n') };
 }
 
 /**
@@ -85,6 +94,18 @@ export function planNativeReminders({ today, horizon = 40, dayInfo, addDays, off
       if (!d || !d.Maghrib) continue;
       const at = d.Maghrib + 20 * 60000;
       push({ id: `${eveKey}-${rem.type}`, kind: rem.type, at, until: at + WINDOW_WATCH, watch: iso(targetDay), ...reminderText(t, rem) });
+    }
+    // Mouharram, Ramadan, Chawwal, Dhou al-Hijja : le 29 au soir, annonce de l'observation, puis « croissant non vu » s'il y a lieu
+    const h = { d: 1, m: nm, y: ny };
+    const on = nm === 10 || nm === 12 ? (prefs.eid || prefs.month) : prefs.month;
+    if (WATCHED_MONTHS.includes(nm) && on) {
+      const eveKey = iso(hb.last.day + 28), d = dayInfo(eveKey);
+      if (d && d.Maghrib) {
+        const obsAt = d.Asr || d.Maghrib - 90 * 60000;                     // à l'Asr : avant que l'observation commence
+        push({ id: `${eveKey}-obs`, kind: 'obs', at: obsAt, until: d.Maghrib + 30 * 60000, ...reminderText(t, { type: 'obs', h }) });
+        const at = d.Maghrib + 20 * 60000;                                 // le ministère annonce que le mois commence le SURLENDEMAIN
+        push({ id: `${eveKey}-nosight`, kind: 'nosight', at, until: at + WINDOW_WATCH, watch: iso(hb.last.day + 30), ...reminderText(t, { type: 'nosight', h }) });
+      }
     }
   }
   return out.sort((a, b) => a.at - b.at);
