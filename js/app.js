@@ -1898,10 +1898,11 @@ function watchThumb(cv, sp) {
   }, { rootMargin: '0px 240px 240px 240px' });
   cv.__job = { sp, cv }; thumbObserver.observe(cv);
 }
-function thumbButton(sp, label, caption) {
+function thumbButton(sp, label, caption, quran = false) {
   const b = document.createElement('button'); b.type = 'button'; b.className = 'card-thumb';
   b.innerHTML = '<canvas width="8" height="10"></canvas><span class="ct-cap"><b></b><span></span></span>';
   b.querySelector('b').textContent = label; b.querySelector('.ct-cap span').textContent = caption || '';
+  if (quran) b.querySelector('.ct-cap span').classList.add('quran');   // signes propres à Warsh : police Warsh (sinon des carrés vides)
   b.addEventListener('click', () => openCardPreview(sp));
   watchThumb(b.querySelector('canvas'), sp);
   return b;
@@ -1963,7 +1964,7 @@ function renderCards() {
     const { sec, row } = section(categoryTitle(sp.key), list.length, () => openPickAll(sp));
     for (const i of picks) {
       const spec = { ...sp, i, pick: true }, txt = list[i];
-      row.append(thumbButton(spec, t(kindKey(sp.key, txt)), preview(txt.t, 5)));
+      row.append(thumbButton(spec, t(kindKey(sp.key, txt)), preview(txt.t, 5), !!txt.q));
     }
     const all = document.createElement('button'); all.type = 'button'; all.className = 'card-thumb all-tile';
     all.innerHTML = '<span class="at-n"></span><span class="ct-cap"><b></b></span>'; all.querySelector('.at-n').textContent = String(list.length); all.querySelector('b').textContent = t('viewAll');
@@ -2848,7 +2849,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.14.2';
+export const APP_VERSION = '2.14.3';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

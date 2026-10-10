@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.14.3] – 2026-10
+### Corrigé
+- Cartes : l'aperçu des versets (liste et « عرض الكل ») utilise la police Warsh ; ses signes propres s'affichaient en carrés vides.
+
 ## [2.14.2] – 2026-10
 ### Corrigé
 - Bandeau de mise à jour resté affiché après la mise à jour : l'appli rouvre la page existante, la nouvelle adresse de lancement est maintenant lue (launchQueue). Le module mis à jour reçoit aussi sa configuration au toucher suivant.
