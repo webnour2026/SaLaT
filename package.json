@@ -1,6 +1,6 @@
 {
   "name": "salat",
-  "version": "2.14.1",
+  "version": "2.14.2",
   "private": true,
   "description": "SaLaTi – PWA d'horaires de prière, Qibla, Adhan et calendrier hégirien (aucune dépendance : les tests n'utilisent que Node).",
   "type": "module",

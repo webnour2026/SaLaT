@@ -2125,14 +2125,16 @@ const TWA_PKG = 'io.github.webnour2026.salat';
 const isTwa = () => localStorage.getItem('priere.native') === '1';
 const nativeActive = () => isTwa() && !!localStorage.getItem('priere.nativeAt');
 const nativeRem = () => nativeActive() && localStorage.getItem('priere.nativeRem') === '1';   // le module envoie lui-même les rappels
-function detectTwa() {
-  const n = new URLSearchParams(location.search).get('native');
+function detectTwa(url = location.href) {
+  let n = null; try { n = new URL(url, location.href).searchParams.get('native'); } catch {}
+  const before = nativeLevel();
   if (n === '1') localStorage.setItem('priere.native', '1');
   if (n === '2' || n === '3') { localStorage.setItem('priere.native', '1'); localStorage.setItem('priere.nativeRem', '1'); }   // module ≥ v10 : rappels appli fermée
   if (n === '4') { localStorage.setItem('priere.native', '1'); localStorage.setItem('priere.nativeRem', '1'); }
   if (n === '3' || n === '4') localStorage.setItem('priere.nativeMq', '1');       // module ≥ 2.13 : Mode Mosquée (sonneries coupées)
   else if (n === '1' || n === '2') localStorage.removeItem('priere.nativeMq');
   if (/^[1-9]$/.test(n || '')) localStorage.setItem('priere.nativeLvl', n);       // version du module : bandeau « mise à jour » s'il est ancien
+  if (before && nativeLevel() > before && localStorage.getItem('priere.nativeAt')) localStorage.setItem('priere.nativeDirty', '1');   // module mis à jour : il reçoit la configuration au prochain toucher
   if (n === '0') { localStorage.removeItem('priere.native'); localStorage.removeItem('priere.nativeRem'); localStorage.removeItem('priere.nativeMq'); localStorage.removeItem('priere.nativeLvl'); }       // retour sans module : désactivé
   if (!isTwa()) { localStorage.removeItem('priere.nativeAt'); localStorage.removeItem('priere.nativeDirty'); localStorage.removeItem('priere.nativeRem'); localStorage.removeItem('priere.nativeMq'); }
   localStorage.removeItem('priere.twa');                     // ancien indicateur (v2.5.0)
@@ -2846,7 +2848,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.14.1';
+export const APP_VERSION = '2.14.2';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
@@ -2862,6 +2864,11 @@ function lockHorizontal() {
 function init() {
   lockHorizontal();
   detectTwa();
+  // L'appli Android rouvre la page déjà ouverte (« focus-existing ») : l'adresse de lancement — donc la version du module
+  // après une mise à jour — arrive par launchQueue, pas par location.
+  if ('launchQueue' in window) {
+    try { window.launchQueue.setConsumer(p => { if (p && p.targetURL) { detectTwa(p.targetURL); renderUpdate(); renderNative(); } }); } catch {}
+  }
   document.addEventListener('click', () => { if (nativeNeedsSync()) syncNative({ quiet: true, ask: !localStorage.getItem('priere.nativeAt') }); }, { capture: true });
   Promise.all([loadCustomAdhans(), loadSiteAdhans()]).then(([{ migratedTo }]) => {
     const a = S().adhan;
