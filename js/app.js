@@ -8,7 +8,7 @@ import { Compass } from './compass.js';
 import { formatHijri, useHabous, habousActive, habousInfo } from './hijri.js';
 import { initHabous, refreshHabous } from './habous.js';
 import { refreshOfficiel } from './officiel.js';
-import { planNativeReminders, reminderText, wallTime, FRIDAY_AT } from './reminders.js';
+import { planNativeReminders, reminderText, wallTime, FRIDAY_AT, autoMonthTexts } from './reminders.js';
 import { hasWaqf, drawArabicLine } from './waqf.js';
 import { nearestLocality, moroccoReference, localityName, allLocalities, localityByCode, sameLocalityName, SNAP_KM } from './localites.js';
 import { declination as wmmDeclination } from './wmm.js';
@@ -2149,6 +2149,9 @@ async function nativePayload() {
     off: getOffset(),   // téléphone déréglé : écart (ms) entre l'horloge du téléphone et l'heure réelle ; le module décale ses alarmes d'autant
     ol: S().officialLocality !== false, olc: S().officialLocalityCode ?? null,   // Maroc : localité officielle (collage automatique / choix manuel), pour le calcul de secours du module
     mq: mqPayload(),   // Mode Mosquée
+    // Maroc : dernier début de mois officiel + textes de chaque mois : le module prépare seul les rappels du croissant, appli fermée
+    ...(() => { const hb = habousActive() ? habousInfo() : null; return hb && hb.last ? { hb: { y: hb.last.y, m: hb.last.m, d: hb.last.day } } : {}; })(),
+    amt: autoMonthTexts({ t, prefs: { eid: S().eidReminder !== false, month: S().monthReminder !== false } }),
     adj: S().adjust, en: !!a.enabled, na: !!a.notifyAt, nb: a.notifyBefore || 0, vib: !!a.vibrate, su, on: !!S().ongoing, gr: GRACE_MIN,
     hj: Array.from({ length: 31 }, (_, i) => fmtDates(Date.parse(`${addDays(today, i)}T12:00:00Z`)).hijri),
     ad: Object.fromEntries(PRAYERS.map(k => [k, a.enabled ? nativeSound(adhanFor(k)) : 'none'])),
@@ -2824,7 +2827,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.13.2';
+export const APP_VERSION = '2.14.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

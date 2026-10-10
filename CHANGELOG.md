@@ -81,6 +81,12 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.14.0] – 2026-10 ⚠ nouvel AAB à publier (module Android)
+### Modifié
+- Rappels du croissant (observation, « vu », « non vu », début de mois, Aïds) **autonomes** : le module Android retient le dernier début de mois officiel, lit les annonces du ministère le soir du 29 et prépare lui-même le mois suivant — même si l'appli n'est plus jamais ouverte, comme l'Adhan.
+- Sans réseau le soir de l'annonce : relecture le surlendemain, sinon mois de 30 jours supposé, corrigé à la lecture suivante.
+- Mode Mosquée : l'Iqama du Maghrib de Ramadan reste juste au-delà des 31 jours envoyés par la page.
+
 ## [2.13.2] – 2026-10
 ### Ajouté
 - Mouharram, Ramadan, Chawwal, Dhou al-Hijja : notification « الليلة ترقّب هلال شهر … » à l'Asr du 29 ; puis, si le croissant n'est pas vu, « لم يثبت هلال شهر … » le soir même (le mois en cours compte 30 jours). Fonctionne appli fermée avec le module actuel (pas de nouvel AAB).

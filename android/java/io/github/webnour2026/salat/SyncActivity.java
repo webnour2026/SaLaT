@@ -36,6 +36,7 @@ public class SyncActivity extends Activity {
             if (d != null && d.length() < 60000) {
                 cfg = new JSONObject(d);
                 AlarmScheduler.save(this, cfg);
+                AutoMonth.learnConfig(this, cfg);   // dernier début de mois officiel connu de la page
                 AlarmScheduler.scheduleNext(this);
                 Reminders.schedule(this);
                 MosqueMode.onConfig(this);       // Mode Mosquée désactivé / durée changée pendant un cycle

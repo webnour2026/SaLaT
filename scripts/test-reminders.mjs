@@ -14,7 +14,8 @@ globalThis.localStorage = { getItem: k => store.get(k) ?? null, setItem: (k, v) 
 const load = f => import(pathToFileURL(path.join(tmp, 'js', f)).href);
 const { setHabous, useHabous } = await load('hijri.js');
 const { HABOUS_BUILTIN } = await load('habous.js');
-const { planNativeReminders } = await load('reminders.js');
+const { planNativeReminders, autoMonthTexts, reminderText: reminderTextRaw } = await load('reminders.js');
+const reminderTextOf = ev => reminderTextRaw(t, ev);
 
 const MONTHS = ['Mouharram', 'Safar', 'Rabia al-Awal', 'Rabia ath-Thani', 'Joumada al-Oula', 'Joumada ath-Thania', 'Rajab', 'Chaabane', 'Ramadan', 'Chawwal', 'Dhou al-Qi’da', 'Dhou al-Hijja'];
 const t = (k, v) => k === 'hijriMonths' ? MONTHS : `${k}${v ? JSON.stringify(v) : ''}`;
@@ -142,6 +143,19 @@ eq('vendredi : coexiste avec les jours blancs (ids distincts)', String(new Set(p
   lastIs(4, 1448, '2026-09-13');                         // Rabi' II → Joumada I : mois ordinaire
   eq('mois ordinaire (Joumada I) : ni observation ni « non vu »', String(planA('2026-10-05').some(e => e.kind === 'obs' || e.kind === 'nosight')), 'false');
   setHabous(HABOUS_BUILTIN);
+}
+
+// textes envoyés au module pour qu'il prépare seul les mois suivants (appli fermée)
+{
+  const a = autoMonthTexts({ t, prefs: { eid: true, month: true } });
+  eq('module : textes pour les 12 mois', Object.keys(a).join(','), '1,2,3,4,5,6,7,8,9,10,11,12');
+  eq('module : observation + non vu seulement pour 1, 9, 10, 12', Object.keys(a).filter(m => a[m].o && a[m].n).join(','), '1,9,10,12');
+  eq('module : Chawwal = Aïd', a[10].s[0], 'fitrNotifTitle');
+  eq('module : Mouharram, année à compléter par le module', a[1].s[0], 'newYearNotifTitle{"y":"{y}"}');
+  eq('module : mêmes textes que le plan de la page', JSON.stringify(a[9].n), JSON.stringify([reminderTextOf({ type: 'nosight', h: { d: 1, m: 9, y: 1 } }).title, reminderTextOf({ type: 'nosight', h: { d: 1, m: 9, y: 1 } }).body]));
+  const b = autoMonthTexts({ t, prefs: { eid: true, month: false } });
+  eq('module : rappels de mois coupés → seulement Chawwal et Dhou al-Hijja (Aïds)', Object.keys(b).join(','), '10,12');
+  eq('module : tout coupé → rien', Object.keys(autoMonthTexts({ t, prefs: { eid: false, month: false } })).length, 0);
 }
 
 // taille de la charge utile envoyée au module (limite 60 000 caractères une fois décodée, mais on reste très en dessous)

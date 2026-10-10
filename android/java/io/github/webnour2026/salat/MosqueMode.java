@@ -79,7 +79,7 @@ final class MosqueMode {
         try {
             long adhanMs = sound == null ? 0 : durationOf(ctx, sound);
             long[] w = MosqueMath.window(t, adhanMs, m.optInt("d", MosqueMath.DUR_DEFAULT),
-                    MosqueMath.iqamaMin(key, ramadan(cfg, t)));
+                    MosqueMath.iqamaMin(key, ramadan(ctx, cfg, t)));
             JSONObject st = new JSONObject();
             st.put("T", t); st.put("key", key);
             st.put("start", w[0]); st.put("iqama", w[1]); st.put("end", w[2]);
@@ -91,11 +91,12 @@ final class MosqueMode {
     }
 
     /** Ramadan ce jour-là ? (cfg.mq.rm, aligné sur les lignes de cfg.times) */
-    private static boolean ramadan(JSONObject cfg, long t) {
+    private static boolean ramadan(Context ctx, JSONObject cfg, long t) {
         JSONObject m = mq(cfg);
         JSONArray rm = m == null ? null : m.optJSONArray("rm");
         int i = AlarmScheduler.dayIndexOf(cfg, t);
-        return rm != null && i >= 0 && i < rm.length() && rm.optInt(i, 0) == 1;
+        if (rm != null && i >= 0 && i < rm.length()) return rm.optInt(i, 0) == 1;
+        return AutoMonth.isRamadan(ctx, t);                 // au-delà des 31 jours : calendrier appris par le module
     }
 
     /** Durée réelle du fichier de l'Adhan ; à défaut, estimation (20 s pour la version courte, 4 min sinon). */

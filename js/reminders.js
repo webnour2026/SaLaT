@@ -110,3 +110,22 @@ export function planNativeReminders({ today, horizon = 40, dayInfo, addDays, off
   }
   return out.sort((a, b) => a.at - b.at);
 }
+
+/**
+ * Textes de tous les mois pour le module Android, qui prépare lui-même les rappels du croissant mois après mois
+ * (appli fermée). { "<mois>": { s: [titre, texte] (vu), o: […] (observation), n: […] (non vu) } ; « {y} » = année hégirienne.
+ * Mêmes règles que planNativeReminders : début de mois si prefs.month (Chawwal : Aïd si prefs.eid) ;
+ * observation et « non vu » pour Mouharram, Ramadan, Chawwal, Dhou al-Hijja.
+ */
+export function autoMonthTexts({ t, prefs }) {
+  const out = {}, pair = r => [r.title, r.body];
+  for (let m = 1; m <= 12; m++) {
+    const h = { d: 1, m, y: '{y}' }, e = {};
+    const rem = m === 10 && prefs.eid ? { type: 'eid', kind: 'fitr', h } : prefs.month ? { type: 'month', h } : null;
+    if (rem) e.s = pair(reminderText(t, rem));
+    const on = m === 10 || m === 12 ? (prefs.eid || prefs.month) : prefs.month;
+    if (WATCHED_MONTHS.includes(m) && on) { e.o = pair(reminderText(t, { type: 'obs', h })); e.n = pair(reminderText(t, { type: 'nosight', h })); }
+    if (Object.keys(e).length) out[m] = e;
+  }
+  return out;
+}

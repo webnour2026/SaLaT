@@ -74,6 +74,14 @@ final class AlarmScheduler {
         return t;
     }
 
+    /** Horaires (ms) du jour d'époque `epochDay` (Fajr, Dhuhr, Asr, Maghrib, Isha) : officiels, sinon calcul local. */
+    static long[] timesOn(JSONObject cfg, long epochDay) {
+        Calendar utc = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        utc.clear();
+        utc.setTimeInMillis(epochDay * 86400000L);
+        return dayTimes(cfg, utc);
+    }
+
     /** Prochaine prière après `now` : clé, heure (ms) et indice du jour dans cfg.times (-1 si calcul local). */
     static final class Next {
         final String key; final long time; final int day;

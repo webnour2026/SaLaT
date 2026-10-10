@@ -69,7 +69,7 @@ final class Reminders {
     static void schedule(Context ctx) {
         AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
         am.cancel(pending(ctx));
-        long next = nextDue(AlarmScheduler.config(ctx), doneIds(ctx), Clock.now(ctx));
+        long next = nextDue(AutoMonth.merged(ctx, AlarmScheduler.config(ctx)), doneIds(ctx), Clock.now(ctx));   // rappels de la page + calculés ici
         if (next == Long.MAX_VALUE) return;
         long trigger = Clock.toDevice(ctx, next);   // alarme sur l'horloge du téléphone, corrigée de l'écart mesuré
         boolean exact = Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms();
@@ -134,16 +134,34 @@ final class Reminders {
         final JSONObject cfg = AlarmScheduler.config(ctx);
         if (cfg == null) return;
         Set<String> done = doneIds(ctx);
-        for (JSONObject e : due(cfg, done, Clock.now(ctx), new Starts() {
-            @Override public Set<String> get() { return fetchStarts(cfg.optString("base", "")); }
-        })) {
-            show(ctx, cfg, e);
+        final String base = cfg.optString("base", "");
+        final Starts starts = new Starts() {
+            @Override public Set<String> get() {
+                String json = fetchJson(base);
+                if (json != null) AutoMonth.learnJson(ctx, json);   // le module apprend le nouveau début de mois : il prépare le suivant seul
+                return json == null ? null : parseStarts(json);
+            }
+        };
+        for (JSONObject e : due(AutoMonth.merged(ctx, cfg), done, Clock.now(ctx), starts)) {
+            if (e.optBoolean("refresh", false)) {                  // aucun début de mois appris ce mois-ci (pas de réseau le soir de l'annonce)
+                String json = fetchJson(base);
+                if (json != null) AutoMonth.learnJson(ctx, json);
+                AutoMonth.estimate(ctx);                            // toujours rien de plus récent : on suppose 30 jours
+            } else {
+                show(ctx, cfg, e);
+            }
             markDone(ctx, e.optString("id", ""));
         }
     }
 
     /** Débuts de mois annoncés par le ministère : data/habous.json du site de l'application. */
     static Set<String> fetchStarts(String base) {
+        String json = fetchJson(base);
+        return json == null ? null : parseStarts(json);
+    }
+
+    /** Contenu brut de data/habous.json (site de l'application seulement), ou null. */
+    static String fetchJson(String base) {
         HttpURLConnection c = null;
         try {
             if (base == null || !base.startsWith(SITE)) return null;
@@ -159,7 +177,7 @@ final class Reminders {
             String line;
             while ((line = r.readLine()) != null && sb.length() < 200000) sb.append(line).append('\n');
             r.close();
-            return parseStarts(sb.toString());
+            return sb.toString();
         } catch (Exception ex) {
             return null;
         } finally {
