@@ -10,6 +10,7 @@ export const ADHANS = [
   { id: 'madinah', labelKey: 'adhanMadinah', file: 'audio/adhan/madinah.mp3' },
   { id: 'adhan1',  labelKey: 'adhanCalm',    file: 'audio/adhan/adhan1.mp3' },
   { id: 'doha',    labelKey: 'adhanDoha',    file: 'audio/adhan/doha.mp3' },
+  { id: 'sirajul', labelKey: 'adhanSirajul', file: 'audio/adhan/sirajul.mp3' },   // Qari MD Sirajul Islam, CC BY 4.0 (audio.com)
   // « الصلاة خير من النوم » : proposé seulement pour le Fajr ; « Doha » choisi pour toutes les prières le prend au Fajr
   { id: 'doha_fajr', labelKey: 'adhanDohaFajr', file: 'audio/adhan/doha_fajr.mp3', fajrOnly: true, fajrOf: 'doha' },
   { id: 'beep',    labelKey: 'beep' },

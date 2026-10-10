@@ -8,6 +8,8 @@
 name: Télécharger les Adhans
 on:
   workflow_dispatch:
+  push:
+    paths: ['audio/adhan/sources/**']   # fichier source déposé : converti tout seul
 permissions:
   contents: write
 jobs:
@@ -33,8 +35,8 @@ jobs:
               ('adhan1',     'Beautiful_adhan.ogg',                                               160, None),
               ('doha',       'https://archive.org/download/adhan.recordings.from.doha.qatar/Adhan_Doha_Qatar_02_Dhuhr_Adhan.mp3', 300, None),
               ('doha_fajr',  'https://archive.org/download/adhan.recordings.from.doha.qatar/Adhan_Doha_Qatar_01_Fajr_Adhan.mp3',  300, None),   # « الصلاة خير من النوم » : Fajr seulement
-              # page:… = page audio.com ; le lien du fichier (signé, valable quelques jours) est relu à chaque exécution ; voix à partir de 3 s
-              ('sirajul',    'page:https://audio.com/saqib-piash/audio/adhan',                                                    300, 3.0),
+              # file:… = fichier déposé dans le dépôt (audio.com refuse les serveurs de GitHub) ; voix à partir de 3 s
+              ('sirajul',    'file:audio/adhan/sources/sirajul.mp3',                                                               300, 3.0),
           ]
           # crédits des sources hors Commons (adresse directe)
           URL_CREDITS = {
@@ -105,7 +107,11 @@ jobs:
           for key, name, maxdur, forced in SOURCES:
               print(f'→ {key} : {name}')
               try:
-                  if name.startswith('page:'):
+                  if name.startswith('file:'):
+                      import shutil
+                      if not os.path.exists(name[5:]): raise RuntimeError(f'fichier absent : {name[5:]} (à déposer sur GitHub)')
+                      shutil.copy(name[5:], '/tmp/src')
+                  elif name.startswith('page:'):
                       page = get(name[5:]).decode('utf-8', 'replace')
                       page = html.unescape(page).replace('\\u0026', '&').replace('\\/', '/')
                       m = re.search(r'https://[a-z0-9.-]*ustatik\.com/[^"\'\s<>]+?\.(?:mp3|m4a|wav)[^"\'\s<>]*', page) \
@@ -120,7 +126,7 @@ jobs:
                   encode('/tmp/src', key, maxdur, forced)
               except Exception as e:
                   print('  ✗', e); print(f'::warning title=Adhan {key}::{e}'); continue
-              if name.startswith(('http', 'page:')):
+              if name.startswith(('http', 'page:', 'file:')):
                   if key in URL_CREDITS: credits.append({'id': key, **URL_CREDITS[key]})
                   continue
               em = {}
