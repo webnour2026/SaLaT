@@ -96,8 +96,10 @@ eq('vendredi : titre et corps', `${fr[0].title} | ${fr[0].body}`, 'fridayNotifTi
 eq('vendredi : désactivé par défaut dans ce test', String(plan('2026-09-30').some(e => e.kind === 'friday')), 'false');
 eq('vendredi : sans lever du soleil connu → pas de rappel', String(planNativeReminders({ today: '2026-09-30', t, addDays, now: Date.parse('2026-09-30T00:00:00Z'), prefs: { friday: true }, offset: 0, dayInfo: k => ({ Maghrib: Date.parse(k + 'T18:40:00Z') }) }).some(e => e.kind === 'friday')), 'false');
 {
-  const z = planNativeReminders({ today: '2026-09-30', t, addDays, now: Date.parse('2026-09-30T00:00:00Z'), prefs: { friday: true }, offset: 0, tz: 'Africa/Casablanca', dayInfo: k => ({ Maghrib: Date.parse(k + 'T18:40:00Z') }) }).filter(e => e.kind === 'friday');
-  eq('vendredi : 09:30 heure du Maroc (UTC+1) = 08:30 UTC', new Date(z[0].at).toISOString(), '2026-10-02T08:30:00.000Z');
+  const z = planNativeReminders({ today: '2026-09-30', t, addDays, now: Date.parse('2026-09-30T00:00:00Z'), prefs: { friday: true }, offset: 0, tz: 'Etc/GMT-1', dayInfo: k => ({ Maghrib: Date.parse(k + 'T18:40:00Z') }) }).filter(e => e.kind === 'friday');   // fuseau fixe : indépendant de la base des fuseaux installée
+  eq('vendredi : 09:30 en UTC+1 = 08:30 UTC', new Date(z[0].at).toISOString(), '2026-10-02T08:30:00.000Z');
+  const zu = planNativeReminders({ today: '2026-09-30', t, addDays, now: Date.parse('2026-09-30T00:00:00Z'), prefs: { friday: true }, offset: 0, tz: 'UTC', dayInfo: k => ({ Maghrib: 1 }) }).filter(e => e.kind === 'friday');
+  eq('vendredi : 09:30 au Maroc (GMT, fuseau UTC de l\'appli) = 09:30 UTC', new Date(zu[0].at).toISOString(), '2026-10-02T09:30:00.000Z');
   eq('vendredi : un seul rappel par vendredi (pas de doublon)', String(new Set(z.map(e => e.id)).size === z.length), 'true');
   const pz = planNativeReminders({ today: '2026-09-30', t, addDays, now: Date.parse('2026-09-30T00:00:00Z'), prefs: { friday: true }, offset: 0, tz: 'Europe/Paris', dayInfo: k => ({ Maghrib: 1 }) }).filter(e => e.kind === 'friday');
   eq('vendredi : 09:30 à Paris en heure d\'été = 07:30 UTC', new Date(pz[0].at).toISOString(), '2026-10-02T07:30:00.000Z');
