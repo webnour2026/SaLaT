@@ -39,7 +39,7 @@ on:
 env:
   PACKAGE_ID: io.github.webnour2026.salat
   HOST: webnour2026.github.io
-  START_URL: /SaLaT/?source=twa&native=6   # version du module : 3 = Mode Mosquée, 4 = rappels du croissant autonomes, 5 = Adhans de Doha, 6 = Adhan marocain par défaut, Adhan court de 40 s. À augmenter (et NATIVE_LATEST dans js/app.js) à chaque changement du module Android
+  START_URL: /SaLaT/?source=twa&native=7   # version du module : 3 = Mode Mosquée, 4 = rappels du croissant autonomes, 5 = Adhans de Doha, 6 = Adhan court de 40 s, 7 = Anas Tazi par défaut + Sirajul Islam. À augmenter (et NATIVE_LATEST dans js/app.js) à chaque changement du module Android
   APP_NAME: SaLaTi
   SITE: https://webnour2026.github.io/SaLaT
 

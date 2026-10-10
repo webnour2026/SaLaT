@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.17.1] – 2026-10 ⚠ nouvel AAB (version code 19, native=7)
+### Ajouté
+- Adhans intégrés à l'appli : « مغربي، أنس التازي » (par défaut) et « أذان — القارئ محمد سراج الإسلام ».
+
 ## [2.17.0] – 2026-10
 ### Modifié
 - « مغربي، أنس التازي » devient l'Adhan par défaut (accord écrit d'Anas Tazi, 10/10/2026). Tant que son fichier n'est pas intégré, l'appli joue « Aaqib » à la place.
