@@ -1,0 +1,65 @@
+[
+ {
+  "id": "mecque-2013",
+  "license": "CC BY 3.0 — Seyfula Islam (Commons)",
+  "source": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Adhan%2C_Great_Mosque_of_Mecca_-_Jan_21%2C_2013.webm",
+  "voice_db": -14.7,
+  "floor_db": -18.8,
+  "contrast_db": 4.1,
+  "seconds": 4106
+ },
+ {
+  "id": "mecque-2018",
+  "license": "CC BY 3.0 — M SOHAIL Ahmad (Commons)",
+  "source": "https://upload.wikimedia.org/wikipedia/commons/7/75/Time_of_Adhan%2C_Great_Mosque_of_Mecca_-_Jan_6%2C_2018_.webm",
+  "voice_db": -22.8,
+  "floor_db": -23.6,
+  "contrast_db": 0.8,
+  "seconds": 3621
+ },
+ {
+  "id": "mecque-2012-maghrib",
+  "license": "CC BY 3.0 — 3omar Faruq (Commons)",
+  "source": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Maghrib_Adhan_at_the_Masjid_al_Haram%2C_Mecca_-_25_Feb%2C_2012.webm",
+  "voice_db": -17.7,
+  "floor_db": -21.5,
+  "contrast_db": 3.8,
+  "seconds": 6270
+ },
+ {
+  "id": "istanbul",
+  "license": "CC0 — Viceskeeni2 (Commons)",
+  "source": "https://upload.wikimedia.org/wikipedia/commons/3/3d/Adhan_in_Istanbul.webm",
+  "voice_db": -18.5,
+  "floor_db": -21.6,
+  "contrast_db": 3.1,
+  "seconds": 1042
+ },
+ {
+  "id": "konya",
+  "license": "CC BY 3.0 — Frans van der Vaart (Commons)",
+  "source": "https://upload.wikimedia.org/wikipedia/commons/2/2e/Hminsec150_Konya.webm",
+  "voice_db": -12.1,
+  "floor_db": -14.3,
+  "contrast_db": 2.2,
+  "seconds": 1250
+ },
+ {
+  "id": "doha-dhuhr",
+  "license": "Public Domain Mark — archive.org",
+  "source": "https://archive.org/download/adhan.recordings.from.doha.qatar/Adhan_Doha_Qatar_02_Dhuhr_Adhan.mp3",
+  "voice_db": -9.4,
+  "floor_db": -10.2,
+  "contrast_db": 0.8,
+  "seconds": 3422
+ },
+ {
+  "id": "doha-fajr",
+  "license": "Public Domain Mark — archive.org",
+  "source": "https://archive.org/download/adhan.recordings.from.doha.qatar/Adhan_Doha_Qatar_01_Fajr_Adhan.mp3",
+  "voice_db": -9.1,
+  "floor_db": -9.6,
+  "contrast_db": 0.5,
+  "seconds": 4156
+ }
+]
