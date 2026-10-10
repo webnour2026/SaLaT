@@ -33,10 +33,13 @@ jobs:
               ('adhan1',     'Beautiful_adhan.ogg',                                               160, None),
               ('doha',       'https://archive.org/download/adhan.recordings.from.doha.qatar/Adhan_Doha_Qatar_02_Dhuhr_Adhan.mp3', 300, None),
               ('doha_fajr',  'https://archive.org/download/adhan.recordings.from.doha.qatar/Adhan_Doha_Qatar_01_Fajr_Adhan.mp3',  300, None),   # « الصلاة خير من النوم » : Fajr seulement
+              # page:… = page audio.com ; le lien du fichier (signé, valable quelques jours) est relu à chaque exécution ; voix à partir de 3 s
+              ('sirajul',    'page:https://audio.com/saqib-piash/audio/adhan',                                                    300, 3.0),
           ]
           # crédits des sources hors Commons (adresse directe)
           URL_CREDITS = {
               'doha':      {'author': 'Doha (Qatar), 2013-2014 — auteur non nommé', 'license': 'Public Domain Mark 1.0', 'source': 'Internet Archive', 'url': 'https://archive.org/details/adhan.recordings.from.doha.qatar'},
+              'sirajul':   {'author': 'Qari MD Sirajul Islam (mis en ligne par Saqib Piash)', 'license': 'CC BY 4.0', 'source': 'audio.com', 'url': 'https://audio.com/saqib-piash/audio/adhan'},
               'doha_fajr': {'author': 'Doha (Qatar), 2013-2014 — auteur non nommé', 'license': 'Public Domain Mark 1.0', 'source': 'Internet Archive', 'url': 'https://archive.org/details/adhan.recordings.from.doha.qatar'},
           }
 
@@ -102,7 +105,12 @@ jobs:
           for key, name, maxdur, forced in SOURCES:
               print(f'→ {key} : {name}')
               try:
-                  if name.startswith('http'):
+                  if name.startswith('page:'):
+                      page = get(name[5:]).decode('utf-8', 'replace')
+                      m = re.search(r'<meta[^>]+property="og:audio(?::secure_url)?"[^>]+content="([^"]+)"', page) or re.search(r'content="([^"]+)"[^>]+property="og:audio', page)
+                      if not m: raise RuntimeError('lien audio introuvable sur la page')
+                      get(html.unescape(m.group(1)), '/tmp/src')
+                  elif name.startswith('http'):
                       get(name, '/tmp/src')
                   else:
                       q = urllib.parse.quote(name)
@@ -110,7 +118,7 @@ jobs:
                   encode('/tmp/src', key, maxdur, forced)
               except Exception as e:
                   print('  ✗', e); continue
-              if name.startswith('http'):
+              if name.startswith(('http', 'page:')):
                   if key in URL_CREDITS: credits.append({'id': key, **URL_CREDITS[key]})
                   continue
               em = {}
