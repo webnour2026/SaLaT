@@ -84,17 +84,26 @@ eq('hors Maroc : aucune surveillance', String(p.some(e => e.watch)), 'false');
 eq('hors Maroc : le début de Joumada I est prévu par le calcul', String(p.some(e => e.kind === 'month')), 'true');
 eq('hors Maroc : jours blancs présents (calcul)', String(plan('2026-09-20').filter(e => e.kind === 'white').length >= 2), 'true');
 
-// vendredi : rappel 15 min après le lever du soleil, utile jusqu'à 5 h plus tard
+// vendredi : sans fuseau, rappel 15 min après le lever du soleil ; avec le fuseau du lieu, à 09:30 ; utile 3 h
 p = plan('2026-09-30', { prefs: { friday: true, month: false } });
 const fr = p.filter(e => e.kind === 'friday');
 eq('vendredi : 6 vendredis dans les 40 jours', String(fr.length), '6');
 eq('vendredi : le premier est le 2 octobre 2026', fr[0].id, '2026-10-02-friday');
 eq('vendredi : tous sont des vendredis', String(fr.every(e => new Date(e.id.slice(0, 10) + 'T12:00:00Z').getUTCDay() === 5)), 'true');
 eq('vendredi : envoi à 06:45 (heure du Maroc) = 05:45 UTC', new Date(fr[0].at).toISOString(), '2026-10-02T05:45:00.000Z');
-eq('vendredi : valable 5 h', String((fr[0].until - fr[0].at) / 3600e3), '5');
+eq('vendredi : valable 3 h', String((fr[0].until - fr[0].at) / 3600e3), '3');
 eq('vendredi : titre et corps', `${fr[0].title} | ${fr[0].body}`, 'fridayNotifTitle | fridayNotifBody');
 eq('vendredi : désactivé par défaut dans ce test', String(plan('2026-09-30').some(e => e.kind === 'friday')), 'false');
 eq('vendredi : sans lever du soleil connu → pas de rappel', String(planNativeReminders({ today: '2026-09-30', t, addDays, now: Date.parse('2026-09-30T00:00:00Z'), prefs: { friday: true }, offset: 0, dayInfo: k => ({ Maghrib: Date.parse(k + 'T18:40:00Z') }) }).some(e => e.kind === 'friday')), 'false');
+{
+  const z = planNativeReminders({ today: '2026-09-30', t, addDays, now: Date.parse('2026-09-30T00:00:00Z'), prefs: { friday: true }, offset: 0, tz: 'Africa/Casablanca', dayInfo: k => ({ Maghrib: Date.parse(k + 'T18:40:00Z') }) }).filter(e => e.kind === 'friday');
+  eq('vendredi : 09:30 heure du Maroc (UTC+1) = 08:30 UTC', new Date(z[0].at).toISOString(), '2026-10-02T08:30:00.000Z');
+  eq('vendredi : un seul rappel par vendredi (pas de doublon)', String(new Set(z.map(e => e.id)).size === z.length), 'true');
+  const pz = planNativeReminders({ today: '2026-09-30', t, addDays, now: Date.parse('2026-09-30T00:00:00Z'), prefs: { friday: true }, offset: 0, tz: 'Europe/Paris', dayInfo: k => ({ Maghrib: 1 }) }).filter(e => e.kind === 'friday');
+  eq('vendredi : 09:30 à Paris en heure d\'été = 07:30 UTC', new Date(pz[0].at).toISOString(), '2026-10-02T07:30:00.000Z');
+  const pw = pz.find(e => e.id === '2026-11-06-friday');
+  eq('vendredi : 09:30 à Paris en heure d\'hiver = 08:30 UTC', new Date(pw.at).toISOString(), '2026-11-06T08:30:00.000Z');
+}
 eq('vendredi : coexiste avec les jours blancs (ids distincts)', String(new Set(plan('2026-09-20', { prefs: { friday: true } }).map(e => e.id)).size === plan('2026-09-20', { prefs: { friday: true } }).length), 'true');
 
 // taille de la charge utile envoyée au module (limite 60 000 caractères une fois décodée, mais on reste très en dessous)

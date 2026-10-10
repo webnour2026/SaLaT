@@ -81,6 +81,18 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.13.0] – 2026-10 ⚠ nouvel AAB à publier (module Android)
+### Ajouté
+- **Mode Mosquée** (وضع المسجد) : bouton mosquée dans l'en-tête, deux choix « هذه الصلاة فقط » / « كل الصلوات », durée réglable (25 min par défaut, pas de 5 min, 10 à 90 min).
+  Après l'Adhan, le module Android coupe les sonneries (silencieux avec l'accès « Ne pas déranger », sinon vibreur), puis remet exactement l'état d'avant (sonnerie, vibreur, Ne pas déranger) — sauf si l'utilisateur l'a changé entre-temps.
+  Fonctionne appli fermée, survit au redémarrage, une seule alarme par étape (pas de doublon). Notification « وضع المسجد مفعّل » avec compte à rebours et bouton « إعادة الرنين الآن ».
+- Écran **الإقامة** 15 min après l'Adhan (Maghrib : 10 min ; Maghrib de Ramadan : dès la fin de l'Adhan), puis écran **الصلاة** pendant 5 min ; la période de silence couvre toujours la prière.
+- Badge d'état sur l'accueil et ligne « وضع المسجد — مفعّل » dans les réglages.
+### Modifié
+- Appli Android : plus aucune notification web (« webnour2026.github.io ») — tout passe par le module SaLaTi, activé automatiquement au premier toucher. Supprime les doubles notifications (Joumou'a, rappels).
+- Rappel du vendredi à **09:30** (heure du lieu).
+- Puce « critères des Habous » retirée de l'en-tête ; le bouton « mode silencieux » de l'en-tête est remplacé par le Mode Mosquée (le mode silencieux reste dans Réglages → Adhan).
+
 ## [2.12.7] – 2026-10
 ### Corrigé
 - Barre de défilement qui clignotait sur les mois de 6 lignes du calendrier (cases réduites, ajustement re-vérifié à chaque mois).

@@ -33,14 +33,13 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>
       <span id="placeName" data-i18n="locating">Localisation en cours…</span>
     </button>
-    <span class="chip-official" id="officialChip" data-i18n="officialChip" hidden>Critères des Habous</span>
     </div>
     <div class="top-right">
       <button class="lang-btn gear-btn" id="settingsBtn" type="button" data-i18n-aria="settings" aria-label="Réglages">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.14 12.94a7.07 7.07 0 0 0 .05-.94 7.07 7.07 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7 7 0 0 0-1.62-.94l-.36-2.54A.5.5 0 0 0 13.9 2h-3.84a.5.5 0 0 0-.49.42l-.36 2.54a7 7 0 0 0-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.67 8.48a.5.5 0 0 0 .12.64l2.03 1.58a7.07 7.07 0 0 0-.05.94c0 .32.02.63.05.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96a7 7 0 0 0 1.62.94l.36 2.54a.5.5 0 0 0 .49.42h3.84a.5.5 0 0 0 .49-.42l.36-2.54a7 7 0 0 0 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Z"/></svg>
       </button>
-      <button class="lang-btn silent-btn" id="silentBtn" type="button" aria-haspopup="dialog" data-i18n-title="silentMode">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path id="bellPath" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3a1.5 1.5 0 0 0-3 0v1.16A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/><path class="slash" d="M3.3 2.3 21.7 20.7l-1.4 1.4L1.9 3.7Z"/></svg>
+      <button class="lang-btn mosque-btn" id="mosqueBtn" type="button" aria-haspopup="dialog" data-i18n-aria="mqTitle" data-i18n-title="mqTitle" aria-label="Mode Mosquée">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c.5.9 1.4 1.5 1.4 2.4a1.4 1.4 0 0 1-2.8 0c0-.9.9-1.5 1.4-2.4Z"/><path d="M12 6.6c-3.3 0-6 2.5-6 5.6h12c0-3.1-2.7-5.6-6-5.6Z"/><path d="M5.4 13.2h13.2V21h-4.4v-3.4a2.2 2.2 0 0 0-4.4 0V21H5.4Z"/><path d="M2 21V10.4L3 7.6l1 2.8V21Zm18 0V10.4l1-2.8 1 2.8V21Z"/></svg>
       </button>
       <button class="lang-btn" id="langBtn" type="button" aria-label="Langue / اللغة / Language" hidden>ع</button>
     </div>
@@ -70,6 +69,11 @@
       </div>
 
       <div class="cta-adhan clock-warn" id="clockWarn" role="alert" hidden><span id="clockWarnTxt"></span><button class="cw-close" id="clockWarnClose" type="button" data-i18n-aria="close" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+
+      <button class="mq-badge" id="mqBadge" type="button" hidden aria-haspopup="dialog">
+        <span class="mq-badge-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.2c.5.9 1.4 1.5 1.4 2.4a1.4 1.4 0 0 1-2.8 0c0-.9.9-1.5 1.4-2.4Z"/><path d="M12 6.6c-3.3 0-6 2.5-6 5.6h12c0-3.1-2.7-5.6-6-5.6Z"/><path d="M5.4 13.2h13.2V21h-4.4v-3.4a2.2 2.2 0 0 0-4.4 0V21H5.4Z"/><path d="M2 21V10.4L3 7.6l1 2.8V21Zm18 0V10.4l1-2.8 1 2.8V21Z"/></svg></span>
+        <span class="mq-badge-txt"><b id="mqBadgeTitle"></b><small id="mqBadgeSub"></small></span>
+      </button>
 
       <div class="arch" id="arch" data-sky="day">
         <button class="icon-btn arch-share" id="dayShare" type="button" data-i18n-aria="shareDay" aria-label="Partager les horaires du jour">
@@ -238,6 +242,12 @@
           <span class="hub-txt"><span class="hub-title" data-i18n="sAdhanNotif">Adhan et notifications</span><span class="hub-sub" id="hub-adhan"></span></span>
           <span class="hub-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span>
         </button></li>
+        <li><button type="button" class="hub-row" id="hubMosque">
+          <span class="hub-ico" aria-hidden="true"><svg viewBox="0 0 24 24" class="fill"><path d="M12 2.2c.5.9 1.4 1.5 1.4 2.4a1.4 1.4 0 0 1-2.8 0c0-.9.9-1.5 1.4-2.4Z"/><path d="M12 6.6c-3.3 0-6 2.5-6 5.6h12c0-3.1-2.7-5.6-6-5.6Z"/><path d="M5.4 13.2h13.2V21h-4.4v-3.4a2.2 2.2 0 0 0-4.4 0V21H5.4Z"/><path d="M2 21V10.4L3 7.6l1 2.8V21Zm18 0V10.4l1-2.8 1 2.8V21Z"/></svg></span>
+          <span class="hub-txt"><span class="hub-title" data-i18n="mqTitle">Mode Mosquée</span><span class="hub-sub" id="hub-mosque"></span></span>
+          <span class="hub-state" id="hubMosqueState"></span>
+          <span class="hub-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span>
+        </button></li>
         <li><button type="button" class="hub-row" data-page="look">
           <span class="hub-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg></span>
           <span class="hub-txt"><span class="hub-title" data-i18n="sLook">Langue et apparence</span><span class="hub-sub" id="hub-look"></span></span>
@@ -295,6 +305,7 @@
         <label class="field"><span data-i18n="volume">Volume</span><input type="range" id="sVolume" min="0" max="1" step="0.05"></label>
         <label class="switch"><input type="checkbox" id="sAdhanShort"><span data-i18n="adhanShort">Adhan court (20 s)</span></label>
         <label class="switch"><input type="checkbox" id="sVibrate"><span data-i18n="vibration"></span></label>
+        <div class="line"><span id="silentLine" data-i18n="silentMode">Mode silencieux</span><button class="btn small" type="button" id="silentOpen" data-i18n="change">Modifier</button></div>
         <details class="limits custom-adhan">
           <summary data-i18n="myAdhans">Mes Adhans</summary>
           <p class="note" data-i18n="importHelp"></p>
@@ -545,6 +556,45 @@
       <button class="btn btn-primary wide" type="button" data-silent="off" id="silentOff" data-i18n="silentOff">Réactiver l’Adhan</button>
     </div>
   </dialog>
+
+  <!-- Mode Mosquée -->
+  <dialog id="mosqueDialog" class="sheet mq-sheet" aria-labelledby="mqDlgTitle">
+    <form method="dialog" class="sheet-head">
+      <h2 id="mqDlgTitle" data-i18n="mqTitle">Mode Mosquée</h2>
+      <button class="icon-btn" value="close" data-i18n-aria="close" aria-label="Fermer">✕</button>
+    </form>
+    <div class="mq-hero" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.2c.5.9 1.4 1.5 1.4 2.4a1.4 1.4 0 0 1-2.8 0c0-.9.9-1.5 1.4-2.4Z"/><path d="M12 6.6c-3.3 0-6 2.5-6 5.6h12c0-3.1-2.7-5.6-6-5.6Z"/><path d="M5.4 13.2h13.2V21h-4.4v-3.4a2.2 2.2 0 0 0-4.4 0V21H5.4Z"/><path d="M2 21V10.4L3 7.6l1 2.8V21Zm18 0V10.4l1-2.8 1 2.8V21Z"/></svg></div>
+    <p class="mq-state" id="mqState"></p>
+    <div class="mq-opts" role="radiogroup" data-i18n-aria="mqChoose" aria-label="Fonctionnement">
+      <label class="mq-opt"><input type="radio" name="mqMode" value="once">
+        <span class="mq-opt-body"><b data-i18n="mqOnce">Cette prière uniquement</b><small data-i18n="mqOnceHelp"></small></span></label>
+      <label class="mq-opt"><input type="radio" name="mqMode" value="perm">
+        <span class="mq-opt-body"><b data-i18n="mqPerm">Toutes les prières</b><small data-i18n="mqPermHelp"></small></span></label>
+    </div>
+    <div class="mq-dur">
+      <span class="mq-dur-lbl" data-i18n="mqDur">Durée des sonneries désactivées</span>
+      <div class="stepper">
+        <button class="btn step" type="button" id="mqMinus" aria-label="−">−</button>
+        <output id="mqDurVal" aria-live="polite">25 min</output>
+        <button class="btn step" type="button" id="mqPlus" aria-label="+">+</button>
+      </div>
+    </div>
+    <p class="note mq-note" id="mqNote"></p>
+    <button class="btn btn-primary wide" type="button" id="mqToggle" data-i18n="mqActivate">Activer</button>
+    <button class="btn wide mq-off" type="button" id="mqOff" data-i18n="mqDeactivate" hidden>Désactiver</button>
+  </dialog>
+
+  <div class="mq-screen" id="mqScreen" role="dialog" aria-modal="true" aria-labelledby="mqScrTitle" hidden>
+    <button class="mq-scr-close" id="mqScrClose" type="button" data-i18n-aria="close" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <p class="mq-scr-prayer" id="mqScrPrayer"></p>
+    <h2 class="mq-scr-title" id="mqScrTitle"></h2>
+    <p class="mq-scr-sub" id="mqScrSub"></p>
+    <div class="mq-ring" id="mqRing" hidden>
+      <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="trk" cx="60" cy="60" r="52"/><circle class="arc" id="mqArc" cx="60" cy="60" r="52"/></svg>
+      <b id="mqRingVal">05:00</b>
+    </div>
+    <p class="mq-scr-chip" id="mqScrChip"></p>
+  </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
