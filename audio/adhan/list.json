@@ -20,6 +20,16 @@
   "label": "Adhan1"
  },
  {
+  "id": "doha",
+  "file": "audio/adhan/doha.mp3",
+  "label": "Doha"
+ },
+ {
+  "id": "doha_fajr",
+  "file": "audio/adhan/doha_fajr.mp3",
+  "label": "Doha fajr"
+ },
+ {
   "id": "madinah",
   "file": "audio/adhan/madinah.mp3",
   "label": "Madinah"
