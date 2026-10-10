@@ -15,6 +15,7 @@ public class BootReceiver extends BroadcastReceiver {
         AlarmScheduler.scheduleNext(app);
         Reminders.schedule(app);
         Ongoing.update(app);
+        MosqueMode.resume(app);                 // cycle du Mode Mosquée en cours : alarmes réarmées, ou son rendu s'il est échu
         final PendingResult result = goAsync();
         new Thread(new Runnable() {
             @Override

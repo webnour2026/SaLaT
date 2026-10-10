@@ -3,6 +3,7 @@ package io.github.webnour2026.salat;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlarmManager;
+import android.app.NotificationManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -19,7 +20,7 @@ import org.json.JSONObject;
  * Activité invisible : elle se ferme aussitôt et on revient dans SaLaTi.
  */
 public class SyncActivity extends Activity {
-    private boolean ask, quiet, test;
+    private boolean ask, quiet, test, mosque;
     private JSONObject cfg;
 
     @Override
@@ -31,11 +32,13 @@ public class SyncActivity extends Activity {
             ask = data != null && "1".equals(data.getQueryParameter("ask"));
             quiet = data != null && "1".equals(data.getQueryParameter("quiet"));
             test = data != null && "1".equals(data.getQueryParameter("test"));
+            mosque = data != null && "1".equals(data.getQueryParameter("mq"));   // activation du Mode Mosquée : accès « Ne pas déranger »
             if (d != null && d.length() < 60000) {
                 cfg = new JSONObject(d);
                 AlarmScheduler.save(this, cfg);
                 AlarmScheduler.scheduleNext(this);
                 Reminders.schedule(this);
+                MosqueMode.onConfig(this);       // Mode Mosquée désactivé / durée changée pendant un cycle
             }
         } catch (Exception e) {
             cfg = null;
@@ -70,6 +73,16 @@ public class SyncActivity extends Activity {
             if (!am.canScheduleExactAlarms()) {
                 try {
                     startActivity(new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:" + getPackageName())));
+                } catch (Exception ignored) {}
+            }
+        }
+        // Mode Mosquée : couper la sonnerie (et pas seulement passer en vibreur) demande l'accès « Ne pas déranger »
+        if (mosque && Build.VERSION.SDK_INT >= 23) {
+            NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            if (!nm.isNotificationPolicyAccessGranted()) {
+                try {
+                    if (cfg != null) Toast.makeText(this, AlarmScheduler.text(cfg, "mqDnd", "Autorisez SaLaTi à couper la sonnerie"), Toast.LENGTH_LONG).show();
+                    startActivity(new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS));
                 } catch (Exception ignored) {}
             }
         }

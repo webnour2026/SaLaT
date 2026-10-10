@@ -28,6 +28,7 @@ export const DEFAULTS = {
   declAuto: true,               // déclinaison calculée par WMM2025
   declination: 0,               // valeur manuelle (degrés, Est positif)
   qiblaBeep: true,              // petit bip quand la boussole pointe vers la Qibla
+  mosque: { mode: 'off', dur: 25, once: null, since: 0, last: 'once' },   // Mode Mosquée : off | once (prochaine prière) | perm ; durée (min) ; prière visée { key, ts }
   adhan: {
     enabled: true,
     mode: 'global',             // global | perPrayer

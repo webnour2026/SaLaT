@@ -8,7 +8,7 @@ import { Compass } from './compass.js';
 import { formatHijri, useHabous, habousActive, habousInfo } from './hijri.js';
 import { initHabous, refreshHabous } from './habous.js';
 import { refreshOfficiel } from './officiel.js';
-import { planNativeReminders, reminderText } from './reminders.js';
+import { planNativeReminders, reminderText, wallTime, FRIDAY_AT } from './reminders.js';
 import { hasWaqf, drawArabicLine } from './waqf.js';
 import { nearestLocality, moroccoReference, localityName, allLocalities, localityByCode, sameLocalityName, SNAP_KM } from './localites.js';
 import { declination as wmmDeclination } from './wmm.js';
@@ -16,6 +16,7 @@ import { sunPosition, timesAtAzimuth } from './sun.js';
 import { ADHANS, playAdhan, stopAdhan, unlockAudio, playBeep, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, removeCustomAdhan, loadCustomAdhans, customAdhans, loadSiteAdhans, DEFAULT_ADHAN, RETIRED } from './adhan.js';
 import { hijriMonth, upcomingWhiteDays, civilNoon, hijriOf, OCCASIONS, isWhiteDay, reminderFor } from './calendar.js';
 import { PRESET_CITIES, METHOD_BY_COUNTRY, getGpsPosition, reverseGeocode, searchCity } from './location.js';
+import { clampDur, stepDur, effectiveMode, phaseAt, iqamaMin, PRAYER_SCREEN, PRAYER_SPAN, IQAMA_SCREEN } from './mosque.js';
 
 const $ = sel => document.querySelector(sel);
 // branche un écouteur sans planter si l'élément n'existe pas (ancien index.html en cache, etc.)
@@ -149,6 +150,9 @@ function renderSettingsHub() {
   set('look', `${{ fr: 'Fran\u00e7ais', ar: '\u0627\u0644\u0639\u0631\u0628\u064a\u0629', en: 'English' }[s.lang] || ''} \u00b7 ${t(s.theme === 'auto' ? 'auto' : s.theme)}`);
   set('adv', '');
   set('about', `Version ${APP_VERSION}`);
+  const mm = mqMode(), mq = MQ();
+  set('mosque', mm === 'off' ? '' : t(mm === 'once' ? 'mqHubOnce' : 'mqHubPerm', { n: mq.dur }));
+  const hs = $('#hubMosqueState'); if (hs) { hs.textContent = t(mm === 'off' ? 'hubOff' : 'hubOn'); hs.classList.toggle('on', mm !== 'off'); }
 }
 
 // ================= Position =================
@@ -276,6 +280,7 @@ function loadDays() {
   state.dayKey = key;
   state.today = getDay(S(), key);
   state.tomorrow = getDay(S(), addDays(key, 1));
+  try { state.yesterday = getDay(S(), addDays(key, -1)); } catch { state.yesterday = null; }   // Mode Mosquée : Isha d'hier encore en cours après minuit
   computeNext();
 }
 
@@ -298,7 +303,7 @@ function skyFor(t) {
   return 'maghrib';
 }
 
-function renderAll() { renderHeader(); renderHome(); renderWhite(); renderOccChip(); renderSilent(); renderCta(); requestAnimationFrame(setFit); }
+function renderAll() { renderHeader(); renderHome(); renderWhite(); renderOccChip(); renderSilent(); renderMosque(); renderCta(); requestAnimationFrame(setFit); }
 
 // ================= Consulter d'autres jours =================
 // state.viewKey : date consultée ('YYYY-MM-DD'), null = aujourd'hui (avec compte à rebours)
@@ -346,7 +351,6 @@ function renderHeader() {
   renderNoLoc();
   const loc = S().location;
   $('#placeName').textContent = loc ? (loc.name || `${loc.lat.toFixed(3)}, ${loc.lng.toFixed(3)}`) : t('chooseCity');
-  const chip = $('#officialChip'); if (chip) chip.hidden = !loc || Number(S().method) !== 21;   // calcul selon les critères des Habous (Maroc)
   const day = shownDay();
   const { greg, hijri } = fmtDates(viewing() && day ? (day.times.Dhuhr || now()) : now());
   $('#gregDate').textContent = greg;
@@ -506,10 +510,10 @@ function renderHome() {
 // ================= Mode silencieux =================
 const isSilent = () => { const u = S().silentUntil; return u === -1 || (u > 0 && now() < u); };
 function renderSilent() {
-  const btn = $('#silentBtn'); if (!btn) return;
   const on = isSilent();
-  btn.classList.toggle('on', on);
   const u = S().silentUntil;
+  const line = $('#silentLine');
+  if (line) line.textContent = on ? `${t('silentMode')} · ${u === -1 ? t('silentOn') : t('silentUntil', { t: fmtTime(u) })}` : t('silentMode');
   const st = $('#silentState');
   if (st) st.textContent = !on ? '' : u === -1 ? t('silentOn') : t('silentUntil', { t: fmtTime(u) });
   const off = $('#silentOff'); if (off) off.hidden = !on;
@@ -526,6 +530,128 @@ function setSilent(mode) {
   toast(mode === 'off' ? t('silentOffMsg') : t('silentOn'));
 }
 function hideAdhanAlert() { const al = $('#adhanAlert'); if (al) al.hidden = true; }
+
+// ================= Mode Mosquée =================
+// Après l'Adhan, le module Android coupe les sonneries pendant la durée choisie puis remet l'état d'avant.
+// La page affiche l'état (en-tête, badge, réglages) et, appli ouverte, les écrans « Iqama » puis « Prière ».
+const MQ = () => S().mosque || (S().mosque = { mode: 'off', dur: 25, once: null, since: 0, last: 'once' });
+const isRamadanTs = ts => { try { return hijriOf(civilNoon(ts, tz()), S().hijriOffset).m === 9; } catch { return false; } };
+// durée de l'Adhan (estimation) : la coupure du son attend la fin de l'Adhan
+function adhanEstimate(key) {
+  const a = S().adhan;
+  if (!a.enabled || isSilent() || adhanFor(key) === 'none') return 0;
+  return a.short || adhanFor(key) === 'beep' ? 20000 : 240000;
+}
+function mqPrayers() {
+  const out = [];
+  for (const d of [state.yesterday, state.today, state.tomorrow]) {
+    if (!d || !d.times) continue;
+    for (const k of PRAYERS) if (d.times[k]) out.push({ key: k, ts: d.times[k], date: d.date, ramadan: isRamadanTs(d.times[k]), adhanMs: adhanEstimate(k) });
+  }
+  return out;
+}
+/** Prochaine prière strictement après t (même règle que le module Android). */
+function prayerAfter(t) {
+  return mqPrayers().filter(p => p.ts > t + 1000).sort((a, b) => a.ts - b.ts)[0] || null;
+}
+function mqMode(tNow = now()) {
+  const mq = MQ(), m = effectiveMode(mq, tNow);
+  if (mq.mode === 'once' && m === 'off') { mq.mode = 'off'; mq.once = null; save(); }   // « cette prière » terminée : le mode s'éteint seul
+  return m;
+}
+const nativeMqCapable = () => isTwa() && localStorage.getItem('priere.nativeMq') === '1';
+const mqName = (key, ts) => prayerLabel(key, dateKeyInTz(ts, tz()));
+const shortHMS = ms => formatHMS(Math.max(0, ms)).replace(/^00:/, '');
+
+function renderMosque(tNow = now()) {
+  const mode = mqMode(tNow), mq = MQ(), on = mode !== 'off';
+  const btn = $('#mosqueBtn'); if (btn) btn.classList.toggle('on', on);
+  const ph = on ? phaseAt(mq, mqPrayers(), tNow) : null;
+  // badge de l'accueil
+  const badge = $('#mqBadge');
+  if (badge) {
+    badge.hidden = !on;
+    if (on) {
+      $('#mqBadgeTitle').textContent = t('mqBadgeOn');
+      let sub;
+      if (ph && ph.phase !== 'adhan') sub = t('mqBadgeSilence', { r: shortHMS(ph.end - tNow) });
+      else if (mode === 'once' && mq.once) sub = t('mqBadgeOnce', { p: mqName(mq.once.key, mq.once.ts), t: fmtTime(mq.once.ts), n: mq.dur });
+      else sub = t('mqBadgePerm', { n: mq.dur });
+      $('#mqBadgeSub').textContent = sub;
+      badge.classList.toggle('live', !!(ph && ph.phase !== 'adhan'));
+    }
+  }
+  // écrans Iqama / Prière (appli ouverte)
+  const scr = $('#mqScreen'); if (!scr) return;
+  const show = ph && (ph.phase === 'iqama' || ph.phase === 'prayer') && state.mqDismissed !== ph.T;
+  if (!show) { if (!scr.hidden) { scr.hidden = true; document.body.classList.remove('mq-open'); } return; }
+  if (scr.hidden) { scr.hidden = false; document.body.classList.add('mq-open'); stopAdhan(); hideAdhanAlert(); }
+  scr.dataset.phase = ph.phase;
+  $('#mqScrPrayer').textContent = mqName(ph.key, ph.T);
+  const iq = ph.phase === 'iqama';
+  $('#mqScrTitle').textContent = t(iq ? 'mqIqama' : 'mqPrayer');
+  $('#mqScrSub').textContent = t(iq ? 'mqIqamaSub' : 'mqPrayerSub');
+  $('#mqRing').hidden = iq;
+  if (!iq) {
+    const left = Math.max(0, ph.iqama + PRAYER_SPAN - tNow);
+    $('#mqRingVal').textContent = shortHMS(left);
+    const c = 2 * Math.PI * 52;
+    const arc = $('#mqArc'); arc.style.strokeDasharray = `${c}`; arc.style.strokeDashoffset = `${c * (1 - left / PRAYER_SCREEN)}`;
+  }
+  $('#mqScrChip').textContent = `${t('mqScrChip')} · ${t('mqUntil', { t: fmtTime(ph.end) })}`;
+}
+
+function openMosque() {
+  const mq = MQ(), active = mqMode() !== 'off';
+  state.mqDraft = { mode: active ? mq.mode : (mq.last || 'once'), dur: clampDur(mq.dur) };
+  renderMosqueDialog();
+  $('#mosqueDialog').showModal();
+}
+function renderMosqueDialog() {
+  const mq = MQ(), d = state.mqDraft, mode = mqMode(), active = mode !== 'off';
+  const st = $('#mqState');
+  let txt = active ? t('mqStateOn') : t('mqStateOff');
+  if (active) {
+    const n = mode === 'once' && mq.once ? mq.once : prayerAfter(now());
+    if (n) txt += ` · ${t('mqNext', { p: mqName(n.key, n.ts), t: fmtTime(n.ts) })}`;
+  }
+  st.textContent = txt; st.classList.toggle('on', active);
+  document.querySelectorAll('input[name="mqMode"]').forEach(r => { r.checked = r.value === d.mode; });
+  $('#mqDurVal').textContent = t('mqMin', { n: d.dur });
+  $('#mqMinus').disabled = d.dur <= clampDur(1); $('#mqPlus').disabled = d.dur >= clampDur(999);
+  $('#mqNote').textContent = !isTwa() ? t('mqNoteWeb') : nativeMqCapable() ? t('mqNote') : t('mqNoteUpdate');
+  const changed = active && (d.mode !== mq.mode || d.dur !== mq.dur);
+  const main = $('#mqToggle');
+  main.textContent = active ? t('mqUpdate') : t('mqActivate');
+  main.hidden = active && !changed;
+  $('#mqOff').hidden = !active;
+}
+function applyMosque(mode) {
+  const mq = MQ(), d = state.mqDraft || { mode, dur: mq.dur }, wasPerm = mqMode() === 'perm';
+  if (mode === 'off') { mq.mode = 'off'; mq.once = null; }
+  else {
+    mq.mode = mode; mq.dur = clampDur(d.dur); mq.last = mode;
+    if (mode === 'once') {
+      const keep = mq.once && mqMode() === 'once' && mq.once.ts > now() - PRAYER_SPAN;
+      const n = keep ? mq.once : prayerAfter(now());       // déjà programmée : on garde la même prière
+      mq.once = n ? { key: n.key, ts: n.ts } : null;
+    } else if (!wasPerm) mq.since = now();
+  }
+  save();
+  $('#mosqueDialog').open && $('#mosqueDialog').close();
+  toast(t(mode === 'off' ? 'mqOffMsg' : 'mqOnMsg'));
+  renderMosque(); renderSettingsHub();
+  if (isTwa()) syncNative({ quiet: true, mq: mode !== 'off' });   // geste de l'utilisateur : le module est mis à jour tout de suite
+}
+function mqPayload() {
+  const mq = MQ(), mode = mqMode(), today = state.dayKey || dateKeyInTz(now(), tz());
+  return {
+    m: mode, d: clampDur(mq.dur),
+    t: mode === 'once' && mq.once ? Math.round(mq.once.ts / 60000) * 60000 : 0,
+    rm: Array.from({ length: 31 }, (_, i) => (isRamadanTs(Date.parse(`${addDays(today, i)}T12:00:00Z`)) ? 1 : 0)),
+  };
+}
+
 
 // ================= Jours blancs =================
 function hijriLabel(h) { return `${h.d} ${t('hijriMonths')[h.m - 1]}`; }
@@ -1878,6 +2004,7 @@ const countdown = new Countdown({
     // changement de jour dans le fuseau du lieu
     if (state.dayKey && dateKeyInTz(tNow, tz()) !== state.dayKey) { loadDays(); if (state.viewKey === state.dayKey) state.viewKey = null; renderAll(); refresh(); }
     checkEvents(tNow);
+    renderMosque(tNow);
     if (tNow % 60000 < 1000) { renderHome(); renderSilent(); if (!$('#view-qibla').hidden) renderSun(); } // chaque minute
   },
   onReach() {
@@ -1916,9 +2043,9 @@ function checkEvents(tNow) {
       events.push({ id: `${state.today.date}-white`, ts: state.today.times.Isha + 30 * 60000, type: 'white', h, win: 6 * 3600e3 });
     }
   }
-  // vendredi : 15 min après le lever du soleil, « أكثروا من الصلاة على النبي ﷺ »
-  if (S().fridayReminder !== false && state.today.times.Sunrise && isFridayKey(state.today.date)) {
-    events.push({ id: `${state.today.date}-friday`, ts: state.today.times.Sunrise + 15 * 60000, type: 'friday', win: 5 * 3600e3 });
+  // vendredi à 09:30 (heure du lieu) : « أكثروا من الصلاة على النبي ﷺ »
+  if (S().fridayReminder !== false && isFridayKey(state.today.date)) {
+    events.push({ id: `${state.today.date}-friday`, ts: wallTime(state.today.date, FRIDAY_AT[0], FRIDAY_AT[1], tz()), type: 'friday', win: 3 * 3600e3 });
   }
   // rappels de la veille au soir (20 min après le Maghrib) : début de mois avec le doua, ou Aïd avec le takbir.
   // Au Maroc, seulement quand la date est officielle (annonce du ministère). Fenêtre de 6 h : l'annonce peut tomber tard.
@@ -1946,7 +2073,7 @@ async function fireEvent(ev) {
   if (ev.type === 'eid' || ev.type === 'month' || ev.type === 'white' || ev.type === 'friday') {
     const { title, body } = reminderText(t, ev);
     // avec le module Android récent, c'est lui qui envoie ces rappels (même appli fermée) : pas de doublon
-    if (!nativeRem()) notify(title, body, { tag: ev.type, vibrateOn: !isSilent() && a.vibrate });
+    if (!nativeRem()) webNotify(title, body, { tag: ev.type, vibrateOn: !isSilent() && a.vibrate });
     toast(title, 6000);
     return;
   }
@@ -1957,11 +2084,11 @@ async function fireEvent(ev) {
     return;
   }
   if (ev.type === 'before') {
-    notify(name, t('beforeMsg', { n: a.notifyBefore }), { tag: `before-${ev.p}`, vibrateOn: a.vibrate });
+    webNotify(name, t('beforeMsg', { n: a.notifyBefore }), { tag: `before-${ev.p}`, vibrateOn: a.vibrate });
     return;
   }
   const msg = `${t('itsTime')} ${name}`;
-  if (a.notifyAt || silent) notify(msg, fmtTime(ev.ts), { tag: `at-${ev.p}`, vibrateOn: !silent && a.vibrate });
+  if (a.notifyAt || silent) webNotify(msg, fmtTime(ev.ts), { tag: `at-${ev.p}`, vibrateOn: !silent && a.vibrate });
   if (silent) { toast(msg, 6000); return; }   // mode silencieux : ni son ni vibration
   if (a.vibrate) vibrate();
   if (a.enabled && adhanFor(ev.p) !== 'none') {
@@ -1971,6 +2098,10 @@ async function fireEvent(ev) {
     if (r === 'fallback' || r === 'beep') toast(t('adhanMissing'), 5000);
   }
 }
+
+// Dans l'application Android, toutes les notifications viennent du module natif « SaLaTi » :
+// jamais de notification web (elle s'afficherait sous « webnour2026.github.io », en double).
+function webNotify(title, body, opts) { return isTwa() ? Promise.resolve(false) : notify(title, body, opts); }
 
 // ================= Adhan téléphone fermé (module Android de l'application Play Store) =================
 const TWA_PKG = 'io.github.webnour2026.salat';
@@ -1982,9 +2113,11 @@ const nativeRem = () => nativeActive() && localStorage.getItem('priere.nativeRem
 function detectTwa() {
   const n = new URLSearchParams(location.search).get('native');
   if (n === '1') localStorage.setItem('priere.native', '1');
-  if (n === '2') { localStorage.setItem('priere.native', '1'); localStorage.setItem('priere.nativeRem', '1'); }   // module ≥ v10 : rappels appli fermée
-  if (n === '0') { localStorage.removeItem('priere.native'); localStorage.removeItem('priere.nativeRem'); }       // retour sans module : désactivé
-  if (!isTwa()) { localStorage.removeItem('priere.nativeAt'); localStorage.removeItem('priere.nativeDirty'); localStorage.removeItem('priere.nativeRem'); }
+  if (n === '2' || n === '3') { localStorage.setItem('priere.native', '1'); localStorage.setItem('priere.nativeRem', '1'); }   // module ≥ v10 : rappels appli fermée
+  if (n === '3') localStorage.setItem('priere.nativeMq', '1');                    // module ≥ 2.13 : Mode Mosquée (sonneries coupées)
+  else if (n === '1' || n === '2') localStorage.removeItem('priere.nativeMq');
+  if (n === '0') { localStorage.removeItem('priere.native'); localStorage.removeItem('priere.nativeRem'); localStorage.removeItem('priere.nativeMq'); }       // retour sans module : désactivé
+  if (!isTwa()) { localStorage.removeItem('priere.nativeAt'); localStorage.removeItem('priere.nativeDirty'); localStorage.removeItem('priere.nativeRem'); localStorage.removeItem('priere.nativeMq'); }
   localStorage.removeItem('priere.twa');                     // ancien indicateur (v2.5.0)
 }
 // même règle que le workflow Android pour nommer les sons intégrés (res/raw)
@@ -2007,7 +2140,7 @@ async function nativePayload() {
   const a = S().adhan;
   const su = S().silentUntil === -1 ? 32503680000000 : (S().silentUntil || 0);
   const rem = planNativeReminders({
-    today, offset: S().hijriOffset, t,
+    today, offset: S().hijriOffset, t, tz: tz(),
     prefs: { eid: S().eidReminder !== false, month: S().monthReminder !== false, white: !!S().whiteDays, friday: S().fridayReminder !== false },
     addDays, dayInfo: key => { const d = getDay(S(), key); return d && d.times ? { Sunrise: d.times.Sunrise, Maghrib: d.times.Maghrib, Isha: d.times.Isha } : null; },
   });
@@ -2015,22 +2148,25 @@ async function nativePayload() {
     v: 2, base: new URL('.', location.href).href, rem, lat: +loc.lat.toFixed(5), lng: +loc.lng.toFixed(5), tz: tz(), method: S().method, school: S().school,
     off: getOffset(),   // téléphone déréglé : écart (ms) entre l'horloge du téléphone et l'heure réelle ; le module décale ses alarmes d'autant
     ol: S().officialLocality !== false, olc: S().officialLocalityCode ?? null,   // Maroc : localité officielle (collage automatique / choix manuel), pour le calcul de secours du module
+    mq: mqPayload(),   // Mode Mosquée
     adj: S().adjust, en: !!a.enabled, na: !!a.notifyAt, nb: a.notifyBefore || 0, vib: !!a.vibrate, su, on: !!S().ongoing, gr: GRACE_MIN,
     hj: Array.from({ length: 31 }, (_, i) => fmtDates(Date.parse(`${addDays(today, i)}T12:00:00Z`)).hijri),
     ad: Object.fromEntries(PRAYERS.map(k => [k, a.enabled ? nativeSound(adhanFor(k)) : 'none'])),
     names: { ...Object.fromEntries(PRAYERS.map(k => [k, t(k)])), Jumuah: t('Jumuah') },   // Jumuah : nom du Dhuhr le vendredi
     txt: { itsTime: t('itsTime'), before: t('beforeMsg'), stop: t('stop'), ok: t('nativeOk'), city: loc.name || '',
-           chAdhan: t('chAdhan'), chBefore: t('chBefore'), chSilent: t('chSilent'), chOngoing: t('chOngoing'), chReminder: t('chReminder') },
+           chAdhan: t('chAdhan'), chBefore: t('chBefore'), chSilent: t('chSilent'), chOngoing: t('chOngoing'), chReminder: t('chReminder'),
+           chMosque: t('chMosque'), mqOn: t('mqBadgeOn'), mqUntil: t('mqUntil'), mqStopNow: t('mqStopNow'), mqIqama: t('mqIqama'), mqIqamaBody: t('mqIqamaBody'),
+           mqEnd: t('mqEnd'), mqEndBody: t('mqEndBody'), mqEndKept: t('mqEndKept'), mqDnd: t('mqDnd') },
     times,
   };
 }
-async function syncNative({ ask = false, quiet = false, test = false } = {}) {
+async function syncNative({ ask = false, quiet = false, test = false, mq = false } = {}) {
   if (!isTwa()) return;
   const payload = await nativePayload(); if (!payload) return;
   localStorage.setItem('priere.nativeAt', String(Date.now()));
   localStorage.setItem('priere.nativeOff', String(payload.off || 0));
   localStorage.removeItem('priere.nativeDirty');
-  const q = `d=${encodeURIComponent(JSON.stringify(payload))}${ask ? '&ask=1' : ''}${quiet ? '&quiet=1' : ''}${test ? '&test=1' : ''}`;
+  const q = `d=${encodeURIComponent(JSON.stringify(payload))}${ask ? '&ask=1' : ''}${quiet ? '&quiet=1' : ''}${test ? '&test=1' : ''}${mq && nativeMqCapable() ? '&mq=1' : ''}`;
   // si le module est absent, Android revient ici (native=0) au lieu d'ouvrir le Play Store
   const back = encodeURIComponent(`${location.origin}${location.pathname}?native=0#settings`);
   location.href = `intent://sync?${q}#Intent;scheme=salati;package=${TWA_PKG};S.browser_fallback_url=${back};end`;
@@ -2051,6 +2187,7 @@ function requestNativeSync() {
   else localStorage.setItem('priere.nativeDirty', '1');
 }
 function nativeNeedsSync() {
+  if (isTwa() && !localStorage.getItem('priere.nativeAt')) return true;   // appli Android : le module (Adhan, rappels, Mode Mosquée) est activé au premier toucher
   if (!nativeActive()) return false;
   if (localStorage.getItem('priere.nativeV') !== '4') { localStorage.setItem('priere.nativeV', '4'); localStorage.setItem('priere.nativeDirty', '1'); }   // 4 : la charge utile contient l'écart d'horloge
   const at = +localStorage.getItem('priere.nativeAt') || 0;
@@ -2536,7 +2673,7 @@ function bindSettings() {
     if (S().adhan.notifyBefore > 0) await ensureNotifPermission(); else updateNotifWarn();
   });
   on('#testNotif', 'click', async () => {
-    if (nativeActive()) { syncNative({ quiet: true, test: true }); return; }   // test via le module Android
+    if (isTwa()) { syncNative({ quiet: true, test: true, ask: !nativeActive() }); return; }   // appli Android : test via le module natif
     if (await ensureNotifPermission()) notify(`${t('itsTime')} ${t('Asr')}`, fmtTime(now()), { tag: 'test', vibrateOn: S().adhan.vibrate });
   });
   on('#sLang', 'change', e => { S().lang = e.target.value; save(); applyLang(); renderAll(); renderSettings(); renderQibla(); });
@@ -2618,7 +2755,15 @@ function bind() {
   on('#sensorHelpSun', 'click', () => { $('#sensorHelpDlg').close(); showQiblaAlternatives(true); });
   on('#adhanStop', 'click', () => { stopAdhan(); hideAdhanAlert(); });
   on('#adhanSilent', 'click', () => { stopAdhan(); hideAdhanAlert(); renderSilent(); $('#silentDialog').showModal(); });
-  on('#silentBtn', 'click', () => { renderSilent(); $('#silentDialog').showModal(); });
+  on('#silentOpen', 'click', () => { renderSilent(); $('#silentDialog').showModal(); });
+  // Mode Mosquée
+  ['#mosqueBtn', '#mqBadge', '#hubMosque'].forEach(sel => on(sel, 'click', openMosque));
+  document.querySelectorAll('input[name="mqMode"]').forEach(r => r.addEventListener('change', () => { state.mqDraft.mode = r.value; renderMosqueDialog(); }));
+  on('#mqMinus', 'click', () => { state.mqDraft.dur = stepDur(state.mqDraft.dur, -1); renderMosqueDialog(); });
+  on('#mqPlus', 'click', () => { state.mqDraft.dur = stepDur(state.mqDraft.dur, 1); renderMosqueDialog(); });
+  on('#mqToggle', 'click', () => applyMosque(state.mqDraft.mode));
+  on('#mqOff', 'click', () => applyMosque('off'));
+  on('#mqScrClose', 'click', () => { const p = phaseAt(MQ(), mqPrayers(), now()); state.mqDismissed = p ? p.T : null; renderMosque(); });
   document.querySelectorAll('[data-silent]').forEach(b => b.addEventListener('click', () => { setSilent(b.dataset.silent); $('#silentDialog').close(); }));
   on('#calPrev', 'click', () => calShift(-1));
   on('#calNext', 'click', () => calShift(1));
@@ -2679,7 +2824,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.12.21';
+export const APP_VERSION = '2.13.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
@@ -2695,7 +2840,7 @@ function lockHorizontal() {
 function init() {
   lockHorizontal();
   detectTwa();
-  document.addEventListener('click', () => { if (nativeNeedsSync()) syncNative({ quiet: true }); }, { capture: true });
+  document.addEventListener('click', () => { if (nativeNeedsSync()) syncNative({ quiet: true, ask: !localStorage.getItem('priere.nativeAt') }); }, { capture: true });
   Promise.all([loadCustomAdhans(), loadSiteAdhans()]).then(([{ migratedTo }]) => {
     const a = S().adhan;
     if (migratedTo) {       // ancien emplacement unique « custom » → nouvel identifiant

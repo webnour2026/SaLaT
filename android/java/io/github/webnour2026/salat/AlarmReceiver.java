@@ -27,7 +27,10 @@ public class AlarmReceiver extends BroadcastReceiver {
             long when = intent.getLongExtra(AlarmScheduler.EXTRA_TIME, 0);
             long now = Clock.now(ctx);
             // alarme très en retard (téléphone éteint, etc.) : on ne joue pas un Adhan périmé
-            if (cfg != null && key != null && !"tick".equals(type) && Math.abs(now - when) < 20 * 60000L) notify(ctx, cfg, key, type, when);
+            if (cfg != null && key != null && !"tick".equals(type) && Math.abs(now - when) < 20 * 60000L) {
+                String sound = notify(ctx, cfg, key, type, when);
+                if ("at".equals(type)) MosqueMode.onPrayer(ctx.getApplicationContext(), cfg, key, when, sound);   // après l'Adhan : sonneries coupées
+            }
         } catch (Exception ignored) {
         } finally {
             AlarmScheduler.scheduleNext(ctx);
@@ -59,11 +62,12 @@ public class AlarmReceiver extends BroadcastReceiver {
         }).start();
     }
 
-    static void notify(Context ctx, JSONObject cfg, String key, String type) {
-        notify(ctx, cfg, key, type, Clock.now(ctx));
+    static String notify(Context ctx, JSONObject cfg, String key, String type) {
+        return notify(ctx, cfg, key, type, Clock.now(ctx));
     }
 
-    static void notify(Context ctx, JSONObject cfg, String key, String type, long when) {
+    /** Affiche la notification ; renvoie l'Adhan joué (nom res/raw) ou null s'il n'y a pas de son. */
+    static String notify(Context ctx, JSONObject cfg, String key, String type, long when) {
         NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
         String name = AlarmScheduler.prayerName(cfg, key, when);
         boolean vib = cfg.optBoolean("vib", true);
@@ -74,7 +78,7 @@ public class AlarmReceiver extends BroadcastReceiver {
             String msg = AlarmScheduler.text(cfg, "before", "dans {n} min").replace("{n}", String.valueOf(cfg.optInt("nb", 0)));
             Notification.Builder b = AlarmScheduler.builder(ctx, ch).setContentTitle(name).setContentText(msg);
             nm.notify(AlarmScheduler.NOTIF_BEFORE, b.build());
-            return;
+            return null;
         }
 
         boolean adhan = cfg.optBoolean("en", true) && !silent;
@@ -92,8 +96,8 @@ public class AlarmReceiver extends BroadcastReceiver {
                 if (AlarmScheduler.rawId(ctx, sound) == 0) sound = null;   // aucun son intégré : notification simple
             }
         }
-        if (sound == null && !cfg.optBoolean("na", false) && !silent) return;
-        if (!adhan && !cfg.optBoolean("na", false)) return;
+        if (sound == null && !cfg.optBoolean("na", false) && !silent) return null;
+        if (!adhan && !cfg.optBoolean("na", false)) return null;
 
         String label = sound != null ? AlarmScheduler.text(cfg, "chAdhan", "Adhan") : AlarmScheduler.text(cfg, "chSilent", "Heure de la prière");
         String ch = AlarmScheduler.channel(ctx, sound, vib && !silent, label);
@@ -118,5 +122,6 @@ public class AlarmReceiver extends BroadcastReceiver {
         }
         Notification n = b.build();
         nm.notify(AlarmScheduler.NOTIF_ADHAN, n);
+        return sound;
     }
 }

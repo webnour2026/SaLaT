@@ -116,6 +116,9 @@ final class AlarmScheduler {
         return null;
     }
 
+    /** Indice de la ligne de cfg.times qui contient cet horaire, sinon -1 (utilisé aussi par le Mode Mosquée). */
+    static int dayIndexOf(JSONObject cfg, long time) { return dayIndex(cfg, time); }
+
     /** Indice de la ligne de cfg.times qui contient cet horaire, sinon -1. */
     private static int dayIndex(JSONObject cfg, long time) {
         try {
@@ -139,9 +142,10 @@ final class AlarmScheduler {
         boolean adhan = cfg.optBoolean("en", true), at = cfg.optBoolean("na", false);
         int before = cfg.optInt("nb", 0);
         boolean ongoing = cfg.optBoolean("on", false);   // notification permanente : à rafraîchir à chaque prière
-        if (!adhan && !at && before <= 0 && !ongoing) return;
-
         long now = Clock.now(ctx);                      // heure réelle (horloge du téléphone + écart mesuré)
+        boolean mosque = MosqueMode.wanted(cfg, now);    // Mode Mosquée : une alarme à chaque prière, même sans Adhan
+        if (!adhan && !at && before <= 0 && !ongoing && !mosque) return;
+
         long bestTime = Long.MAX_VALUE; String bestKey = null, bestType = null;
         String tz = cfg.optString("tz", TimeZone.getDefault().getID());
         Calendar day = Calendar.getInstance(TimeZone.getTimeZone(tz));
@@ -159,8 +163,8 @@ final class AlarmScheduler {
                     long b = t[k] - before * 60000L;
                     if (b > now + 1000 && b < bestTime) { bestTime = b; bestKey = KEYS[k]; bestType = "before"; }
                 }
-                if ((adhan || at || ongoing) && t[k] > now + 1000 && t[k] < bestTime) {
-                    bestTime = t[k]; bestKey = KEYS[k]; bestType = (adhan || at) ? "at" : "tick";
+                if ((adhan || at || ongoing || mosque) && t[k] > now + 1000 && t[k] < bestTime) {
+                    bestTime = t[k]; bestKey = KEYS[k]; bestType = (adhan || at || mosque) ? "at" : "tick";
                 }
                 // notification permanente : fin de la période « c'est l'heure » -> prière suivante
                 long end = t[k] + cfg.optInt("gr", 30) * 60000L;
