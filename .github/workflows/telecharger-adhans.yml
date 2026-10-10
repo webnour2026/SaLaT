@@ -37,10 +37,12 @@ jobs:
               ('doha_fajr',  'https://archive.org/download/adhan.recordings.from.doha.qatar/Adhan_Doha_Qatar_01_Fajr_Adhan.mp3',  300, None),   # « الصلاة خير من النوم » : Fajr seulement
               # file:… = fichier déposé dans le dépôt (audio.com refuse les serveurs de GitHub) ; voix à partir de 3 s
               ('sirajul',    'file:audio/adhan/sources/sirajul.mp3',                                                               300, 3.0),
+              ('anas_tazi',  'file:audio/adhan/sources/anas-tazi.mp3',                                                             300, None),   # accord écrit d'Anas Tazi, 10/10/2026
           ]
           # crédits des sources hors Commons (adresse directe)
           URL_CREDITS = {
               'doha':      {'author': 'Doha (Qatar), 2013-2014 — auteur non nommé', 'license': 'Public Domain Mark 1.0', 'source': 'Internet Archive', 'url': 'https://archive.org/details/adhan.recordings.from.doha.qatar'},
+              'anas_tazi': {'author': 'Anas Tazi (accord écrit du 10 octobre 2026)', 'license': 'Autorisation de l’auteur', 'source': 'YouTube', 'url': 'https://youtu.be/3mCyc5w9yc8'},
               'sirajul':   {'author': 'Qari MD Sirajul Islam (mis en ligne par Saqib Piash)', 'license': 'CC BY 4.0', 'source': 'audio.com', 'url': 'https://audio.com/saqib-piash/audio/adhan'},
               'doha_fajr': {'author': 'Doha (Qatar), 2013-2014 — auteur non nommé', 'license': 'Public Domain Mark 1.0', 'source': 'Internet Archive', 'url': 'https://archive.org/details/adhan.recordings.from.doha.qatar'},
           }

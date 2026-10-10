@@ -6,6 +6,7 @@ export const DEFAULT_ADHAN = 'adhan-moroccan';   // Adhan marocain par défaut
 // automatiquement grâce à audio/adhan/list.json (généré par les workflows GitHub).
 export const ADHANS = [
   { id: 'adhan-moroccan', labelKey: 'adhanMoroccan', file: 'audio/adhan/adhan-moroccan.mp3' },
+  { id: 'anas_tazi', labelKey: 'adhanAnasTazi', file: 'audio/adhan/anas_tazi.mp3' },   // Anas Tazi, avec son accord écrit
   { id: 'aaqib',   labelKey: 'adhanAaqib',   file: 'audio/adhan/aaqib.mp3' },
   { id: 'madinah', labelKey: 'adhanMadinah', file: 'audio/adhan/madinah.mp3' },
   { id: 'adhan1',  labelKey: 'adhanCalm',    file: 'audio/adhan/adhan1.mp3' },
