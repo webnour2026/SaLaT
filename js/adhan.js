@@ -9,6 +9,9 @@ export const ADHANS = [
   { id: 'madinah', labelKey: 'adhanMadinah', file: 'audio/adhan/madinah.mp3' },
   { id: 'morocco', labelKey: 'adhanAtlas',   file: 'audio/adhan/morocco.mp3' },
   { id: 'adhan1',  labelKey: 'adhanCalm',    file: 'audio/adhan/adhan1.mp3' },
+  { id: 'doha',    labelKey: 'adhanDoha',    file: 'audio/adhan/doha.mp3' },
+  // « الصلاة خير من النوم » : proposé seulement pour le Fajr ; « Doha » choisi pour toutes les prières le prend au Fajr
+  { id: 'doha_fajr', labelKey: 'adhanDohaFajr', file: 'audio/adhan/doha_fajr.mp3', fajrOnly: true, fajrOf: 'doha' },
   { id: 'beep',    labelKey: 'beep' },
   { id: 'none',    labelKey: 'noneAdhan' },
 ];

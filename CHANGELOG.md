@@ -81,6 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.15.0] – 2026-10 ⚠ nouvel AAB (version code 17, native=5)
+### Ajouté
+- Deux Adhans de Doha (Qatar, domaine public, Internet Archive) : « أذان الدوحة » et « أذان الفجر (الصلاة خير من النوم) ».
+- L'Adhan du Fajr n'est proposé que pour le Fajr et ne sonne jamais à une autre prière ; « Doha » choisi pour toutes les prières prend sa version du Fajr au Fajr.
+
 ## [2.14.3] – 2026-10
 ### Corrigé
 - Cartes : l'aperçu des versets (liste et « عرض الكل ») utilise la police Warsh ; ses signes propres s'affichaient en carrés vides.

@@ -562,7 +562,7 @@ function mqMode(tNow = now()) {
 }
 const nativeMqCapable = () => isTwa() && localStorage.getItem('priere.nativeMq') === '1';
 // Version du module Android installé (paramètre « native » de l'adresse de démarrage de l'appli Play Store)
-const NATIVE_LATEST = 4;                                    // 4 = module 2.14 : rappels du croissant autonomes
+const NATIVE_LATEST = 5;                                    // 4 = module 2.14 : rappels du croissant autonomes ; 5 = 2.15 : Adhans de Doha intégrés
 const STORE_URL = 'https://play.google.com/store/apps/details?id=io.github.webnour2026.salat';
 const nativeLevel = () => Number(localStorage.getItem('priere.nativeLvl') || 0);
 const UPD_KEY = 'priere.updDismiss';
@@ -2032,7 +2032,14 @@ const countdown = new Countdown({
 function adhanFor(prayer) {
   if (S().adhan.mute && S().adhan.mute[prayer]) return 'none';   // cloche barrée : pas d'Adhan pour cette prière
   const a = S().adhan;
-  return a.mode === 'perPrayer' ? a.perPrayer[prayer] : a.global;
+  let id = a.mode === 'perPrayer' ? a.perPrayer[prayer] : a.global;
+  const fajrOnly = ADHANS.find(x => x.id === id && x.fajrOnly);
+  if (fajrOnly && prayer !== 'Fajr') id = fajrOnly.fajrOf;                         // « الصلاة خير من النوم » : jamais hors du Fajr
+  if (prayer === 'Fajr') {                                                          // même voix, version du Fajr si elle existe
+    const f = ADHANS.find(x => x.fajrOnly && x.fajrOf === id);
+    if (f && (state.adhanAvail || {})[f.id] !== false) id = f.id;
+  }
+  return id;
 }
 
 const REM_KEY = 'priere.remFired';
@@ -2131,8 +2138,8 @@ function detectTwa(url = location.href) {
   const before = nativeLevel();
   if (n === '1') localStorage.setItem('priere.native', '1');
   if (n === '2' || n === '3') { localStorage.setItem('priere.native', '1'); localStorage.setItem('priere.nativeRem', '1'); }   // module ≥ v10 : rappels appli fermée
-  if (n === '4') { localStorage.setItem('priere.native', '1'); localStorage.setItem('priere.nativeRem', '1'); }
-  if (n === '3' || n === '4') localStorage.setItem('priere.nativeMq', '1');       // module ≥ 2.13 : Mode Mosquée (sonneries coupées)
+  if (Number(n) >= 4) { localStorage.setItem('priere.native', '1'); localStorage.setItem('priere.nativeRem', '1'); }
+  if (Number(n) >= 3) localStorage.setItem('priere.nativeMq', '1');       // module ≥ 2.13 : Mode Mosquée (sonneries coupées)
   else if (n === '1' || n === '2') localStorage.removeItem('priere.nativeMq');
   if (/^[1-9]$/.test(n || '')) localStorage.setItem('priere.nativeLvl', n);       // version du module : bandeau « mise à jour » s'il est ancien
   if (before && nativeLevel() > before && localStorage.getItem('priere.nativeAt')) localStorage.setItem('priere.nativeDirty', '1');   // module mis à jour : il reçoit la configuration au prochain toucher
@@ -2609,10 +2616,10 @@ function renderCustomAdhan() {
   }));
 }
 
-function adhanOptions(selected) {
+function adhanOptions(selected, prayer = null) {
   const av = state.adhanAvail || {};
-  // on masque les Adhans absents du site (sauf celui déjà choisi, pour que l'utilisateur le voie)
-  return ADHANS.filter(x => x.custom || !(x.file && av[x.id] === false) || x.id === selected).map(x => new Option((x.labelKey ? t(x.labelKey) : x.label) + (x.file && av[x.id] === false ? ` (${t('adhanUnavailable')})` : ''), x.id, false, x.id === selected));
+  // on masque les Adhans absents du site (sauf celui déjà choisi, pour que l'utilisateur le voie) ; un Adhan du Fajr n'est proposé que pour le Fajr
+  return ADHANS.filter(x => !x.fajrOnly || prayer === 'Fajr').filter(x => x.custom || !(x.file && av[x.id] === false) || x.id === selected).map(x => new Option((x.labelKey ? t(x.labelKey) : x.label) + (x.file && av[x.id] === false ? ` (${t('adhanUnavailable')})` : ''), x.id, false, x.id === selected));
 }
 function renderAdhanPickers() {
   const a = S().adhan;
@@ -2622,7 +2629,7 @@ function renderAdhanPickers() {
     const label = document.createElement('label'); label.className = 'field';
     const span = document.createElement('span'); span.textContent = k === 'global' ? t('adhanSound') : t(k);
     const sel = document.createElement('select');
-    sel.append(...adhanOptions(k === 'global' ? a.global : a.perPrayer[k]));
+    sel.append(...adhanOptions(k === 'global' ? a.global : a.perPrayer[k], k));
     sel.addEventListener('change', () => { if (k === 'global') a.global = sel.value; else a.perPrayer[k] = sel.value; save(); });
     label.append(span, sel);
     const btn = document.createElement('button');
@@ -2846,10 +2853,13 @@ function sanitizeAdhans() {
   let changed = false;
   if (!ok(a.global)) { a.global = DEFAULT_ADHAN; changed = true; }
   for (const k of Object.keys(a.perPrayer)) if (!ok(a.perPrayer[k])) { a.perPrayer[k] = DEFAULT_ADHAN; changed = true; }
+  const fo = id => ADHANS.find(x => x.id === id && x.fajrOnly);                   // Adhan du Fajr choisi ailleurs : sa voix ordinaire
+  if (fo(a.global)) { a.global = fo(a.global).fajrOf; changed = true; }
+  for (const k of Object.keys(a.perPrayer)) if (k !== 'Fajr' && fo(a.perPrayer[k])) { a.perPrayer[k] = fo(a.perPrayer[k]).fajrOf; changed = true; }
   if (changed) save();
 }
 
-export const APP_VERSION = '2.14.3';
+export const APP_VERSION = '2.15.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
