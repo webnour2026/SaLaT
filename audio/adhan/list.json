@@ -10,6 +10,11 @@
   "label": "Adhan1"
  },
  {
+  "id": "anas_tazi",
+  "file": "audio/adhan/anas_tazi.mp3",
+  "label": "Anas tazi"
+ },
+ {
   "id": "doha",
   "file": "audio/adhan/doha.mp3",
   "label": "Doha"
