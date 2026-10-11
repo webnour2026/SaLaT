@@ -894,10 +894,17 @@ async function buildMonthImage(mon) {
   g.textAlign = rtl ? 'right' : 'left'; g.textBaseline = 'alphabetic'; g.fillStyle = '#0E6B58';
   g.font = font(700, 38); g.fillText('SaLaTi – صلاتي', X(M + 116), y + 42);
   g.fillStyle = '#5A6B78'; g.font = font(400, 24);
-  g.fillText(t('shareFooter').split(':').slice(1).join(':').trim() || '', X(M + 116), y + 80);
-  g.font = font(400, 20); g.fillText('Google Play : SaLaTi', X(M + 116), y + 112);
+  const badge = await loadBadge(), bh = 104, bw = Math.round(bh * BADGE_RATIO), room = W - 2 * M - 116 - (badge ? bw + 16 : 0);
+  g.fillText(footerLine() || '', X(M + 116), y + 80, room);
+  if (badge) g.drawImage(badge, X(W - M - bw, bw), y - 4, bw, bh);
   return cv;
 }
+
+// Badge officiel « Disponible sur Google Play » (icons/badges/<langue>.png, fichiers de Google, à ne pas modifier)
+const BADGE_RATIO = 646 / 250;
+// « Horaires de prière, Qibla et Adhan… » : la partie de shareFooter après « : », avec majuscule
+const footerLine = () => { const x = t('shareFooter').split(':').slice(1).join(':').trim(); return x.charAt(0).toLocaleUpperCase() + x.slice(1); };
+const loadBadge = () => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = `icons/badges/${['ar', 'fr', 'en'].includes(getLang()) ? getLang() : 'en'}.png`; });
 
 function monthShareText(mon) {
   if (state.tableMode === 'ramadan') {
@@ -1004,8 +1011,9 @@ async function buildDayImage(day, isToday) {
   g.textAlign = rtl ? 'right' : 'left'; g.textBaseline = 'alphabetic';
   g.fillStyle = '#0E6B58'; g.font = font(700, 40); g.fillText('SaLaTi – صلاتي', X(M + 118), y + 44);
   g.fillStyle = '#5A6B78'; g.font = font(400, 26);
-  g.fillText(t('shareFooter').split(':').slice(1).join(':').trim(), X(M + 118), y + 84);
-  g.font = font(400, 22); g.fillText('Google Play : SaLaTi', X(M + 118), y + 116);
+  const badge = await loadBadge(), bh = 110, bw = Math.round(bh * BADGE_RATIO), room = W - 2 * M - 118 - (badge ? bw + 16 : 0);
+  g.fillText(footerLine(), X(M + 118), y + 84, room);
+  if (badge) g.drawImage(badge, X(W - M - bw, bw), y - 6, bw, bh);
   return cv;
 }
 function dayShareText(day) {
@@ -1804,11 +1812,13 @@ const warsh = px => `400 ${px}px WarshQ, Amiri, serif`;             // texte cor
   const rtl = document.documentElement.dir === 'rtl';
   const ix = rtl ? W - 60 - 90 : 60;
   if (icon) { g.save(); g.beginPath(); g.roundRect(ix, fy + 8, 90, 90, 20); g.clip(); g.drawImage(icon, ix, fy + 8, 90, 90); g.restore(); }
-  g.textAlign = rtl ? 'right' : 'left';
+  g.textAlign = rtl ? 'right' : 'left'; g.direction = rtl ? 'rtl' : 'ltr';   // la dédicace était en RTL : le pied suit la langue de l'appli
   const tx = rtl ? W - 60 - 110 : 170;
-  g.fillStyle = '#fff'; g.font = plex(700, 38); g.fillText('SaLaTi – صلاتي', tx, fy + 50);
-  g.font = plex(400, 24); g.globalAlpha = .85; g.fillText(t('shareFooter').split(':').slice(1).join(':').trim(), tx, fy + 88);
-  g.fillText('Google Play : SaLaTi', tx, fy + 118); g.globalAlpha = 1;
+  const badge = await loadBadge(), bh = 112, bw = Math.round(bh * BADGE_RATIO);
+  const room = W - 170 - 50 - (badge ? bw + 16 : 0);                        // texte entre l'icône et le badge
+  g.fillStyle = '#fff'; g.font = plex(700, 38); g.fillText('SaLaTi – صلاتي', tx, fy + 50, room);
+  g.font = plex(400, 24); g.globalAlpha = .85; g.fillText(footerLine(), tx, fy + 90, room); g.globalAlpha = 1;
+  if (badge) g.drawImage(badge, rtl ? 44 : W - 44 - bw, fy - 2, bw, bh);   // côté opposé à l'icône
   return cv;
 }
 
@@ -2865,7 +2875,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.21.5';
+export const APP_VERSION = '2.22.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

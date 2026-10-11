@@ -1,5 +1,5 @@
 // Service worker — changer VERSION à chaque déploiement pour forcer la mise à jour.
-const VERSION = 'salati-v2.21.5';
+const VERSION = 'salati-v2.22.0';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
@@ -8,6 +8,9 @@ const APP_SHELL = [
   'index.html',
   'manifest.json',
   'confidentialite.html',
+  'icons/badges/ar.png',
+  'icons/badges/fr.png',
+  'icons/badges/en.png',
   'css/style.css',
   'fonts/warsh.10.woff2',
   'js/adhan.js',
