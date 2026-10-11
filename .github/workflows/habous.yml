@@ -5,7 +5,11 @@
 name: Habous
 on:
   schedule:
-    - cron: '*/15 18-22 * * *' # toutes les 15 min le soir (l'annonce tombe vers 19-22 h) : la veille d'un Aïd, pas d'attente
+    # GitHub décale souvent ces horaires de plusieurs heures : chaque exécution du soir d'annonce surveille elle-même
+    # (toutes les 5 min, jusqu'à 4 h 30) ; plusieurs départs pour qu'au moins un tombe à temps, les suivants attendent leur tour.
+    - cron: '50 16 * * *'
+    - cron: '35 18 * * *'
+    - cron: '20 20 * * *'
     - cron: '40 6 * * *'       # rattrapage le lendemain matin
   workflow_dispatch:
     inputs:
@@ -20,6 +24,7 @@ concurrency:
 jobs:
   habous:
     runs-on: ubuntu-latest
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
@@ -31,6 +36,7 @@ jobs:
         run: node scripts/update-habous.mjs
         env:
           MANUAL_START: ${{ github.event.inputs.start }}
+          WATCH_MIN: ${{ github.event_name == 'schedule' && '270' || (github.event.inputs.start == '' && '180' || '0') }}
       - name: Publier si le calendrier a changé
         run: |
           if [ -n "$(git status --porcelain data/habous.json)" ]; then

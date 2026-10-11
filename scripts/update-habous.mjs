@@ -195,6 +195,11 @@ async function main() {
     start = d; console.log('Saisie manuelle :', manual);
   } else {
     if (today < last + 27) { console.log(`Pas encore la période d'annonce (dernier début : ${lastRow.start}).`); return; }
+    // Soir d'annonce (29e ou 30e jour) : WATCH_MIN > 0 → on ne s'arrête pas au premier essai, on relit toutes les 5 min
+    // jusqu'à l'annonce (GitHub décale les tâches programmées de plusieurs heures : une seule exécution doit couvrir la soirée).
+    const watchMin = Number(process.env.WATCH_MIN || 0), evening = today === last + 28 || today === last + 29;
+    const deadline = Date.now() + (evening ? watchMin : 0) * 60000;
+    for (let round = 1; ; round++) {
     const list = sources(next.m, next.y);
     const cands = [];
     const res = await Promise.allSettled(list.map(async src => {
@@ -209,9 +214,14 @@ async function main() {
     res.forEach((r, i) => console.log(`  ${list[i].trust === 'official' ? '★' : '·'} ${list[i].name} : ${r.status === 'fulfilled' ? r.value : 'indisponible (' + r.reason.message + ')'}`));
     const verdict = decide(cands);
     console.log(`Décision : ${verdict.day ? iso(verdict.day) : 'aucune'} — ${verdict.why}`);
-    if (verdict.day) start = verdict.day;
+    if (verdict.day) { start = verdict.day; break; }
+    if (Date.now() + 5 * 60000 > deadline) break;
+    console.log(`Essai ${round} : pas encore d'annonce — nouvel essai dans 5 min.`);
+    await new Promise(r => setTimeout(r, 5 * 60000));
+    }
   }
   if (!start) { console.log(`Aucune annonce trouvée pour ${HIJRI_AR[next.m]} ${next.y}.`); return; }
+  console.log(`::notice title=Habous::${HIJRI_AR[next.m]} ${next.y} commence le ${iso(start)}`);
   t.months.push({ y: next.y, m: next.m, start: iso(start) });
   t.updated = iso(today);
   save(t);
