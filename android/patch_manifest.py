@@ -5,12 +5,13 @@ mod = pathlib.Path(sys.argv[1])
 # mises en page natives (notification permanente) : android/res/layout -> app/src/main/res/layout
 import shutil
 # + description du widget : android/res/xml -> app/src/main/res/xml
-for kind in ('layout', 'xml'):
+# + polices du widget : android/res/font (*.ttf) -> app/src/main/res/font
+for kind, pat in (('layout', '*.xml'), ('xml', '*.xml'), ('font', '*.ttf')):
     src = pathlib.Path(__file__).resolve().parent / 'res' / kind
     if src.is_dir():
         dst = mod / 'src/main/res' / kind
         dst.mkdir(parents=True, exist_ok=True)
-        for f in src.glob('*.xml'):
+        for f in src.glob(pat):
             shutil.copy(f, dst / f.name)
             print(kind, 'copié :', f.name)
 m = mod / 'src/main/AndroidManifest.xml'

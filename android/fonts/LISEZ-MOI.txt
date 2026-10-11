@@ -1,0 +1,11 @@
+Polices intégrées au widget Android (android/res/font), sous-ensembles (latin + arabe) des polices de l'appli :
+
+  salati_kufi.ttf          Reem Kufi, graisse 600 — Copyright 2015-2022 The Reem Kufi Project Authors
+                           (https://github.com/aliftype/reem-kufi)
+  salati_plex_light.ttf    « SaLaTi Sans Light »,  tiré d'IBM Plex Sans Arabic Light  — Copyright © 2017 IBM Corp.
+  salati_plex_medium.ttf   « SaLaTi Sans Medium », tiré d'IBM Plex Sans Arabic Medium — Copyright © 2017 IBM Corp.
+                           (https://github.com/IBM/plex) — « Plex » est un Reserved Font Name : la version modifiée est renommée.
+
+Toutes trois sous licence SIL Open Font License 1.1 (texte complet : OFL.txt, https://openfontlicense.org).
+Ce sont des « Modified Versions » au sens de la licence (sous-ensemble de caractères, instance figée de la police variable) ;
+Reem Kufi n'a pas de « Reserved Font Name » et garde son nom ; IBM Plex en a un (« Plex ») : renommée « SaLaTi Sans ».

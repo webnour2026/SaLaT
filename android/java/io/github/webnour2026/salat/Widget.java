@@ -32,7 +32,7 @@ public class Widget extends AppWidgetProvider {
     static final String ACTION_TICK = "io.github.webnour2026.salat.WIDGET_TICK";
     private static final int RQ_TICK = 30;
 
-    private static final int CREAM = 0xFFF4F1E6, SUB = 0xFFBFD8CF, GOLD = 0xFFEFCB72, DIM = 0x99BFD8CF;
+    private static final int CREAM = 0xFFF4F1E6, SUB = 0xFFBFD8CF, GOLD = 0xFFEFCB72, DIM = 0x80BFD8CF;
 
     @Override
     public void onReceive(Context ctx, Intent intent) {
@@ -78,17 +78,22 @@ public class Widget extends AppWidgetProvider {
 
     private static RemoteViews build(Context ctx, JSONObject cfg, long now,
                                      AlarmScheduler.Next cur, AlarmScheduler.Next next, int size) {
-        String layout = size == WidgetMath.COMPACT ? "widget_compact" : "widget_large";
-        RemoteViews rv = new RemoteViews(ctx.getPackageName(), res(ctx, layout, "layout"));
-        rv.setOnClickPendingIntent(id(ctx, "w_root"), AlarmScheduler.openApp(ctx));
-
         AlarmScheduler.Next shown = cur != null ? cur : next;
+        String name = cfg == null || shown == null ? "SaLaTi" : AlarmScheduler.prayerName(cfg, shown.key, shown.time);
+        boolean rtl = cfg == null || shown == null || WidgetMath.rtl(name);
+        String base = size == WidgetMath.TINY ? "widget_tiny" : size == WidgetMath.COMPACT ? "widget_compact" : "widget_large";
+        RemoteViews rv = new RemoteViews(ctx.getPackageName(), res(ctx, base + (rtl ? "_ar" : "_ltr"), "layout"));
+        rv.setOnClickPendingIntent(id(ctx, "w_root"), AlarmScheduler.openApp(ctx));
+        boolean large = size == WidgetMath.LARGE || size == WidgetMath.MEDIUM;
+
         if (cfg == null || shown == null) {
             // module jamais synchronisé : on invite à ouvrir l'appli une fois
             rv.setTextViewText(id(ctx, "w_prayer"), "SaLaTi");
+            rv.setTextViewText(id(ctx, "w_time"), "افتح التطبيق · Ouvrir");
             rv.setViewVisibility(id(ctx, "w_count"), View.GONE);
-            if (size != WidgetMath.COMPACT) {
-                rv.setTextViewText(id(ctx, "w_label"), "افتح التطبيق · Ouvrir l'appli");
+            if (large) {
+                rv.setViewVisibility(id(ctx, "w_label"), View.GONE);
+                rv.setViewVisibility(id(ctx, "w_clabel"), View.GONE);
                 rv.setViewVisibility(id(ctx, "w_row"), View.GONE);
                 rv.setViewVisibility(id(ctx, "w_head"), View.GONE);
             }
@@ -98,28 +103,31 @@ public class Widget extends AppWidgetProvider {
         String tz = cfg.optString("tz", TimeZone.getDefault().getID());
         SimpleDateFormat hm = new SimpleDateFormat("HH:mm", Locale.US);
         hm.setTimeZone(TimeZone.getTimeZone(tz));
-        String name = AlarmScheduler.prayerName(cfg, shown.key, shown.time);
-        boolean rtl = WidgetMath.rtl(name);
 
-        rv.setTextViewText(id(ctx, "w_prayer"), name + "  " + hm.format(new Date(shown.time)));
+        rv.setTextViewText(id(ctx, "w_prayer"), name);
+        rv.setTextViewText(id(ctx, "w_time"), hm.format(new Date(shown.time)));
+        // « −1:24:10 » avant l'heure ; juste après, « +04:21 » en doré (jusqu'à la fin du délai), puis la prière suivante
         int count = id(ctx, "w_count");
         rv.setViewVisibility(count, View.VISIBLE);
-        rv.setChronometer(count, SystemClock.elapsedRealtime() + (shown.time - now), cur != null ? "+%s" : "%s", true);
+        rv.setChronometer(count, SystemClock.elapsedRealtime() + (shown.time - now), cur != null ? "+%s" : "\u2212%s", true);
         if (Build.VERSION.SDK_INT >= 24) rv.setChronometerCountDown(count, cur == null);
+        rv.setTextColor(count, cur != null ? GOLD : CREAM);
 
-        if (size == WidgetMath.COMPACT) return rv;
+        if (!large) return rv;
 
         rv.setTextViewText(id(ctx, "w_label"), cur != null
-                ? AlarmScheduler.text(cfg, "wSince", rtl ? "منذ" : "Depuis")
+                ? AlarmScheduler.text(cfg, "itsTime", rtl ? "حان وقت صلاة" : "C\u2019est l\u2019heure de")
                 : AlarmScheduler.text(cfg, "wNext", rtl ? "الصلاة القادمة" : "Prochaine prière"));
+        rv.setTextViewText(id(ctx, "w_clabel"), cur != null
+                ? AlarmScheduler.text(cfg, "wSince", rtl ? "منذ" : "Depuis")
+                : AlarmScheduler.text(cfg, "wIn", rtl ? "بعد" : "Dans"));
 
-        // en-tête : ville et date hégirienne (grand format seulement)
+        // en-tête : ville et date hégirienne (grand format seulement) — gauche → droite fixe : en arabe, la ville à droite
         if (size == WidgetMath.LARGE) {
             String city = AlarmScheduler.text(cfg, "city", "");
             String hijri = "";
             JSONArray hj = cfg.optJSONArray("hj");
             if (hj != null && shown.day >= 0 && shown.day < hj.length()) hijri = hj.optString(shown.day, "");
-            // en-tête en gauche → droite fixe : en arabe, la ville à droite
             rv.setTextViewText(id(ctx, "w_left"), rtl ? hijri : city);
             rv.setTextViewText(id(ctx, "w_right"), rtl ? city : hijri);
             rv.setTextColor(id(ctx, "w_left"), rtl ? GOLD : SUB);

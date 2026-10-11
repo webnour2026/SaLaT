@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Filet doré entre la prochaine prière et les 5 horaires, estompé aux deux bouts -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient android:angle="0" android:startColor="#00EFCB72" android:centerColor="#59EFCB72" android:endColor="#00EFCB72" />
+    <size android:height="1dp" />
+</shape>

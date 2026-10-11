@@ -81,6 +81,15 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.19.0] – 2026-10-11 ⚠ nouvel AAB (version code 21, native=9)
+### Modifié
+- Widget redessiné aux couleurs et polices de l'appli : nom de la prière en Reem Kufi, chiffres en IBM Plex Sans Arabic (renommée « SaLaTi Sans », sous-ensemble intégré, licence OFL : android/fonts/), fond vert avec le motif d'étoiles de l'écran d'accueil, filet doré, prière et compte à rebours sur deux colonnes (prière à droite en arabe).
+- Compte à rebours signé : « −5:26:38 » avant l'heure, « +04:21 » en doré juste après (avec « حان وقت صلاة » / « منذ »), puis la prière suivante.
+- Trois formats selon la taille : grand (ville, date hégirienne, 5 horaires), une rangée (côte à côte), étroit 2 cases (empilé).
+### Corrigé
+- En-tête du widget : ville et date hégirienne collées au centre (alignement « début/fin » inversé par l'arabe) ; désormais aux deux extrémités.
+- Mises en page générées par scripts/gen-widget-layouts.py.
+
 ## [2.18.2] – 2026-10-11
 ### Ajouté
 - Réglages → À propos : la version du module Android installé s'affiche à côté de celle des écrans (« Version 2.18.2 · Android 8 »), pour savoir d'un coup d'œil si la mise à jour Google Play est installée.

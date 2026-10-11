@@ -6,17 +6,18 @@ package io.github.webnour2026.salat;
 final class WidgetMath {
     private WidgetMath() {}
 
-    static final int COMPACT = 0, MEDIUM = 1, LARGE = 2;
+    static final int COMPACT = 0, MEDIUM = 1, LARGE = 2, TINY = 3;
 
     /**
      * Mise en page selon la taille donnée par le lanceur (dp) :
-     *   COMPACT : une rangée (≈ 1 case de haut, ou trop étroit pour 5 horaires) → prière + compte à rebours ;
+     *   TINY    : étroit (≈ 2 cases de large) → prière, puis compte à rebours en dessous ;
+     *   COMPACT : une rangée (≈ 1 case de haut) → prière et compte à rebours côte à côte ;
      *   MEDIUM  : + les 5 horaires du jour ;
      *   LARGE   : + ville et date hégirienne.
      */
     static int layout(int widthDp, int heightDp) {
+        if (widthDp > 0 && widthDp < 200) return TINY;
         if (heightDp > 0 && heightDp < 100) return COMPACT;
-        if (widthDp > 0 && widthDp < 200) return COMPACT;
         if (heightDp > 0 && heightDp < 150) return MEDIUM;
         return LARGE;
     }
