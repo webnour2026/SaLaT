@@ -1,0 +1,20 @@
+# Compare le calcul local des horaires (méthodes hors Maroc) à AlAdhan, la source utilisée par l'appli hors Maroc.
+# Actions → « Vérifier les méthodes » → Run workflow ; résultat dans le résumé du travail.
+name: Vérifier les méthodes
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['js/prayer-calc.js', 'scripts/verifier-aladhan.mjs']
+permissions:
+  contents: read
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/verifier-aladhan.mjs

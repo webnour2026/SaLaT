@@ -3,7 +3,8 @@
 // Pour les autres méthodes : secours si l'API est injoignable et qu'aucun horaire n'est en cache. Algorithme dérivé de PrayTimes.org.
 import { moroccoReference } from './localites.js';
 
-// fajr / isha en degrés sous l'horizon ; ishaMin = minutes après le maghrib
+// fajr / isha en degrés sous l'horizon ; ishaMin = minutes après le maghrib ;
+// maghrib = degrés sous l'horizon (méthodes chiites), maghribMin = minutes après le coucher. Paramètres d'AlAdhan (api.aladhan.com/v1/methods).
 const METHOD_PARAMS = {
   21: { fajr: 19, isha: 17 },      // Maroc : voir MA_MODEL
   3:  { fajr: 18, isha: 17 },      // MWL
@@ -18,6 +19,16 @@ const METHOD_PARAMS = {
   8:  { fajr: 19.5, ishaMin: 90 }, // Golfe
   16: { fajr: 18.2, isha: 18.2 },  // Dubaï
   15: { fajr: 18, isha: 18 },      // Moonsighting (approx.)
+  9:  { fajr: 18, isha: 17.5 },    // Koweït
+  10: { fajr: 18, ishaMin: 90 },   // Qatar
+  11: { fajr: 20, isha: 18 },      // Singapour (MUIS)
+  17: { fajr: 20, isha: 18 },      // Malaisie (JAKIM)
+  20: { fajr: 20, isha: 18 },      // Indonésie (KEMENAG)
+  14: { fajr: 16, isha: 15 },      // Russie
+  22: { fajr: 18, maghribMin: 3, ishaMin: 77 },   // Portugal (Comunidade Islâmica de Lisboa)
+  23: { fajr: 18, isha: 18, maghribMin: 5 },      // Jordanie
+  0:  { fajr: 16, isha: 14, maghrib: 4 },         // chiite (Qom)
+  7:  { fajr: 17.7, isha: 14, maghrib: 4.5 },     // Téhéran
 };
 
 const rad = d => d * Math.PI / 180;
@@ -92,7 +103,7 @@ export function computeDay({ lat, lng, snap = true, code = null }, dateStr, meth
     Asr: asrTime(school === 1 ? 2 : 1, 13 / 24),
     Sunset: angleTime(hSet, 18 / 24),
   };
-  h.Maghrib = h.Sunset;
+  h.Maghrib = p.maghrib ? angleTime(p.maghrib, 18 / 24) : h.Sunset + (p.maghribMin || 0) / 60;
   h.Isha = p.ishaMin ? h.Maghrib + p.ishaMin / 60 : angleTime(ishaAngle, 18 / 24);
   // Hautes latitudes (Europe du Nord en été…) : quand le Soleil n'atteint pas l'angle, Fajr/Isha n'existent pas ou sont aberrants.
   // Règle « angle » (celle de PrayTimes et d'AlAdhan par défaut) : portion de la nuit = angle / 60. Sans effet aux latitudes ordinaires.

@@ -24,7 +24,7 @@ function on(sel, ev, fn, opts) {
   const el = document.querySelector(sel);
   if (el) el.addEventListener(ev, fn, opts); else console.warn('Élément absent :', sel);
 }
-const METHOD_IDS = [21, 3, 5, 4, 1, 2, 13, 12, 19, 18, 8, 16, 15];
+const METHOD_IDS = [21, 3, 5, 4, 1, 2, 13, 12, 19, 18, 8, 9, 10, 16, 23, 17, 20, 11, 14, 22, 0, 7, 15];
 const LIST_ROWS = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 // Le vendredi, la prière du Dhuhr est la prière de la Joumou'a
 const isFridayKey = dateKey => new Date(`${dateKey}T12:00:00Z`).getUTCDay() === 5;
@@ -2863,7 +2863,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.19.1';
+export const APP_VERSION = '2.20.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

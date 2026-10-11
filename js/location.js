@@ -23,7 +23,23 @@ export const PRESET_CITIES = [
 ];
 
 // Méthode de calcul conseillée par pays (utilisée tant que l'utilisateur n'a pas choisi)
-export const METHOD_BY_COUNTRY = { ma: 21, sa: 4, eg: 5, pk: 1, us: 2, ca: 2, tr: 13, fr: 12, dz: 19, tn: 18, ae: 16, kw: 8, qa: 8, bh: 8, om: 8 };
+// Méthode proposée d'office selon le pays (code ISO) ; ailleurs : Ligue islamique mondiale (3). L'utilisateur peut toujours la changer.
+export const METHOD_BY_COUNTRY = {
+  ma: 21,                                                         // Maroc : horaires des Habous
+  sa: 4, ye: 4,                                                   // Umm Al-Qura
+  eg: 5, sd: 5, ly: 5, sy: 5, lb: 5, ps: 5, iq: 5,                // Autorité égyptienne (usage courant au Machrek et en Libye)
+  ae: 16, kw: 9, qa: 10, bh: 8, om: 8,                            // Golfe
+  jo: 23,                                                         // Jordanie
+  dz: 19, tn: 18, mr: 3,                                          // Maghreb
+  tr: 13, az: 13,                                                 // Diyanet
+  pk: 1, in: 1, bd: 1, af: 1,                                     // Karachi
+  ir: 7,                                                          // Téhéran
+  my: 17, id: 20, sg: 11, bn: 17,                                 // Asie du Sud-Est
+  ru: 14,                                                         // Russie
+  us: 2, ca: 2,                                                   // ISNA
+  fr: 12,                                                         // UOIF
+  pt: 22,                                                         // Lisbonne
+};
 
 export function getGpsPosition() {
   return new Promise((resolve, reject) => {

@@ -74,7 +74,7 @@ final class PrayerCalc {
         1200, 2500, 2000, 1400, 1500, 1250, 1000
     };
 
-    /** {fajr°, isha°, ishaMin (0 = angle), décalage Dhuhr (min), décalage Maghrib (min)} */
+    /** {fajr°, isha°, ishaMin (0 = angle), maghrib° (0 = coucher), minutes après le coucher pour le Maghrib} — paramètres d'AlAdhan, comme js/prayer-calc.js */
     private static double[] params(int method) {
         switch (method) {
             case 21: return new double[]{19, 17, 0};          // Maroc : voir le modèle ci-dessus
@@ -90,6 +90,16 @@ final class PrayerCalc {
             case 8:  return new double[]{19.5, 0, 90};        // Golfe
             case 16: return new double[]{18.2, 18.2, 0};      // Dubaï
             case 15: return new double[]{18, 18, 0};          // Moonsighting (approx.)
+            case 9:  return new double[]{18, 17.5, 0};        // Koweït
+            case 10: return new double[]{18, 0, 90};          // Qatar
+            case 11: return new double[]{20, 18, 0};          // Singapour
+            case 17: return new double[]{20, 18, 0};          // Malaisie
+            case 20: return new double[]{20, 18, 0};          // Indonésie
+            case 14: return new double[]{16, 15, 0};          // Russie
+            case 22: return new double[]{18, 0, 77, 0, 3};    // Portugal : Maghrib = coucher + 3 min, Isha = Maghrib + 77 min
+            case 23: return new double[]{18, 18, 0, 0, 5};    // Jordanie : Maghrib = coucher + 5 min
+            case 0:  return new double[]{16, 14, 0, 4};       // chiite (Qom) : Maghrib à 4° sous l'horizon
+            case 7:  return new double[]{17.7, 14, 0, 4.5};   // Téhéran
             default: return new double[]{18, 17, 0};          // MWL
         }
     }
@@ -157,7 +167,8 @@ final class PrayerCalc {
         double asrAngle = -deg(Math.atan(1 / ((school == 1 ? 2 : 1) + dtan(Math.abs(lat - s13[0])))));
         double asr = angleTime(jd, lat, asrAngle, 13 / 24.0, false);
         double sunset = angleTime(jd, lat, hSet, 18 / 24.0, false);
-        double maghrib = sunset;
+        double maghrib = p.length > 3 && p[3] > 0 ? angleTime(jd, lat, p[3], 18 / 24.0, false)
+                : sunset + (p.length > 4 ? p[4] : 0) / 60;
         double isha = p[2] > 0 ? maghrib + p[2] / 60 : angleTime(jd, lat, ishaAngle, 18 / 24.0, false);
 
         // Hautes latitudes : règle « angle » (portion de la nuit = angle / 60) quand le Soleil n'atteint pas l'angle
