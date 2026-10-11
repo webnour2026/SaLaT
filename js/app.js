@@ -149,7 +149,7 @@ function renderSettingsHub() {
   set('adhan', snd.join(' \u00b7 '));
   set('look', `${{ fr: 'Fran\u00e7ais', ar: '\u0627\u0644\u0639\u0631\u0628\u064a\u0629', en: 'English' }[s.lang] || ''} \u00b7 ${t(s.theme === 'auto' ? 'auto' : s.theme)}`);
   set('adv', '');
-  set('about', `Version ${APP_VERSION}`);
+  set('about', versionLabel());
   const mm = mqMode(), mq = MQ();
   set('mosque', mm === 'off' ? '' : t(mm === 'once' ? 'mqHubOnce' : 'mqHubPerm', { n: mq.dur }));
   const hs = $('#hubMosqueState'); if (hs) { hs.textContent = t(mm === 'off' ? 'hubOff' : 'hubOn'); hs.classList.toggle('on', mm !== 'off'); }
@@ -566,6 +566,8 @@ const NATIVE_LATEST = 8;                                    // 4 = module 2.14 :
 const STORE_URL = 'https://play.google.com/store/apps/details?id=io.github.webnour2026.salat';
 const nativeLevel = () => Number(localStorage.getItem('priere.nativeLvl') || 0);
 const UPD_KEY = 'priere.updDismiss';
+// « Version 2.18.1 · Android 8 » : version des écrans (site) et du module Android installé (Google Play)
+const versionLabel = () => `Version ${APP_VERSION}${isTwa() && nativeLevel() > 0 ? ` · Android ${nativeLevel()}` : ''}`;
 function renderUpdate() {
   const box = $('#updBanner'); if (!box) return;
   // fermé (×) : silence 3 jours, mais seulement pour cette version — une nouvelle version du module le fait réapparaître
@@ -2548,7 +2550,7 @@ function renderSettings() {
   renderSettingsHub();
   renderCredits();
   renderCustomAdhan();
-  const ver = $('#appVersion'); if (ver) ver.textContent = `Version ${APP_VERSION}`;
+  const ver = $('#appVersion'); if (ver) ver.textContent = versionLabel();
   if (!state.adhanAvail) availableAdhans().then(av => { state.adhanAvail = av; renderAdhanPickers(); });
   $('#sNotifyAt').checked = a.notifyAt;
   $('#sNotifyBefore').replaceChildren(...[0, 5, 10, 15].map(n => new Option(n ? `${n} ${t('minBefore')}` : t('none'), n, false, n === a.notifyBefore)));
@@ -2861,7 +2863,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.18.1';
+export const APP_VERSION = '2.18.2';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

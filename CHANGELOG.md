@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.18.2] – 2026-10-11
+### Ajouté
+- Réglages → À propos : la version du module Android installé s'affiche à côté de celle des écrans (« Version 2.18.2 · Android 8 »), pour savoir d'un coup d'œil si la mise à jour Google Play est installée.
+
 ## [2.18.1] – 2026-10-11
 ### Corrigé
 - Bandeau « mise à jour disponible » : fermé avec ×, il restait caché 3 jours même quand une NOUVELLE version du module sortait entre-temps. La fermeture ne vaut plus que pour la version en cours.
