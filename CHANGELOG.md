@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.18.1] – 2026-10-11
+### Corrigé
+- Bandeau « mise à jour disponible » : fermé avec ×, il restait caché 3 jours même quand une NOUVELLE version du module sortait entre-temps. La fermeture ne vaut plus que pour la version en cours.
+
 ## [2.18.0] – 2026-10-11 ⚠ nouvel AAB (version code 20, native=8)
 ### Ajouté
 - Widget d'écran d'accueil Android (4 × 2 par défaut, redimensionnable) : prochaine prière avec compte à rebours en direct, les 5 horaires du jour (prochaine prière en doré, prières passées estompées), ville et date hégirienne en grand format ; petit format (une rangée) : prière + compte à rebours. Juste après l'heure : « منذ » et temps écoulé, comme la notification permanente.

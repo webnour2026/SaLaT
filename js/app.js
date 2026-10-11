@@ -568,7 +568,8 @@ const nativeLevel = () => Number(localStorage.getItem('priere.nativeLvl') || 0);
 const UPD_KEY = 'priere.updDismiss';
 function renderUpdate() {
   const box = $('#updBanner'); if (!box) return;
-  let until = 0; try { until = Number(localStorage.getItem(UPD_KEY) || 0); } catch {}
+  // fermé (×) : silence 3 jours, mais seulement pour cette version — une nouvelle version du module le fait réapparaître
+  let until = 0; try { const [lvl, u] = String(localStorage.getItem(UPD_KEY) || '').split(':'); if (Number(lvl) === NATIVE_LATEST) until = Number(u) || 0; } catch {}
   box.hidden = !(isTwa() && nativeLevel() > 0 && nativeLevel() < NATIVE_LATEST && Date.now() > until);
 }
 function openPlay() {
@@ -2787,7 +2788,7 @@ function bind() {
   on('#adhanStop', 'click', () => { stopAdhan(); hideAdhanAlert(); });
   on('#adhanSilent', 'click', () => { stopAdhan(); hideAdhanAlert(); renderSilent(); $('#silentDialog').showModal(); });
   on('#updBtn', 'click', openPlay);
-  on('#updClose', 'click', () => { try { localStorage.setItem(UPD_KEY, String(Date.now() + 3 * 864e5)); } catch {} renderUpdate(); });   // rappel dans 3 jours
+  on('#updClose', 'click', () => { try { localStorage.setItem(UPD_KEY, `${NATIVE_LATEST}:${Date.now() + 3 * 864e5}`); } catch {} renderUpdate(); });   // rappel dans 3 jours
   on('#silentOpen', 'click', () => { renderSilent(); $('#silentDialog').showModal(); });
   // Mode Mosquée
   ['#mosqueBtn', '#mqBadge', '#hubMosque'].forEach(sel => on(sel, 'click', openMosque));
@@ -2860,7 +2861,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.18.0';
+export const APP_VERSION = '2.18.1';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
