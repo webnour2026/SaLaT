@@ -8,7 +8,10 @@ L'en-tête et la rangée des horaires sont en gauche → droite fixe : Widget.ja
 import pathlib
 ROOT = pathlib.Path(__file__).resolve().parent.parent / 'android' / 'res'
 CREAM, SUB, GOLD, DIM = '#F4F1E6', '#BFD8CF', '#EFCB72', '#80BFD8CF'
-KUFI, LIGHT, MED = '@font/salati_kufi', '@font/salati_plex_light', '@font/salati_plex_medium'
+# Les widgets ne peuvent pas utiliser les polices de l'appli (res/font ignoré par le lanceur) : polices système pour le texte,
+# et le nom de la prière DESSINÉ en Reem Kufi par Widget.java (image w_prayer_img ; le texte w_prayer reste en secours).
+LIGHT, MED = 'sans-serif-light', 'sans-serif-medium'
+KUFI = MED
 NS = 'xmlns:android="http://schemas.android.com/apk/res/android"'
 
 def tv(id_, size, color, font=None, text=None, gravity=None, extra=''):
@@ -19,6 +22,10 @@ def tv(id_, size, color, font=None, text=None, gravity=None, extra=''):
     if gravity: a.append(f'android:gravity="{gravity}"')
     if extra: a.append(extra)
     return '<TextView ' + ' '.join(a) + ' />'
+
+def name_img(extra=''):
+    return (f'<ImageView android:id="@+id/w_prayer_img" android:layout_width="wrap_content" android:layout_height="wrap_content" '
+            f'android:adjustViewBounds="true" android:scaleType="fitCenter" android:visibility="gone" android:importantForAccessibility="no" {extra}/>')
 
 def count(size, preview, color=CREAM):
     if preview: return tv('w_count', size, color, LIGHT, '−1:24:10')
@@ -54,6 +61,7 @@ def large(rtl, preview=False):
     prayer = f'''<LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="{side}" android:orientation="vertical">
                 {tv('w_label', 11, SUB, None, 'الصلاة القادمة' if preview else None)}
                 {tv('w_prayer', 30, CREAM, KUFI, 'الظهر' if preview else None, extra='android:layout_marginTop="2dp" android:ellipsize="end"')}
+                {'' if preview else name_img('android:layout_marginTop="2dp" ')}
                 {tv('w_time', 15, GOLD, MED, '12:24' if preview else None, extra='android:layout_marginTop="2dp"')}
             </LinearLayout>'''
     cnt = f'''<LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="{other}" android:orientation="vertical">
@@ -78,6 +86,7 @@ def large(rtl, preview=False):
 def compact(rtl):
     prayer = f'''<LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="{'right' if rtl else 'left'}" android:orientation="vertical">
             {tv('w_prayer', 22, CREAM, KUFI, extra='android:ellipsize="end"')}
+            {name_img()}
             {tv('w_time', 13, GOLD, MED, extra='android:layout_marginTop="1dp"')}
         </LinearLayout>'''
     cnt = count(26, False)
@@ -87,7 +96,7 @@ def compact(rtl):
     </LinearLayout>''')
 
 def tiny(rtl):
-    name, time = tv('w_prayer', 17, CREAM, KUFI), tv('w_time', 13, GOLD, MED, extra='android:layout_marginStart="6dp" android:layout_marginEnd="6dp"')
+    name, time = tv('w_prayer', 17, CREAM, KUFI) + '\n            ' + name_img(), tv('w_time', 13, GOLD, MED, extra='android:layout_marginStart="6dp" android:layout_marginEnd="6dp"')
     line = f'{time}\n            {name}' if rtl else f'{name}\n            {time}'
     return frame(f'''<LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:orientation="vertical" android:paddingStart="10dp" android:paddingEnd="10dp">
         <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layoutDirection="ltr" android:gravity="center_vertical" android:orientation="horizontal">
@@ -105,7 +114,7 @@ def pattern():
     return f'''<?xml version="1.0" encoding="utf-8"?>
 <!-- GÉNÉRÉ par scripts/gen-widget-layouts.py — motif d'étoiles du fond du widget -->
 <vector {NS} android:width="360dp" android:height="200dp" android:viewportWidth="360" android:viewportHeight="200">
-    <path android:pathData="{' '.join(paths)}" android:strokeColor="{GOLD}" android:strokeAlpha="0.09" android:strokeWidth="1" android:fillColor="#00000000" />
+    <path android:pathData="{' '.join(paths)}" android:strokeColor="{GOLD}" android:strokeAlpha="0.06" android:strokeWidth="1" android:fillColor="#00000000" />
 </vector>
 '''
 

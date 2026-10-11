@@ -4,9 +4,10 @@
     <ImageView android:layout_width="match_parent" android:layout_height="match_parent" android:layout_margin="1dp" android:scaleType="centerCrop" android:src="@drawable/widget_pattern" android:importantForAccessibility="no" />
     <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:layoutDirection="ltr" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="16dp" android:paddingEnd="16dp">
         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="left" android:orientation="vertical">
-            <TextView android:id="@+id/w_prayer" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:singleLine="true" android:textColor="#F4F1E6" android:textSize="22sp" android:fontFamily="@font/salati_kufi" android:ellipsize="end" />
-            <TextView android:id="@+id/w_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:singleLine="true" android:textColor="#EFCB72" android:textSize="13sp" android:fontFamily="@font/salati_plex_medium" android:layout_marginTop="1dp" />
+            <TextView android:id="@+id/w_prayer" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:singleLine="true" android:textColor="#F4F1E6" android:textSize="22sp" android:fontFamily="sans-serif-medium" android:ellipsize="end" />
+            <ImageView android:id="@+id/w_prayer_img" android:layout_width="wrap_content" android:layout_height="wrap_content" android:adjustViewBounds="true" android:scaleType="fitCenter" android:visibility="gone" android:importantForAccessibility="no" />
+            <TextView android:id="@+id/w_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:singleLine="true" android:textColor="#EFCB72" android:textSize="13sp" android:fontFamily="sans-serif-medium" android:layout_marginTop="1dp" />
         </LinearLayout>
-        <Chronometer android:id="@+id/w_count" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:singleLine="true" android:fontFamily="@font/salati_plex_light" android:textColor="#F4F1E6" android:textSize="26sp" />
+        <Chronometer android:id="@+id/w_count" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:singleLine="true" android:fontFamily="sans-serif-light" android:textColor="#F4F1E6" android:textSize="26sp" />
     </LinearLayout>
 </FrameLayout>

@@ -7,6 +7,10 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -104,7 +108,7 @@ public class Widget extends AppWidgetProvider {
         SimpleDateFormat hm = new SimpleDateFormat("HH:mm", Locale.US);
         hm.setTimeZone(TimeZone.getTimeZone(tz));
 
-        rv.setTextViewText(id(ctx, "w_prayer"), name);
+        setName(ctx, rv, name, size == WidgetMath.TINY ? 17 : size == WidgetMath.COMPACT ? 22 : 30);
         rv.setTextViewText(id(ctx, "w_time"), hm.format(new Date(shown.time)));
         // « −1:24:10 » avant l'heure ; juste après, « +04:21 » en doré (jusqu'à la fin du délai), puis la prière suivante
         int count = id(ctx, "w_count");
@@ -158,6 +162,46 @@ public class Widget extends AppWidgetProvider {
         }
         rv.setViewVisibility(id(ctx, "w_row"), View.VISIBLE);
         return rv;
+    }
+
+    /**
+     * Nom de la prière en Reem Kufi, comme dans l'appli. Un widget ne peut pas utiliser les polices de l'appli (le lanceur les ignore) :
+     * on dessine le nom dans une image. À défaut (Android < 8, police absente, erreur), texte simple dans la police du système.
+     */
+    private static void setName(Context ctx, RemoteViews rv, String name, int sp) {
+        int img = id(ctx, "w_prayer_img"), txt = id(ctx, "w_prayer");
+        Bitmap b = null;
+        try { b = kufi(ctx, name, sp, CREAM); } catch (Throwable ignored) {}
+        if (b != null && img != 0) {
+            rv.setImageViewBitmap(img, b);
+            rv.setViewVisibility(img, View.VISIBLE);
+            rv.setViewVisibility(txt, View.GONE);
+            rv.setContentDescription(img, name);
+        } else {
+            rv.setTextViewText(txt, name);
+            rv.setViewVisibility(txt, View.VISIBLE);
+            if (img != 0) rv.setViewVisibility(img, View.GONE);
+        }
+    }
+
+    private static Bitmap kufi(Context ctx, String text, int sp, int color) {
+        if (Build.VERSION.SDK_INT < 26) return null;
+        int font = res(ctx, "salati_kufi", "font");
+        if (font == 0) return null;
+        Typeface tf = ctx.getResources().getFont(font);
+        android.util.DisplayMetrics dm = ctx.getResources().getDisplayMetrics();
+        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
+        p.setTypeface(tf);
+        p.setColor(color);
+        p.setTextSize(sp * dm.scaledDensity);
+        Paint.FontMetrics fm = p.getFontMetrics();
+        int pad = Math.round(2 * dm.density);
+        int w = (int) Math.ceil(p.measureText(text)) + 2 * pad;
+        int h = (int) Math.ceil(fm.descent - fm.ascent) + pad;
+        if (w <= 2 * pad || h <= pad) return null;
+        Bitmap b = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        new Canvas(b).drawText(text, pad, -fm.ascent, p);
+        return b;
     }
 
     // ---------- rafraîchissement à l'heure de chaque prière ----------

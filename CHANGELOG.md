@@ -81,6 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.19.1] – 2026-10-11 ⚠ nouvel AAB (version code 22, native=10)
+### Corrigé
+- Widget : les polices de l'appli n'étaient pas appliquées (un lanceur ignore les polices d'une appli dans un widget). Le nom de la prière est désormais dessiné en Reem Kufi dans une image (texte système en secours) ; chiffres en polices du système (fine pour le compte à rebours, medium pour les horaires). Polices Plex retirées de l'APK.
+- Motif d'étoiles du fond plus discret.
+
 ## [2.19.0] – 2026-10-11 ⚠ nouvel AAB (version code 21, native=9)
 ### Modifié
 - Widget redessiné aux couleurs et polices de l'appli : nom de la prière en Reem Kufi, chiffres en IBM Plex Sans Arabic (renommée « SaLaTi Sans », sous-ensemble intégré, licence OFL : android/fonts/), fond vert avec le motif d'étoiles de l'écran d'accueil, filet doré, prière et compte à rebours sur deux colonnes (prière à droite en arabe).
