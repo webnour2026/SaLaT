@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.21.5] – 2026-10-11
+### Modifié
+- Message de partage des cartes : « حمّل صلاتي مجاناً على أندرويد » / « Téléchargez SaLaTi gratuitement sur Android » / « Get SaLaTi for free on Android » (le lien mène à Google Play).
+
 ## [2.21.4] – 2026-10-11
 ### Modifié
 - Politique de confidentialité : l'hébergeur est nommé (GitHub Pages, GitHub/Microsoft) sans l'adresse technique du site.
