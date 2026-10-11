@@ -1,5 +1,5 @@
 // Service worker — changer VERSION à chaque déploiement pour forcer la mise à jour.
-const VERSION = 'salati-v2.21.2';
+const VERSION = 'salati-v2.21.3';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
@@ -104,6 +104,13 @@ self.addEventListener('fetch', event => {
   // Tous les fichiers d'une version sont pré-téléchargés ensemble à l'installation du service
   // worker : pas de mélange entre versions. Une nouvelle version (VERSION changée) s'installe
   // en arrière-plan puis l'appli se recharge une fois (voir registerSW dans app.js).
+  // Autre page du site (politique de confidentialité…) : cette page-là, pas l'appli. Seule la racine et index.html donnent l'appli.
+  if (req.mode === 'navigate' && !/(\/|\/index\.html)$/.test(url.pathname)) {
+    event.respondWith(caches.match(req, { cacheName: SHELL, ignoreSearch: true })
+      .then(hit => hit || fetch(req))
+      .catch(() => caches.match('index.html')));
+    return;
+  }
   if (req.mode === 'navigate') {
     event.respondWith(caches.match('index.html', { cacheName: SHELL })
       .then(hit => hit || fetch(req).then(res => { const copy = res.clone(); caches.open(SHELL).then(c => c.put('index.html', copy)); return res; }))
