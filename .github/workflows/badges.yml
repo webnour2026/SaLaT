@@ -1,0 +1,25 @@
+# Badges officiels « Disponible sur Google Play » (ar, fr, en), utilisés tels quels au pied des cartes partagées.
+# Règles de Google : https://play.google.com/intl/en_us/badges/ (ne pas modifier le badge, espace libre autour).
+name: Badges Google Play
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  badges:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Télécharger
+        run: |
+          mkdir -p icons/badges
+          for l in ar fr en; do
+            curl -fsSL -o icons/badges/$l.png "https://play.google.com/intl/en_us/badges/static/images/badges/${l}_badge_web_generic.png"
+            file icons/badges/$l.png | grep -q PNG || { echo "::warning ::$l n'est pas un PNG"; exit 1; }
+            echo "::notice ::$l $(python3 -c "import struct;d=open('icons/badges/$l.png','rb').read(24);print(struct.unpack('>II',d[16:24]))")"
+          done
+      - name: Enregistrer
+        run: |
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add icons/badges
+          git diff --cached --quiet || { git commit -m "Badges officiels Google Play (ar, fr, en)"; git push; }
