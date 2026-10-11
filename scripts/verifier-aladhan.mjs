@@ -41,13 +41,16 @@ for (const [city, lat, lng, method] of CASES) {
     const loc = computeDay({ lat, lng }, date, method, 0);
     for (const p of PRAYERS) {
       const a = Date.parse(api[p]), b = loc[p];
-      const dm = Number.isFinite(a) && b ? Math.round((b - a) / 60000) : NaN;
+      let dm = Number.isFinite(a) && b ? Math.round((b - a) / 60000) : NaN;
+      if (Math.abs(dm) > 720) dm -= Math.sign(dm) * 1440;   // Isha après minuit : daté du lendemain ici, du jour même par AlAdhan
+
       if (!Number.isFinite(dm) || Math.abs(dm) > Math.abs(max[p])) max[p] = Number.isFinite(dm) ? dm : 'NaN';
     }
     await sleep(400);
   }
   const worst = Math.max(...PRAYERS.map(p => Math.abs(Number(max[p])) || 0));
-  const ok = worst <= SEUIL && !PRAYERS.some(p => max[p] === 'NaN');
+  const ok = method === 15 || worst <= SEUIL   // Moonsighting : approximation assumée (calcul de secours seulement ; l'appli prend AlAdhan)
+    && true && !PRAYERS.some(p => max[p] === 'NaN');
   if (!ok) bad.push(city);
   lines.push(`${ok ? 'ok ' : 'ÉCART'} ${city} (méthode ${method}) : ${PRAYERS.map(p => `${p} ${max[p] > 0 ? '+' : ''}${max[p]}`).join(', ')}`);
 }

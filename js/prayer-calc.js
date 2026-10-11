@@ -12,12 +12,12 @@ const METHOD_PARAMS = {
   4:  { fajr: 18.5, ishaMin: 90 }, // Umm Al-Qura
   1:  { fajr: 18, isha: 18 },      // Karachi
   2:  { fajr: 15, isha: 15 },      // ISNA
-  13: { fajr: 18, isha: 17 },      // Diyanet
+  13: { fajr: 18, isha: 17, offsets: { Sunrise: -7, Dhuhr: 5, Asr: 4, Maghrib: 7 } },   // Diyanet (marges « temkin »)
   12: { fajr: 12, isha: 12 },      // UOIF
   19: { fajr: 18, isha: 17 },      // Algérie
   18: { fajr: 18, isha: 18 },      // Tunisie
   8:  { fajr: 19.5, ishaMin: 90 }, // Golfe
-  16: { fajr: 18.2, isha: 18.2 },  // Dubaï
+  16: { fajr: 18.2, isha: 18.2, offsets: { Dhuhr: 3, Maghrib: 3 } },  // Dubaï
   15: { fajr: 18, isha: 18 },      // Moonsighting (approx.)
   9:  { fajr: 18, isha: 17.5 },    // Koweït
   10: { fajr: 18, ishaMin: 90 },   // Qatar
@@ -25,7 +25,7 @@ const METHOD_PARAMS = {
   17: { fajr: 20, isha: 18 },      // Malaisie (JAKIM)
   20: { fajr: 20, isha: 18 },      // Indonésie (KEMENAG)
   14: { fajr: 16, isha: 15 },      // Russie
-  22: { fajr: 18, maghribMin: 3, ishaMin: 77 },   // Portugal (Comunidade Islâmica de Lisboa)
+  22: { fajr: 18, maghribMin: 3, ishaMin: 77, offsets: { Dhuhr: 5 } },   // Portugal (Comunidade Islâmica de Lisboa)
   23: { fajr: 18, isha: 18, maghribMin: 5 },      // Jordanie
   0:  { fajr: 16, isha: 14, maghrib: 4 },         // chiite (Qom)
   7:  { fajr: 17.7, isha: 14, maghrib: 4.5 },     // Téhéran
@@ -103,6 +103,9 @@ export function computeDay({ lat, lng, snap = true, code = null }, dateStr, meth
     Asr: asrTime(school === 1 ? 2 : 1, 13 / 24),
     Sunset: angleTime(hSet, 18 / 24),
   };
+  // hors Maroc : Asr recalculé avec la position du Soleil à l'heure trouvée (comme AlAdhan ; sinon +1 à +2 min).
+  // Pas au Maroc : son modèle est ajusté sur les tableaux officiels avec le calcul en un passage.
+  if (!isMA && Number.isFinite(h.Asr)) h.Asr = asrTime(school === 1 ? 2 : 1, h.Asr / 24);
   h.Maghrib = p.maghrib ? angleTime(p.maghrib, 18 / 24) : h.Sunset + (p.maghribMin || 0) / 60;
   h.Isha = p.ishaMin ? h.Maghrib + p.ishaMin / 60 : angleTime(ishaAngle, 18 / 24);
   // Hautes latitudes (Europe du Nord en été…) : quand le Soleil n'atteint pas l'angle, Fajr/Isha n'existent pas ou sont aberrants.

@@ -104,6 +104,16 @@ final class PrayerCalc {
         }
     }
 
+    /** Marges fixes (minutes) ajoutées par certaines autorités : {Fajr, Dhuhr, Asr, Maghrib, Isha} — comme « offsets » dans js/prayer-calc.js */
+    private static double[] offsets(int method) {
+        switch (method) {
+            case 13: return new double[]{0, 5, 4, 7, 0};     // Diyanet (temkin)
+            case 16: return new double[]{0, 3, 0, 3, 0};     // Dubaï
+            case 22: return new double[]{0, 5, 0, 0, 0};     // Portugal
+            default: return null;
+        }
+    }
+
     private static double rad(double d) { return d * Math.PI / 180; }
     private static double deg(double r) { return r * 180 / Math.PI; }
     private static double fix(double a, double b) { a = a - b * Math.floor(a / b); return a < 0 ? a + b : a; }
@@ -166,6 +176,10 @@ final class PrayerCalc {
         double[] s13 = sun(jd + 13 / 24.0);
         double asrAngle = -deg(Math.atan(1 / ((school == 1 ? 2 : 1) + dtan(Math.abs(lat - s13[0])))));
         double asr = angleTime(jd, lat, asrAngle, 13 / 24.0, false);
+        if (!ma && !Double.isNaN(asr)) {   // hors Maroc : Asr recalculé à l'heure trouvée (comme AlAdhan) ; pas au Maroc (modèle ajusté en un passage)
+            double[] sa = sun(jd + asr / 24);
+            asr = angleTime(jd, lat, -deg(Math.atan(1 / ((school == 1 ? 2 : 1) + dtan(Math.abs(lat - sa[0]))))), asr / 24, false);
+        }
         double sunset = angleTime(jd, lat, hSet, 18 / 24.0, false);
         double maghrib = p.length > 3 && p[3] > 0 ? angleTime(jd, lat, p[3], 18 / 24.0, false)
                 : sunset + (p.length > 4 ? p[4] : 0) / 60;
@@ -181,6 +195,8 @@ final class PrayerCalc {
             fajr += OFF_FAJR / 3600.0; dhuhr += OFF_DHUHR / 3600.0; asr += OFF_ASR / 3600.0;
             maghrib += OFF_MAGHRIB / 3600.0; isha += OFF_ISHA / 3600.0;
         }
+        double[] o = offsets(method);
+        if (o != null) { fajr += o[0] / 60; dhuhr += o[1] / 60; asr += o[2] / 60; maghrib += o[3] / 60; isha += o[4] / 60; }
         long base = utcMidnight(y, m, d);
         double[] h = {fajr, dhuhr, asr, maghrib, isha};
         long[] out = new long[5];
