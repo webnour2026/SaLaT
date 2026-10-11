@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.22.1] – 2026-10-11
+### Modifié
+- Message de partage : retour à « حمّل صلاتي مجاناً » (sans « على أندرويد ») — le badge Google Play de la carte suffit.
+
 ## [2.22.0] – 2026-10-11
 ### Modifié
 - Pied des cartes partagées (versets, douas, vœux), de la carte des horaires du jour et du tableau du mois : badge officiel « Disponible sur Google Play » dans la langue de l'appli (icons/badges, fichiers de Google téléchargés par le workflow « Badges Google Play ») à la place de la ligne « Google Play : SaLaTi ».
