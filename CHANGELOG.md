@@ -84,7 +84,7 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ## [2.23.1] – 2026-10-11 ⚠ nouvel AAB (version code 25, native=13)
 ### Modifié
 - Soir d'annonce, à partir du coucher du soleil (Rabat) + 10 min : la tâche « Habous » relit chaque minute les sources rapides (flux MAP, SNRT, Hespress ar/fr, Google Actualités), toutes les sources à chaque 5e essai ; avant le coucher, toutes les 5 min. Chaque exécution surveille jusqu'à 4 h 30 (GitHub décale les tâches programmées) ; trois départs par jour.
-- Sources : flux Hespress (ar, fr) ajoutés.
+- Sources : flux Hespress (ar, fr) et page « actualités » de Medi1 News (ar, sans flux RSS) ajoutés.
 - Module Android : calendrier relu chaque minute (au lieu de 10) pendant la fenêtre « à surveiller » ; appli ouverte, idem.
 
 ## [2.23.0] – 2026-10-11 ⚠ nouvel AAB (version code 24, native=12)

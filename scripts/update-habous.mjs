@@ -165,6 +165,7 @@ export const sources = (m, y) => {
     //  API payante ; 2M.ma refuse les robots. Google Actualités reprend leurs articles en quelques minutes.)
     { name: 'Hespress (ar, flux)', fast: true, trust: 'press', url: 'https://www.hespress.com/feed' },
     { name: 'Hespress (fr, flux)', fast: true, trust: 'press', url: 'https://fr.hespress.com/feed' },
+    { name: 'Medi1 News (ar, page actualités)', fast: true, trust: 'press', url: 'https://www.medi1news.com/ar/categorie/news' },   // pas de flux RSS : page HTML (robots.txt l'autorise)
     { name: 'Google Actualités (mois)', trust: 'press', url: `https://news.google.com/rss/search?q=${enc(`${ar} ${y} الأوقاف`)}&hl=ar&gl=MA&ceid=MA:ar` },
     { name: 'Google Actualités (5 j)', fast: true, trust: 'press', url: `https://news.google.com/rss/search?q=${enc('فاتح شهر وزارة الأوقاف هلال')}+when:5d&hl=ar&gl=MA&ceid=MA:ar` },
     { name: 'Bing Actualités', trust: 'press', url: `https://www.bing.com/news/search?q=${enc(`${ar} ${y} الأوقاف`)}&format=rss&setlang=ar` },
