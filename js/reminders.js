@@ -38,7 +38,7 @@ export function reminderText(t, ev) {
   const month = t('hijriMonths')[ev.h.m - 1];
   const prev = gen(t('hijriMonths')[(ev.h.m + 10) % 12]);                   // mois en cours (celui qui se termine)
   // soir du 29 : le ministère observe le croissant ; puis, s'il n'est pas vu, le mois en cours compte 30 jours
-  if (ev.type === 'obs') return { title: t('obsNotifTitle', { m: gen(month) }), body: t('obsNotifBody', { m: gen(month) }) };
+  if (ev.type === 'obs') return { title: t('obsNotifTitle', { m: gen(month) }), body: t(ev.calc ? 'obsCalcBody' : 'obsNotifBody', { m: gen(month) }) };
   if (ev.type === 'nosight') return { title: t('nosightNotifTitle', { m: gen(month) }),
     body: t(ev.h.m === 10 ? 'nosightFitrBody' : ev.h.m === 9 ? 'nosightRamadanBody' : 'nosightNotifBody', { m: gen(month), p: prev }) };
   if (ev.type === 'white') return { title: t('whiteNotifTitle'), body: t('whiteNotifBody', { d: ev.h.d, m: month }) };
@@ -73,6 +73,15 @@ export function planNativeReminders({ today, horizon = 40, dayInfo, addDays, off
       if (isWhiteDay(h) && monthConfirmed(tomorrow, offset)) {
         const at = d.Isha + 30 * 60000;
         push({ id: `${key}-white`, kind: 'white', at, until: at + WINDOW_FIXED, ...reminderText(t, { type: 'white', h }) });
+      }
+    }
+    // hors Maroc (calendrier calculé) : le 29 au soir des mois surveillés, inviter à vérifier l'annonce officielle du pays
+    if (!habousActive() && d.Maghrib) {
+      const h = hijriOf(Date.parse(`${key}T12:00:00Z`), offset), nm = h.m === 12 ? 1 : h.m + 1;
+      const on = nm === 10 || nm === 12 ? (prefs.eid || prefs.month) : prefs.month;
+      if (h.d === 29 && WATCHED_MONTHS.includes(nm) && on) {
+        const hn = { d: 1, m: nm, y: h.m === 12 ? h.y + 1 : h.y };
+        push({ id: `${key}-obs`, kind: 'obs', at: d.Asr || d.Maghrib - 90 * 60000, until: d.Maghrib + 30 * 60000, ...reminderText(t, { type: 'obs', h: hn, calc: true }) });
       }
     }
     if (d.Maghrib) {                                                  // début de mois ou Aïd déjà officiel : 20 min après le Maghrib

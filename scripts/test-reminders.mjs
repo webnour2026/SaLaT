@@ -158,6 +158,21 @@ eq('vendredi : coexiste avec les jours blancs (ids distincts)', String(new Set(p
   eq('module : tout coupé → rien', Object.keys(autoMonthTexts({ t, prefs: { eid: false, month: false } })).length, 0);
 }
 
+// hors Maroc (calendrier calculé) : le 29 des mois surveillés, « vérifiez l'annonce de votre pays » ; jamais au Maroc par ce chemin
+{
+  useHabous(false);
+  const { hijriOf } = await load('calendar.js');
+  let eve = null;
+  for (let k = '2027-01-01'; k < '2027-03-31'; k = addDays(k, 1)) { const h = hijriOf(Date.parse(k + 'T12:00:00Z'), 0); if (h.m === 8 && h.d === 29) { eve = k; break; } }
+  const p = plan(addDays(eve, -5)), o = p.filter(e => e.kind === 'obs');
+  eq('hors Maroc : observation le 29 Chaabane (Ramadan) puis le 29 Ramadan (Aïd)', o.map(e => e.id).join(' '), `${eve}-obs ${addDays(eve, 30)}-obs`);
+  eq('hors Maroc : texte « vérifiez l’annonce de votre pays »', o[0] && o[0].body, 'obsCalcBody{"m":"Ramadan"}');
+  eq('hors Maroc : pas de « non vu » (inconnu sans annonce)', String(p.some(e => e.kind === 'nosight')), 'false');
+  eq('hors Maroc : rappels de mois coupés → seulement l’observation de l’Aïd', plan(addDays(eve, -5), { prefs: { month: false } }).filter(e => e.kind === 'obs').map(e => e.id).join(' '), `${addDays(eve, 30)}-obs`);
+  const sep = plan('2026-10-05').filter(e => e.kind === 'obs');
+  eq('hors Maroc : mois non surveillé (Joumada) → rien', sep.length, 0);
+}
+
 // taille de la charge utile envoyée au module (limite 60 000 caractères une fois décodée, mais on reste très en dessous)
 useHabous(true);
 const size = JSON.stringify(plan('2026-09-30')).length;

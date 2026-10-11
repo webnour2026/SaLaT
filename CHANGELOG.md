@@ -81,6 +81,12 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.21.0] – 2026-10-11
+### Ajouté
+- Hors Maroc (calendrier calculé) : le 29 au soir de Chaabane, Ramadan, Dhou al-Qi'da et Dhou al-Hijja (calcul), notification « Ce soir : observation du croissant » invitant à vérifier l'annonce officielle de son pays et, si elle diffère, à ajuster la correction (Réglages → Date hégirienne). Pas de « non vu » hors Maroc (aucune annonce lue).
+### Modifié
+- Note du calendrier selon la source : au Maroc « calendrier officiel (ministère des Habous), mis à jour automatiquement » ; ailleurs « dates calculées (Umm al-Qura), peuvent différer d'un jour selon l'annonce de votre pays ». L'ancienne note conseillait à tort une correction manuelle au Maroc.
+
 ## [2.20.2] – 2026-10-11 ⚠ nouvel AAB (version code 23, native=11)
 ### Ajouté
 - 10 méthodes de calcul (toutes celles d'AlAdhan) : Koweït, Qatar, Jordanie, Malaisie (JAKIM), Indonésie (Kemenag), Singapour (MUIS), Russie, Portugal (Lisbonne), chiite (Qom), Téhéran — dans l'appli et dans le calcul de secours du module Android.
