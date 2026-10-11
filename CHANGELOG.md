@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.21.4] – 2026-10-11
+### Modifié
+- Politique de confidentialité : l'hébergeur est nommé (GitHub Pages, GitHub/Microsoft) sans l'adresse technique du site.
+
 ## [2.21.3] – 2026-10-11
 ### Corrigé
 - Réglages → À propos → « Politique de confidentialité » rechargeait l'appli au lieu d'ouvrir la page : le service worker renvoyait l'écran principal pour toute page. Seules la racine et index.html donnent désormais l'appli ; les autres pages du site s'ouvrent (aussi hors ligne, elles sont pré-chargées). Lien « ← SaLaTi » en haut de la politique pour revenir.
