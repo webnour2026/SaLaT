@@ -160,6 +160,10 @@ export const sources = (m, y) => {
     { name: 'SNRT News (« هلال »)', trust: 'official', url: 'https://snrtnews.com/taxonomy/term/174/feed' },
     { name: 'Ministère des Habous (site)', trust: 'official', url: 'https://www.habous.gov.ma/' },      // souvent saturé la veille d'une fête : simple bonus
     // ----- presse : il faut 2 médias différents -----
+    // (X et Facebook, souvent plus rapides, ne se lisent pas automatiquement : connexion obligatoire, conditions d'utilisation,
+    //  API payante ; 2M.ma refuse les robots. Google Actualités reprend leurs articles en quelques minutes.)
+    { name: 'Hespress (ar, flux)', trust: 'press', url: 'https://www.hespress.com/feed' },
+    { name: 'Hespress (fr, flux)', trust: 'press', url: 'https://fr.hespress.com/feed' },
     { name: 'Google Actualités (mois)', trust: 'press', url: `https://news.google.com/rss/search?q=${enc(`${ar} ${y} الأوقاف`)}&hl=ar&gl=MA&ceid=MA:ar` },
     { name: 'Google Actualités (5 j)', trust: 'press', url: `https://news.google.com/rss/search?q=${enc('فاتح شهر وزارة الأوقاف هلال')}+when:5d&hl=ar&gl=MA&ceid=MA:ar` },
     { name: 'Bing Actualités', trust: 'press', url: `https://www.bing.com/news/search?q=${enc(`${ar} ${y} الأوقاف`)}&format=rss&setlang=ar` },
