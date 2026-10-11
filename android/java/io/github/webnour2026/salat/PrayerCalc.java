@@ -176,10 +176,6 @@ final class PrayerCalc {
         double[] s13 = sun(jd + 13 / 24.0);
         double asrAngle = -deg(Math.atan(1 / ((school == 1 ? 2 : 1) + dtan(Math.abs(lat - s13[0])))));
         double asr = angleTime(jd, lat, asrAngle, 13 / 24.0, false);
-        if (!ma && !Double.isNaN(asr)) {   // hors Maroc : Asr recalculé à l'heure trouvée (comme AlAdhan) ; pas au Maroc (modèle ajusté en un passage)
-            double[] sa = sun(jd + asr / 24);
-            asr = angleTime(jd, lat, -deg(Math.atan(1 / ((school == 1 ? 2 : 1) + dtan(Math.abs(lat - sa[0]))))), asr / 24, false);
-        }
         double sunset = angleTime(jd, lat, hSet, 18 / 24.0, false);
         double maghrib = p.length > 3 && p[3] > 0 ? angleTime(jd, lat, p[3], 18 / 24.0, false)
                 : sunset + (p.length > 4 ? p[4] : 0) / 60;

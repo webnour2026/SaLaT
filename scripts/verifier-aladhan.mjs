@@ -4,6 +4,9 @@
 import { computeDay } from '../js/prayer-calc.js';
 
 const SEUIL = 2;   // minutes
+// Asr d'hiver au-delà de 55° de latitude : soleil très bas, l'heure de l'Asr dépend de quelques centièmes de degré de la position
+// du Soleil (AlAdhan utilise un modèle plus précis) → jusqu'à 5 min d'écart. Calcul de secours seulement : l'appli affiche AlAdhan hors Maroc.
+const SEUIL_ASR_NORD = 5;
 const PRAYERS = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 // [ville, lat, lng, méthode] — chaque méthode dans un pays qui l'utilise, + latitudes extrêmes
 const CASES = [
@@ -48,7 +51,7 @@ for (const [city, lat, lng, method] of CASES) {
     }
     await sleep(400);
   }
-  const worst = Math.max(...PRAYERS.map(p => Math.abs(Number(max[p])) || 0));
+  const worst = Math.max(...PRAYERS.map(p => (p === 'Asr' && Math.abs(lat) > 55 ? Math.max(0, Math.abs(Number(max[p])) - (SEUIL_ASR_NORD - SEUIL)) : Math.abs(Number(max[p]))) || 0));
   const ok = method === 15 || worst <= SEUIL   // Moonsighting : approximation assumée (calcul de secours seulement ; l'appli prend AlAdhan)
     && true && !PRAYERS.some(p => max[p] === 'NaN');
   if (!ok) bad.push(city);

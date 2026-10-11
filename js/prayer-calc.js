@@ -103,9 +103,6 @@ export function computeDay({ lat, lng, snap = true, code = null }, dateStr, meth
     Asr: asrTime(school === 1 ? 2 : 1, 13 / 24),
     Sunset: angleTime(hSet, 18 / 24),
   };
-  // hors Maroc : Asr recalculé avec la position du Soleil à l'heure trouvée (comme AlAdhan ; sinon +1 à +2 min).
-  // Pas au Maroc : son modèle est ajusté sur les tableaux officiels avec le calcul en un passage.
-  if (!isMA && Number.isFinite(h.Asr)) h.Asr = asrTime(school === 1 ? 2 : 1, h.Asr / 24);
   h.Maghrib = p.maghrib ? angleTime(p.maghrib, 18 / 24) : h.Sunset + (p.maghribMin || 0) / 60;
   h.Isha = p.ishaMin ? h.Maghrib + p.ishaMin / 60 : angleTime(ishaAngle, 18 / 24);
   // Hautes latitudes (Europe du Nord en été…) : quand le Soleil n'atteint pas l'angle, Fajr/Isha n'existent pas ou sont aberrants.

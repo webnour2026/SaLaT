@@ -81,6 +81,14 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.20.2] – 2026-10-11 ⚠ nouvel AAB (version code 23, native=11)
+### Ajouté
+- 10 méthodes de calcul (toutes celles d'AlAdhan) : Koweït, Qatar, Jordanie, Malaisie (JAKIM), Indonésie (Kemenag), Singapour (MUIS), Russie, Portugal (Lisbonne), chiite (Qom), Téhéran — dans l'appli et dans le calcul de secours du module Android.
+- Méthode proposée d'office pour ~40 pays (avant : 15) : Koweït → Koweït (au lieu de Golfe), Qatar → Qatar, Jordanie, Malaisie, Indonésie, Singapour, Brunei, Russie, Portugal, Iran, Machrek et Libye (Égypte), Yémen (Umm Al-Qura), Inde/Bangladesh/Afghanistan (Karachi), Azerbaïdjan (Diyanet) ; ailleurs, Ligue islamique mondiale.
+- Workflow « Vérifier les méthodes » (scripts/verifier-aladhan.mjs) : calcul local comparé à AlAdhan sur 27 villes × 4 dates à chaque modification du calcul.
+### Corrigé
+- Calcul de secours hors ligne : marges officielles de la Turquie (Diyanet : lever −7, Dhuhr +5, Asr +4, Maghrib +7 min), de Dubaï (Dhuhr et Maghrib +3) et de Lisbonne (Dhuhr +5) — jusqu'ici 3 à 7 min d'écart avec AlAdhan.
+
 ## [2.19.1] – 2026-10-11 ⚠ nouvel AAB (version code 22, native=10)
 ### Corrigé
 - Widget : les polices de l'appli n'étaient pas appliquées (un lanceur ignore les polices d'une appli dans un widget). Le nom de la prière est désormais dessiné en Reem Kufi dans une image (texte système en secours) ; chiffres en polices du système (fine pour le compte à rebours, medium pour les horaires). Polices Plex retirées de l'APK.
