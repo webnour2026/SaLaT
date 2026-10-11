@@ -36,7 +36,7 @@ final class Reminders {
     private Reminders() {}
 
     static final int REQUEST = 4, NOTIF_BASE = 2000;
-    static final long POLL_MS = 10 * 60000L;
+    static final long POLL_MS = 60000L;          // soir d'annonce : calendrier relu chaque minute (Android peut espacer davantage en veille profonde)
     /** Le module ne lit que le calendrier publié sur le site de l'application. */
     static final String SITE = "https://webnour2026.github.io/";
     private static final String DONE = "remDone";
@@ -95,7 +95,7 @@ final class Reminders {
             boolean watch = e.optString("watch", "").length() > 0;
             long t;
             if (now < at) t = at;                       // pas encore l'heure
-            else if (watch) t = now + POLL_MS;          // à surveiller : on revient dans 10 min
+            else if (watch) t = now + POLL_MS;          // à surveiller : on revient dans 1 min
             else t = now + 1000;                        // certain et déjà dû (téléphone éteint, etc.) : tout de suite
             if (t >= until) continue;
             if (t < next) next = t;

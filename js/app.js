@@ -564,7 +564,7 @@ function mqMode(tNow = now()) {
 }
 const nativeMqCapable = () => isTwa() && localStorage.getItem('priere.nativeMq') === '1';
 // Version du module Android installé (paramètre « native » de l'adresse de démarrage de l'appli Play Store)
-const NATIVE_LATEST = 12;                                    // 4 = module 2.14 : rappels du croissant autonomes ; 5 = 2.15 : Adhans de Doha intégrés ; 8 = 2.18 : widget d'écran d'accueil ; 9 = 2.19 : widget redessiné ; 10 = 2.19.1 : nom de la prière en Reem Kufi ; 11 = 2.20 : 10 méthodes de calcul ajoutées ; 12 = 2.23 : avis de changement de fuseau
+const NATIVE_LATEST = 13;                                    // 4 = module 2.14 : rappels du croissant autonomes ; 5 = 2.15 : Adhans de Doha intégrés ; 8 = 2.18 : widget d'écran d'accueil ; 9 = 2.19 : widget redessiné ; 10 = 2.19.1 : nom de la prière en Reem Kufi ; 11 = 2.20 : 10 méthodes de calcul ajoutées ; 12 = 2.23 : avis de changement de fuseau ; 13 = 2.23.1 : calendrier relu chaque minute les soirs d'annonce
 const STORE_URL = 'https://play.google.com/store/apps/details?id=io.github.webnour2026.salat';
 const nativeLevel = () => Number(localStorage.getItem('priere.nativeLvl') || 0);
 const UPD_KEY = 'priere.updDismiss';
@@ -2093,7 +2093,7 @@ function checkEvents(tNow) {
     const rem = reminderFor(todayNoon + 864e5, S().hijriOffset, { eid: S().eidReminder !== false, month: S().monthReminder !== false });
     if (rem) events.push({ id: `${state.today.date}-${rem.type}`, ts: state.today.times.Maghrib + 20 * 60000, win: 6 * 3600e3, ...rem });
     // soirée du 29 ou du 30 : on interroge le calendrier des Habous toutes les 10 min pour capter l'annonce
-    else if (habousActive() && tNow >= state.today.times.Maghrib && hijriOf(todayNoon, S().hijriOffset).d >= 29) checkHabous(false, 10 * 60000);
+    else if (habousActive() && tNow >= state.today.times.Maghrib && hijriOf(todayNoon, S().hijriOffset).d >= 29) checkHabous(false, 60000);   // soir d'annonce, appli ouverte : chaque minute
   }
   for (const ev of events) {
     // fenêtre de 90 s : si l'appli s'est réveillée bien après, on ne rejoue pas un Adhan périmé
@@ -2877,7 +2877,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.23.0';
+export const APP_VERSION = '2.23.1';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

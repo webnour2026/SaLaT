@@ -81,6 +81,12 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.23.1] – 2026-10-11 ⚠ nouvel AAB (version code 25, native=13)
+### Modifié
+- Soir d'annonce, à partir du coucher du soleil (Rabat) + 10 min : la tâche « Habous » relit chaque minute les sources rapides (flux MAP, SNRT, Hespress ar/fr, Google Actualités), toutes les sources à chaque 5e essai ; avant le coucher, toutes les 5 min. Chaque exécution surveille jusqu'à 4 h 30 (GitHub décale les tâches programmées) ; trois départs par jour.
+- Sources : flux Hespress (ar, fr) ajoutés.
+- Module Android : calendrier relu chaque minute (au lieu de 10) pendant la fenêtre « à surveiller » ; appli ouverte, idem.
+
 ## [2.23.0] – 2026-10-11 ⚠ nouvel AAB (version code 24, native=12)
 ### Ajouté
 - Mode GPS : la position est revérifiée aussi à chaque retour dans l'appli (au plus toutes les 15 min), plus seulement au démarrage. À plus de ~2 km : nouvelle ville, nouveaux horaires, module Android resynchronisé, et le message « 📍 Nouvelle position : Marrakech — horaires mis à jour ». Si le GPS ne répond pas, l'ancienne position est gardée sans fenêtre d'erreur.

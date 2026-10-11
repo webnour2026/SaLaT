@@ -6,6 +6,7 @@
 // Saisie manuelle possible : variable MANUAL_START=AAAA-MM-JJ (workflow_dispatch).
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { computeDay } from '../js/prayer-calc.js';
 
 const DAY = 864e5;
 const FILE = new URL('../data/habous.json', import.meta.url);
@@ -152,20 +153,20 @@ export const sources = (m, y) => {
   const ar = `فاتح شهر ${HIJRI_AR[m]}`;
   return [
     // ----- officielles : l'agence MAP (canal utilisé par le ministère), la télévision publique, le site du ministère -----
-    { name: 'MAP Express (ar, flux)', trust: 'official', url: `https://www.mapexpress.ma/ar/?s=${enc(ar)}&feed=rss2` },
+    { name: 'MAP Express (ar, flux)', fast: true, trust: 'official', url: `https://www.mapexpress.ma/ar/?s=${enc(ar)}&feed=rss2` },
     { name: 'MAP Express (ar, API)', trust: 'official', url: `https://www.mapexpress.ma/wp-json/wp/v2/posts?search=${enc(ar)}&per_page=12&lang=ar` },
     { name: 'MAP Express (fr, flux)', trust: 'official', url: `https://www.mapexpress.ma/?s=${enc('Habous croissant')}&feed=rss2` },
     { name: 'MAP Express (fr, API)', trust: 'official', url: `https://www.mapexpress.ma/wp-json/wp/v2/posts?search=${enc('Habous')}&per_page=12` },
-    { name: 'MAP Express (ar, récents)', trust: 'official', url: 'https://www.mapexpress.ma/ar/feed/' },
-    { name: 'SNRT News (« هلال »)', trust: 'official', url: 'https://snrtnews.com/taxonomy/term/174/feed' },
+    { name: 'MAP Express (ar, récents)', fast: true, trust: 'official', url: 'https://www.mapexpress.ma/ar/feed/' },
+    { name: 'SNRT News (« هلال »)', fast: true, trust: 'official', url: 'https://snrtnews.com/taxonomy/term/174/feed' },
     { name: 'Ministère des Habous (site)', trust: 'official', url: 'https://www.habous.gov.ma/' },      // souvent saturé la veille d'une fête : simple bonus
     // ----- presse : il faut 2 médias différents -----
     // (X et Facebook, souvent plus rapides, ne se lisent pas automatiquement : connexion obligatoire, conditions d'utilisation,
     //  API payante ; 2M.ma refuse les robots. Google Actualités reprend leurs articles en quelques minutes.)
-    { name: 'Hespress (ar, flux)', trust: 'press', url: 'https://www.hespress.com/feed' },
-    { name: 'Hespress (fr, flux)', trust: 'press', url: 'https://fr.hespress.com/feed' },
+    { name: 'Hespress (ar, flux)', fast: true, trust: 'press', url: 'https://www.hespress.com/feed' },
+    { name: 'Hespress (fr, flux)', fast: true, trust: 'press', url: 'https://fr.hespress.com/feed' },
     { name: 'Google Actualités (mois)', trust: 'press', url: `https://news.google.com/rss/search?q=${enc(`${ar} ${y} الأوقاف`)}&hl=ar&gl=MA&ceid=MA:ar` },
-    { name: 'Google Actualités (5 j)', trust: 'press', url: `https://news.google.com/rss/search?q=${enc('فاتح شهر وزارة الأوقاف هلال')}+when:5d&hl=ar&gl=MA&ceid=MA:ar` },
+    { name: 'Google Actualités (5 j)', fast: true, trust: 'press', url: `https://news.google.com/rss/search?q=${enc('فاتح شهر وزارة الأوقاف هلال')}+when:5d&hl=ar&gl=MA&ceid=MA:ar` },
     { name: 'Bing Actualités', trust: 'press', url: `https://www.bing.com/news/search?q=${enc(`${ar} ${y} الأوقاف`)}&format=rss&setlang=ar` },
   ];
 };
@@ -203,8 +204,12 @@ async function main() {
     // jusqu'à l'annonce (GitHub décale les tâches programmées de plusieurs heures : une seule exécution doit couvrir la soirée).
     const watchMin = Number(process.env.WATCH_MIN || 0), evening = today === last + 28 || today === last + 29;
     const deadline = Date.now() + (evening ? watchMin : 0) * 60000;
+    // après le coucher du soleil (Rabat) + 10 min, le communiqué peut tomber à tout moment : un essai par minute,
+    // sur les sources rapides (flux RSS) ; toutes les sources à chaque 5e essai (moins de requêtes vers Google, Bing, l'API MAP).
+    const sunset = computeDay({ lat: 34.02, lng: -6.84, snap: false }, iso(today), 3, 0).Maghrib, fastFrom = sunset + 10 * 60000;
     for (let round = 1; ; round++) {
-    const list = sources(next.m, next.y);
+    const fast = Date.now() >= fastFrom;
+    const list = sources(next.m, next.y).filter(src => !fast || round % 5 === 1 || src.fast);
     const cands = [];
     const res = await Promise.allSettled(list.map(async src => {
       const items = parseAny(await get(src.url), hostOf(src.url)).filter(i => !i.pub || i.pub >= (last + 27) * DAY);   // ignore les vieux articles
@@ -219,9 +224,10 @@ async function main() {
     const verdict = decide(cands);
     console.log(`Décision : ${verdict.day ? iso(verdict.day) : 'aucune'} — ${verdict.why}`);
     if (verdict.day) { start = verdict.day; break; }
-    if (Date.now() + 5 * 60000 > deadline) break;
-    console.log(`Essai ${round} : pas encore d'annonce — nouvel essai dans 5 min.`);
-    await new Promise(r => setTimeout(r, 5 * 60000));
+    const wait = Date.now() >= fastFrom ? 60000 : Math.min(5 * 60000, Math.max(60000, fastFrom - Date.now()));
+    if (Date.now() + wait > deadline) break;
+    console.log(`Essai ${round} : pas encore d'annonce — nouvel essai dans ${Math.round(wait / 60000)} min.`);
+    await new Promise(r => setTimeout(r, wait));
     }
   }
   if (!start) { console.log(`Aucune annonce trouvée pour ${HIJRI_AR[next.m]} ${next.y}.`); return; }
