@@ -28,6 +28,7 @@ final class Ongoing {
     private static final String CHANNEL = "salati2_ongoing";   // ne commence pas par « salati_ » (migration des canaux)
 
     static void update(Context ctx) {
+        Widget.refresh(ctx);   // même rythme que la notification permanente : synchronisation, prière, redémarrage
         try {
             NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
             JSONObject cfg = AlarmScheduler.config(ctx);

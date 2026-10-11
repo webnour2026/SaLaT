@@ -4,13 +4,15 @@ import sys, re, pathlib
 mod = pathlib.Path(sys.argv[1])
 # mises en page natives (notification permanente) : android/res/layout -> app/src/main/res/layout
 import shutil
-src = pathlib.Path(__file__).resolve().parent / 'res' / 'layout'
-if src.is_dir():
-    dst = mod / 'src/main/res/layout'
-    dst.mkdir(parents=True, exist_ok=True)
-    for f in src.glob('*.xml'):
-        shutil.copy(f, dst / f.name)
-        print('layout copié :', f.name)
+# + description du widget : android/res/xml -> app/src/main/res/xml
+for kind in ('layout', 'xml'):
+    src = pathlib.Path(__file__).resolve().parent / 'res' / kind
+    if src.is_dir():
+        dst = mod / 'src/main/res' / kind
+        dst.mkdir(parents=True, exist_ok=True)
+        for f in src.glob('*.xml'):
+            shutil.copy(f, dst / f.name)
+            print(kind, 'copié :', f.name)
 m = mod / 'src/main/AndroidManifest.xml'
 s = m.read_text(encoding='utf-8')
 if 'SyncActivity' in s:
@@ -38,6 +40,15 @@ comps = '''
         <receiver android:name="io.github.webnour2026.salat.StopReceiver" android:exported="false"/>
         <receiver android:name="io.github.webnour2026.salat.ReminderReceiver" android:exported="false"/>
         <receiver android:name="io.github.webnour2026.salat.MosqueReceiver" android:exported="false"/>
+        <!-- Widget d'écran d'accueil : prochaine prière + compte à rebours -->
+        <receiver android:name="io.github.webnour2026.salat.Widget"
+            android:exported="false"
+            android:label="SaLaTi">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/salati_widget"/>
+        </receiver>
         <receiver android:name="io.github.webnour2026.salat.BootReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
