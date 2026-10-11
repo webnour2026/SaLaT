@@ -156,7 +156,7 @@ function renderSettingsHub() {
 }
 
 // ================= Position =================
-async function useGps() {
+async function useGps({ quiet = false } = {}) {
   $('#gpsError').hidden = true;
   $('#placeName').textContent = t('locating');
   try {
@@ -168,8 +168,10 @@ async function useGps() {
       S().location.name = r.name; S().location.country = r.country;
       autoMethod(r.country);
       save(); renderHeader(); refresh();
+      if (quiet && r.name) toast(t('locMoved', { c: r.name }));
     } catch { /* nom de ville facultatif */ }
   } catch {
+    if (quiet) { renderHeader(); return; }   // vérification discrète : on garde l'ancienne position, sans fenêtre
     $('#gpsError').textContent = t('gpsDenied');
     $('#gpsError').hidden = false;
     renderHeader();
@@ -562,7 +564,7 @@ function mqMode(tNow = now()) {
 }
 const nativeMqCapable = () => isTwa() && localStorage.getItem('priere.nativeMq') === '1';
 // Version du module Android installé (paramètre « native » de l'adresse de démarrage de l'appli Play Store)
-const NATIVE_LATEST = 11;                                    // 4 = module 2.14 : rappels du croissant autonomes ; 5 = 2.15 : Adhans de Doha intégrés ; 8 = 2.18 : widget d'écran d'accueil ; 9 = 2.19 : widget redessiné ; 10 = 2.19.1 : nom de la prière en Reem Kufi ; 11 = 2.20 : 10 méthodes de calcul ajoutées
+const NATIVE_LATEST = 12;                                    // 4 = module 2.14 : rappels du croissant autonomes ; 5 = 2.15 : Adhans de Doha intégrés ; 8 = 2.18 : widget d'écran d'accueil ; 9 = 2.19 : widget redessiné ; 10 = 2.19.1 : nom de la prière en Reem Kufi ; 11 = 2.20 : 10 méthodes de calcul ajoutées ; 12 = 2.23 : avis de changement de fuseau
 const STORE_URL = 'https://play.google.com/store/apps/details?id=io.github.webnour2026.salat';
 const nativeLevel = () => Number(localStorage.getItem('priere.nativeLvl') || 0);
 const UPD_KEY = 'priere.updDismiss';
@@ -2200,7 +2202,7 @@ async function nativePayload() {
     txt: { itsTime: t('itsTime'), before: t('beforeMsg'), stop: t('stop'), ok: t('nativeOk'), city: loc.name || '',
            chAdhan: t('chAdhan'), chBefore: t('chBefore'), chSilent: t('chSilent'), chOngoing: t('chOngoing'), chReminder: t('chReminder'),
            chMosque: t('chMosque'), mqOn: t('mqBadgeOn'), mqUntil: t('mqUntil'), mqStopNow: t('mqStopNow'), mqIqama: t('mqIqama'), mqIqamaBody: t('mqIqamaBody'),
-           mqEnd: t('mqEnd'), mqEndBody: t('mqEndBody'), mqEndKept: t('mqEndKept'), mqDnd: t('mqDnd'),
+           mqEnd: t('mqEnd'), mqEndBody: t('mqEndBody'), mqEndKept: t('mqEndKept'), mqDnd: t('mqDnd'), tzTitle: t('tzTitle'), tzBody: t('tzBody'),
            wNext: t('nextPrayer'), wIn: t('in'), wSince: t('since') },   // widget d'écran d'accueil
     times,
   };
@@ -2875,7 +2877,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.22.1';
+export const APP_VERSION = '2.23.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
@@ -2940,20 +2942,27 @@ function init() {
   } else {
     loadDays(); renderAll();   // affichage immédiat depuis le cache
     refresh();
-    // position GPS : on la rafraîchit discrètement si l'utilisateur est en mode GPS
-    if (S().location.source === 'gps') {
-      getGpsPosition().then(p => {
-        const o = S().location;
-        if (Math.hypot(p.lat - o.lat, p.lng - o.lng) > 0.02) useGps();
-        else { o.accuracy = p.accuracy; save(); }
-      }).catch(() => {});
-    }
+    recheckGps(true);
   }
   syncClock().then(afterClockSync);
   checkHabous();       // nouveau début de mois annoncé ? (au plus une vérification toutes les 3 h)
   checkOfficiel();
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkHabous(); checkOfficiel(); } });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkHabous(); checkOfficiel(); recheckGps(); } });
   setTimeout(askNotifFirstRun, 2500);
+}
+
+// Mode GPS : à l'ouverture et à chaque retour dans l'appli (au plus toutes les 15 min), on relit la position ;
+// à plus de ~2 km de l'ancienne, nouvelle ville, nouveaux horaires, module Android resynchronisé, et un message le signale.
+let gpsCheckedAt = 0;
+function recheckGps(force = false) {
+  const o = S().location;
+  if (!o || o.source !== 'gps' || (!force && Date.now() - gpsCheckedAt < 15 * 60000)) return;
+  gpsCheckedAt = Date.now();
+  getGpsPosition().then(p => {
+    const cur = S().location;
+    if (Math.hypot(p.lat - cur.lat, p.lng - cur.lng) > 0.02) useGps({ quiet: true });
+    else { cur.accuracy = p.accuracy; save(); }
+  }).catch(() => {});
 }
 
 // Premier lancement de l'appli Android : proposer tout de suite l'autorisation des notifications

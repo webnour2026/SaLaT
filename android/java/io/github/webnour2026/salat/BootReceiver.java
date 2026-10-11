@@ -16,6 +16,7 @@ public class BootReceiver extends BroadcastReceiver {
         Reminders.schedule(app);
         Ongoing.update(app);
         MosqueMode.resume(app);                 // cycle du Mode Mosquée en cours : alarmes réarmées, ou son rendu s'il est échu
+        if (Intent.ACTION_TIMEZONE_CHANGED.equals(intent.getAction())) TravelNotice.check(app);   // voyage : inviter à mettre à jour la ville
         final PendingResult result = goAsync();
         new Thread(new Runnable() {
             @Override

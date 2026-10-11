@@ -81,6 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.23.0] – 2026-10-11 ⚠ nouvel AAB (version code 24, native=12)
+### Ajouté
+- Mode GPS : la position est revérifiée aussi à chaque retour dans l'appli (au plus toutes les 15 min), plus seulement au démarrage. À plus de ~2 km : nouvelle ville, nouveaux horaires, module Android resynchronisé, et le message « 📍 Nouvelle position : Marrakech — horaires mis à jour ». Si le GPS ne répond pas, l'ancienne position est gardée sans fenêtre d'erreur.
+- Module Android : quand le téléphone change de fuseau horaire (voyage) et que les horaires enregistrés sont ceux d'un autre fuseau, notification « 🌍 Nouveau fuseau horaire — ouvrez SaLaTi pour mettre à jour les horaires de votre nouvelle ville », même appli fermée. Retirée d'elle-même au retour dans le fuseau d'origine. Le module ne lit jamais la position en arrière-plan.
+
 ## [2.22.1] – 2026-10-11
 ### Modifié
 - Message de partage : retour à « حمّل صلاتي مجاناً » (sans « على أندرويد ») — le badge Google Play de la carte suffit.
