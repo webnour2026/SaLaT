@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.24.0] – 2026-10-11 ⚠ nouvel AAB (version code 26, native=14)
+### Ajouté
+- Chaabane rejoint les mois surveillés (Mouharram, Chaabane, Ramadan, Chawwal, Dhou al-Hijja) : le 29 Rajab, « 🌙 الليلة ترقّب هلال شهر شعبان » à l'Asr, puis « لم يثبت هلال شهر شعبان — غدًا متمّم شهر رجب، وفاتح شهر شعبان بعد غد » si le croissant n'est pas vu, même appli fermée ; hors Maroc, rappel de vérifier l'annonce du pays.
+
 ## [2.23.1] – 2026-10-11 ⚠ nouvel AAB (version code 25, native=13)
 ### Modifié
 - Soir d'annonce, à partir du coucher du soleil (Rabat) + 10 min : la tâche « Habous » relit chaque minute les sources rapides (flux MAP, SNRT, Hespress ar/fr, Google Actualités), toutes les sources à chaque 5e essai ; avant le coucher, toutes les 5 min. Chaque exécution surveille jusqu'à 4 h 30 (GitHub décale les tâches programmées) ; trois départs par jour.

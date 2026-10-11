@@ -9,8 +9,8 @@ export const WINDOW_FIXED = 6 * 3600e3;    // rappel « certain » : on peut le 
 export const WINDOW_FRIDAY = 3 * 3600e3;   // rappel du vendredi (09:30) : utile jusqu'à la prière de la Joumou'a
 export const WINDOW_WATCH = 4 * 3600e3;    // rappel « à surveiller » : le module interroge le calendrier pendant 4 h
 export const WINDOW_OBS = 3 * 3600e3;      // « ce soir, observation du croissant » : jusqu'au Maghrib environ
-/** Mois dont l'observation du croissant est annoncée à l'avance (et dont le « non vu » est signalé) : Mouharram, Ramadan, Chawwal, Dhou al-Hijja. */
-export const WATCHED_MONTHS = [1, 9, 10, 12];
+/** Mois dont l'observation du croissant est annoncée à l'avance (et dont le « non vu » est signalé) : Mouharram, Chaabane, Ramadan, Chawwal, Dhou al-Hijja. */
+export const WATCHED_MONTHS = [1, 8, 9, 10, 12];   // + Chaabane : on veut savoir à l'avance si Chaabane commence, pour compter jusqu'à Ramadan
 const iso = day => new Date(day * DAY).toISOString().slice(0, 10);
 export const FRIDAY_AT = [9, 30];          // rappel du vendredi : 09:30, heure du lieu
 

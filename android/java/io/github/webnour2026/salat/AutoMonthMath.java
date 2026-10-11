@@ -20,7 +20,7 @@ final class AutoMonthMath {
 
     static int nextMonth(int m) { return m == 12 ? 1 : m + 1; }
     static int nextYear(int m, int y) { return m == 12 ? y + 1 : y; }
-    static boolean watched(int m) { return m == 1 || m == 9 || m == 10 || m == 12; }
+    static boolean watched(int m) { return m == 1 || m == 8 || m == 9 || m == 10 || m == 12; }   // comme WATCHED_MONTHS (js/reminders.js)
 
     /** Instant de la relecture de secours. */
     static long refreshAt(long last) { return (last + 31) * DAY + 9 * 3600000L; }

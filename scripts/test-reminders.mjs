@@ -149,7 +149,7 @@ eq('vendredi : coexiste avec les jours blancs (ids distincts)', String(new Set(p
 {
   const a = autoMonthTexts({ t, prefs: { eid: true, month: true } });
   eq('module : textes pour les 12 mois', Object.keys(a).join(','), '1,2,3,4,5,6,7,8,9,10,11,12');
-  eq('module : observation + non vu seulement pour 1, 9, 10, 12', Object.keys(a).filter(m => a[m].o && a[m].n).join(','), '1,9,10,12');
+  eq('module : observation + non vu seulement pour 1, 8, 9, 10, 12', Object.keys(a).filter(m => a[m].o && a[m].n).join(','), '1,8,9,10,12');
   eq('module : Chawwal = Aïd', a[10].s[0], 'fitrNotifTitle');
   eq('module : Mouharram, année à compléter par le module', a[1].s[0], 'newYearNotifTitle{"y":"{y}"}');
   eq('module : mêmes textes que le plan de la page', JSON.stringify(a[9].n), JSON.stringify([reminderTextOf({ type: 'nosight', h: { d: 1, m: 9, y: 1 } }).title, reminderTextOf({ type: 'nosight', h: { d: 1, m: 9, y: 1 } }).body]));

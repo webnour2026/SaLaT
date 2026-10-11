@@ -564,7 +564,7 @@ function mqMode(tNow = now()) {
 }
 const nativeMqCapable = () => isTwa() && localStorage.getItem('priere.nativeMq') === '1';
 // Version du module Android installé (paramètre « native » de l'adresse de démarrage de l'appli Play Store)
-const NATIVE_LATEST = 13;                                    // 4 = module 2.14 : rappels du croissant autonomes ; 5 = 2.15 : Adhans de Doha intégrés ; 8 = 2.18 : widget d'écran d'accueil ; 9 = 2.19 : widget redessiné ; 10 = 2.19.1 : nom de la prière en Reem Kufi ; 11 = 2.20 : 10 méthodes de calcul ajoutées ; 12 = 2.23 : avis de changement de fuseau ; 13 = 2.23.1 : calendrier relu chaque minute les soirs d'annonce
+const NATIVE_LATEST = 14;                                    // 4 = module 2.14 : rappels du croissant autonomes ; 5 = 2.15 : Adhans de Doha intégrés ; 8 = 2.18 : widget d'écran d'accueil ; 9 = 2.19 : widget redessiné ; 10 = 2.19.1 : nom de la prière en Reem Kufi ; 11 = 2.20 : 10 méthodes de calcul ajoutées ; 12 = 2.23 : avis de changement de fuseau ; 13 = 2.23.1 : calendrier relu chaque minute les soirs d'annonce ; 14 = 2.24 : Chaabane parmi les mois surveillés
 const STORE_URL = 'https://play.google.com/store/apps/details?id=io.github.webnour2026.salat';
 const nativeLevel = () => Number(localStorage.getItem('priere.nativeLvl') || 0);
 const UPD_KEY = 'priere.updDismiss';
@@ -2877,7 +2877,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.23.1';
+export const APP_VERSION = '2.24.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
