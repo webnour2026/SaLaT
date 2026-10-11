@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.21.2] – 2026-10-11
+### Modifié
+- Politique de confidentialité (fr, ar, en), mise à jour du 11 octobre 2026 : autorisation « Ne pas déranger » du Mode Mosquée (accordée par l'utilisateur) et widget d'écran d'accueil (aucune donnée envoyée).
+
 ## [2.21.1] – 2026-10-11
 ### Corrigé
 - Appli Android : choisir un rappel « avant la prière » pouvait encore demander l'autorisation de notification du SITE (webnour2026.github.io). Dans l'appli, seule l'autorisation Android de SaLaTi est demandée ; toutes les notifications viennent du module SaLaTi.
