@@ -167,6 +167,10 @@ export const sources = (m, y) => {
     { name: 'Hespress (ar, flux)', fast: true, trust: 'press', url: 'https://www.hespress.com/feed' },
     { name: 'Hespress (fr, flux)', fast: true, trust: 'press', url: 'https://fr.hespress.com/feed' },
     { name: 'Medi1 News (ar, page actualités)', fast: true, trust: 'press', url: 'https://www.medi1news.com/ar/categorie/news' },   // pas de flux RSS : page HTML (robots.txt l'autorise)
+    // MAP News et 2M refusent les robots (403) : on passe par Google Actualités, filtré sur leur domaine ; seuls les articles
+    // dont la source est bien ce domaine sont gardés (onlyHost). MAP News = l'agence officielle ; 2M = presse (2 médias requis).
+    { name: 'MAP News (via Google Actualités)', fast: true, trust: 'official', onlyHost: 'mapnews.ma', url: `https://news.google.com/rss/search?q=${enc('site:mapnews.ma (هلال OR croissant OR Habous OR الأوقاف) when:3d')}&hl=fr&gl=MA&ceid=MA:fr` },
+    { name: '2M (via Google Actualités)', fast: true, trust: 'press', onlyHost: '2m.ma', url: `https://news.google.com/rss/search?q=${enc('site:2m.ma (هلال OR croissant OR Habous OR الأوقاف) when:3d')}&hl=fr&gl=MA&ceid=MA:fr` },
     { name: 'Google Actualités (mois)', trust: 'press', url: `https://news.google.com/rss/search?q=${enc(`${ar} ${y} الأوقاف`)}&hl=ar&gl=MA&ceid=MA:ar` },
     { name: 'Google Actualités (5 j)', fast: true, trust: 'press', url: `https://news.google.com/rss/search?q=${enc('فاتح شهر وزارة الأوقاف هلال')}+when:5d&hl=ar&gl=MA&ceid=MA:ar` },
     { name: 'Bing Actualités', trust: 'press', url: `https://www.bing.com/news/search?q=${enc(`${ar} ${y} الأوقاف`)}&format=rss&setlang=ar` },
@@ -214,7 +218,7 @@ async function main() {
     const list = sources(next.m, next.y).filter(src => !fast || round % 5 === 1 || src.fast);
     const cands = [];
     const res = await Promise.allSettled(list.map(async src => {
-      const items = parseAny(await get(src.url), hostOf(src.url)).filter(i => !i.pub || i.pub >= (last + 27) * DAY);   // ignore les vieux articles
+      const items = parseAny(await get(src.url), hostOf(src.url)).filter(i => (!i.pub || i.pub >= (last + 27) * DAY) && (!src.onlyHost || i.host === src.onlyHost));   // ignore les vieux articles (et les autres domaines)
       let n = 0;
       for (const it of items) {
         const d = extractAny(it.text, last, next.m);

@@ -4,23 +4,16 @@ jobs:
   sonde:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - shell: bash {0}
         run: |
-          q() { python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$1"; }
-          for s in "fr|site:mapnews.ma" "fr|site:2m.ma" "fr|mapnews" "ar|هلال جمادى الأولى" "fr|2m.ma croissant" "bing|site:mapnews.ma" "bing|site:2m.ma هلال"; do
-            k=${s%%|*}; s=${s#*|}
-            case $k in fr) U="https://news.google.com/rss/search?q=$(q "$s")&hl=fr&gl=MA&ceid=MA:fr";; ar) U="https://news.google.com/rss/search?q=$(q "$s")&hl=ar&gl=MA&ceid=MA:ar";; bing) U="https://www.bing.com/news/search?q=$(q "$s")&format=rss";; esac
-            curl -sS -m 20 "$U" -o f.xml
-            m=$(python3 - <<'PY'
-          import re
-          s=open('f.xml').read(); it=re.findall(r'<item>(.*?)</item>',s,re.S)
-          out=[str(len(it))]
-          for e in it[:3]:
-              t=re.search(r'<title>(.*?)</title>',e).group(1); p=re.search(r'<pubDate>(.*?)</pubDate>',e).group(1)
-              src=re.search(r'<source[^>]*url="([^"]*)',e); out.append(p[5:22]+' '+t[:50]+' ['+(src.group(1) if src else '')+']')
-          print(' | '.join(out))
-          PY
-          )
-            echo "::notice::$k [$s] $m"
-          done
-          echo "::notice::MAPNEWS-ROBOTS $(curl -sS -m 15 -o /dev/null -w '%{http_code}' https://www.mapnews.ma/robots.txt)"
+          cat > t.mjs <<'JS'
+          const enc = encodeURIComponent;
+          for (const site of ['mapnews.ma', '2m.ma']) {
+            const u = `https://news.google.com/rss/search?q=${enc(`site:${site} (هلال OR croissant OR Habous OR الأوقاف) when:3d`)}&hl=fr&gl=MA&ceid=MA:fr`;
+            const s = await (await fetch(u)).text();
+            const it = [...s.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(m => m[1]);
+            console.log(`::notice::${site} items=${it.length} :: ` + it.slice(0, 4).map(e => (e.match(/<pubDate>(.*?)</) || [])[1]?.slice(5, 22) + ' ' + (e.match(/<title>(.*?)<\/title>/) || [])[1]?.slice(0, 70)).join(' | '));
+          }
+          JS
+          node t.mjs
