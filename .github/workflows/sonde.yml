@@ -4,11 +4,23 @@ jobs:
   sonde:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
       - shell: bash {0}
         run: |
-          UA="SaLaTi-verification/1.0 (appli de prière ; github.com/webnour2026/SaLaT)"
-          for u in "https://www.mapexpress.ma/ar/feed/" "https://www.mapexpress.ma/wp-json/wp/v2/posts?search=Habous&per_page=2" "https://www.hespress.com/feed" "https://fr.hespress.com/feed" "https://www.medi1news.com/ar/categorie/news" "https://www.medi1news.com/fr/categorie/news" "https://news.google.com/rss/search?q=site:snrtnews.com+when:3d&hl=fr&gl=MA&ceid=MA:fr" "https://www.bing.com/news/search?q=Habous&format=rss"; do
-            r=$(curl -sSL -m 20 -A "$UA" -o p -w "%{http_code} %{size_download}" "$u" 2>&1 | cut -c1-80)
-            echo "::notice::$r items=$(grep -c '<item' p) src=$(grep -o '<source url="[^"]*' p | sort | uniq -c | sort -rn | head -2 | tr -s ' ' | tr '\n' ' ') :: $u"
-          done
-          grep -o 'href="[^"]*hespress[^"]*\(feed\|rss\)[^"]*"' p | head -2
+          cat > t.mjs <<'JS'
+          import { sources, parseRss, extractAny, decide } from './scripts/update-habous.mjs';
+          const DAY = 864e5, last = Date.UTC(2026, 8, 13) / DAY;   // 1er Rabia II 1448 → on cherche Joumada I (annoncé le 11 oct.)
+          const hostOf = u => { try { return new URL(u).hostname.replace(/^www\./, '').split('.').slice(-2).join('.'); } catch { return ''; } };
+          const cands = [];
+          for (const src of sources(5, 1448).filter(s => s.onlyHost)) {
+            try {
+              const xml = await (await fetch(src.url)).text();
+              const items = parseRss(xml).filter(i => i.host === src.onlyHost && (!i.pub || i.pub >= (last + 27) * DAY));
+              const hits = items.map(i => ({ d: extractAny(i.text, last, 5), pub: i.pub })).filter(x => x.d);
+              hits.forEach(h => cands.push({ day: h.d, trust: src.trust, host: src.onlyHost }));
+              console.log(`::notice::${src.name}: ${items.length} articles, ${hits.length} annonces ${hits.slice(0, 2).map(h => new Date(h.d * DAY).toISOString().slice(0, 10) + ' publié ' + new Date(h.pub).toISOString().slice(5, 16)).join(', ')}`);
+            } catch (e) { console.log(`::notice::${src.name}: erreur ${e.message}`); }
+          }
+          const v = decide(cands); console.log(`::notice::DÉCISION ${v.day ? new Date(v.day * DAY).toISOString().slice(0, 10) : '-'} (${v.why})`);
+          JS
+          node t.mjs

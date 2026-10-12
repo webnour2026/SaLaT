@@ -158,7 +158,7 @@ export const sources = (m, y) => {
     { name: 'MAP Express (fr, flux)', trust: 'official', url: `https://www.mapexpress.ma/?s=${enc('Habous croissant')}&feed=rss2` },
     { name: 'MAP Express (fr, API)', trust: 'official', url: `https://www.mapexpress.ma/wp-json/wp/v2/posts?search=${enc('Habous')}&per_page=12` },
     { name: 'MAP Express (ar, récents)', fast: true, trust: 'official', url: 'https://www.mapexpress.ma/ar/feed/' },
-    { name: 'SNRT News (« هلال »)', fast: true, trust: 'official', url: 'https://snrtnews.com/taxonomy/term/174/feed' },
+    { name: 'SNRT News (« هلال »)', fast: true, trust: 'official', url: 'https://snrtnews.com/taxonomy/term/174/feed' },   // 403 depuis GitHub en oct. 2026 : gardé (peut rouvrir), copie Google ci-dessous
     // (Site du ministère, www.habous.gov.ma = version arabe : retiré. Son robots.txt interdit tous les robots (« User-agent: * Disallow: / »)
     //  et sa chaîne TLS est incomplète (intermédiaire Sectigo absent) : la requête échouait de toute façon. La MAP diffuse le même communiqué.)
     // ----- presse : il faut 2 médias différents -----
@@ -166,11 +166,15 @@ export const sources = (m, y) => {
     //  API payante ; 2M.ma refuse les robots. Google Actualités reprend leurs articles en quelques minutes.)
     { name: 'Hespress (ar, flux)', fast: true, trust: 'press', url: 'https://www.hespress.com/feed' },
     { name: 'Hespress (fr, flux)', fast: true, trust: 'press', url: 'https://fr.hespress.com/feed' },
-    { name: 'Medi1 News (ar, page actualités)', fast: true, trust: 'press', url: 'https://www.medi1news.com/ar/categorie/news' },   // pas de flux RSS : page HTML (robots.txt l'autorise)
-    // MAP News et 2M refusent les robots (403) : on passe par Google Actualités, filtré sur leur domaine ; seuls les articles
-    // dont la source est bien ce domaine sont gardés (onlyHost). MAP News = l'agence officielle ; 2M = presse (2 médias requis).
-    { name: 'MAP News (via Google Actualités)', fast: true, trust: 'official', onlyHost: 'mapnews.ma', url: `https://news.google.com/rss/search?q=${enc('site:mapnews.ma (هلال OR croissant OR Habous OR الأوقاف) when:3d')}&hl=fr&gl=MA&ceid=MA:fr` },
-    { name: '2M (via Google Actualités)', fast: true, trust: 'press', onlyHost: '2m.ma', url: `https://news.google.com/rss/search?q=${enc('site:2m.ma (هلال OR croissant OR Habous OR الأوقاف) when:3d')}&hl=fr&gl=MA&ceid=MA:fr` },
+    { name: 'Medi1 News (ar, page actualités)', fast: true, trust: 'press', url: 'https://www.medi1news.com/ar/categorie/news' },   // pas de flux RSS : page HTML (robots.txt l'autorise) ; 403 depuis GitHub en oct. 2026
+    // Copies par Google Actualités, filtrées sur le domaine du média : MAP Express, SNRT et Medi1 bloquent depuis oct. 2026 les
+    // serveurs de GitHub (HTTP 403, pare-feu), MAP News et 2M aussi. Seuls les articles dont la source est exactement ce domaine
+    // comptent (onlyHost). Plus lent (Google indexe en quelques minutes à quelques heures) mais toujours joignable.
+    ...[
+      ['MAP Express', 'mapexpress.ma', 'official'], ['MAP News', 'mapnews.ma', 'official'], ['SNRT News', 'snrtnews.com', 'official'],
+      ['Medi1 News', 'medi1news.com', 'press'], ['2M', '2m.ma', 'press'], ['Hespress', 'hespress.com', 'press'],
+    ].map(([n, site, trust]) => ({ name: `${n} (via Google Actualités)`, fast: true, trust, onlyHost: site,
+      url: `https://news.google.com/rss/search?q=${enc(`site:${site} (هلال OR "${HIJRI_AR[m]}" OR croissant OR Habous OR الأوقاف) when:3d`)}&hl=fr&gl=MA&ceid=MA:fr` })),
     { name: 'Google Actualités (mois)', trust: 'press', url: `https://news.google.com/rss/search?q=${enc(`${ar} ${y} الأوقاف`)}&hl=ar&gl=MA&ceid=MA:ar` },
     { name: 'Google Actualités (5 j)', fast: true, trust: 'press', url: `https://news.google.com/rss/search?q=${enc('فاتح شهر وزارة الأوقاف هلال')}+when:5d&hl=ar&gl=MA&ceid=MA:ar` },
     { name: 'Bing Actualités', trust: 'press', url: `https://www.bing.com/news/search?q=${enc(`${ar} ${y} الأوقاف`)}&format=rss&setlang=ar` },
@@ -226,6 +230,8 @@ async function main() {
       }
       return `${items.length} article(s), ${n} annonce(s)`;
     }));
+    const found = [...new Set(cands.map(c => `${c.src} → ${iso(c.day)}`))];
+    if (found.length) console.log(`::notice title=Sources::${found.join(' ; ')}`);
     res.forEach((r, i) => console.log(`  ${list[i].trust === 'official' ? '★' : '·'} ${list[i].name} : ${r.status === 'fulfilled' ? r.value : 'indisponible (' + r.reason.message + ')'}`));
     const verdict = decide(cands);
     console.log(`Décision : ${verdict.day ? iso(verdict.day) : 'aucune'} — ${verdict.why}`);
