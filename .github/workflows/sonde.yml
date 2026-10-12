@@ -1,0 +1,14 @@
+name: Sonde (temporaire)
+on: workflow_dispatch
+jobs:
+  sonde:
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash {0}
+        run: |
+          UA="Mozilla/5.0 (compatible; SaLaT-habous/1.1)"
+          echo "::notice::ROBOTS $(curl -sSL -m 15 -A "$UA" https://madar21.com/robots.txt | grep -iv '^#' | grep -i -A5 'user-agent: \*' | tr '\n' ' ' | cut -c1-300)"
+          for u in https://madar21.com/feed https://madar21.com/feed/ https://madar21.com/rss https://madar21.com/459487.html; do
+            r=$(curl -sSL -m 20 -A "$UA" -o p -w "%{http_code} %{content_type} %{size_download}" "$u" 2>&1 | cut -c1-90)
+            echo "::notice::$u => $r items=$(grep -c '<item' p) last=$(grep -o '<pubDate>[^<]*' p | head -1) t=$(grep -o '<title>[^<]*' p | sed -n 1,2p | tr '\n' '|' | cut -c1-140)"
+          done
