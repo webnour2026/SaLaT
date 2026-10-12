@@ -81,7 +81,10 @@ const RE_LGREG = Object.keys(LATIN_GREG).join('|'), RE_LWEEK = Object.keys(LATIN
 /** Comme extractStart, pour un texte français ou anglais. */
 export function extractStartLatin(raw, last, expected) {
   const text = normLatin(raw);
-  if (!/habous|affaires islamiques|awqaf|islamic affairs/.test(text)) return null;     // doit venir du ministère
+  // doit venir du ministère… ou être une annonce ferme (« le 1er … de l'an 1448 de l'Hégire correspondra au mardi … »), pas une prévision
+  const firm = /hegire|hijri|hegirien/.test(text) && /correspond|sera |debut|commence|est fixe|coincide/.test(text)
+    && !/devrait|prevu|prevision|probabl|astronom|calcul|attendu|expected|likely|predict|pourrait/.test(text);
+  if (!firm && !/habous|affaires islamiques|awqaf|islamic affairs/.test(text)) return null;
   const out = new Set(), plausible = day => day - last === 29 || day - last === 30;
   const names = LATIN_HIJRI[expected].map(n => `(?<![a-z0-9])${n}(?![a-z0-9])`).join('|');
   for (const mt of text.matchAll(new RegExp(names, 'g'))) {

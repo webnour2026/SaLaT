@@ -57,5 +57,10 @@ const src = sources(4, 1448);
 eq('sources : MAP est officielle', String(src.filter(x => x.url.includes('mapexpress.ma') && x.trust === 'official').length >= 4), 'true');
 eq('sources : SNRT est officielle', String(src.some(x => x.url.includes('snrtnews.com') && x.trust === 'official')), 'true');
 eq('sources : la presse est marquée « press »', String(src.filter(x => x.trust === 'press').length >= 2), 'true');
+// titres repris par Google Actualités (sans le mot « Habous ») : annonce ferme acceptée, prévision refusée
+eq('2M : « correspondra au mardi 13 octobre » (sans Habous)', L("Le 1er Joumada I de l'an 1448 de l'Hégire correspondra au mardi 13 octobre - 2M", '2026-09-13', 5), '2026-10-13');
+eq('prévision astronomique refusée', L('Le 1er Joumada I 1448 devrait correspondre au mardi 13 octobre selon les calculs astronomiques', '2026-09-13', 5), null);
+eq('copies Google Actualités : 6 médias, filtrés sur leur domaine', sources(5, 1448).filter(x => x.onlyHost).map(x => x.onlyHost).join(' '), 'mapexpress.ma mapnews.ma snrtnews.com medi1news.com 2m.ma hespress.com');
+
 if (ko) { console.error(ko, 'échec(s)'); process.exit(1); }
 console.log('Tous les tests réussis');
