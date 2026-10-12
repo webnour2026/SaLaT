@@ -65,5 +65,8 @@ eq('copies Google Actualités : 6 médias, filtrés sur leur domaine', sources(5
 eq('Hespress arabe : validé seul', sources(5, 1448).find(x => x.name === 'Hespress (ar, flux)').trust, 'official');
 eq('Hespress français et copie Google : 2 médias requis', sources(5, 1448).filter(x => /Hespress/.test(x.name) && x.name !== 'Hespress (ar, flux)').map(x => x.trust).join(','), 'press,press');
 
+eq('Alyaoum24 suivi chaque minute', sources(5, 1448).some(x => /Alyaoum24/.test(x.name) && x.fast), true);
+eq('site du ministère : en veille derrière robots.txt', JSON.stringify(sources(5, 1448).filter(x => x.robots).map(x => [x.url, x.trust])), JSON.stringify([['https://www.habous.gov.ma/', 'official']]));
+
 if (ko) { console.error(ko, 'échec(s)'); process.exit(1); }
 console.log('Tous les tests réussis');

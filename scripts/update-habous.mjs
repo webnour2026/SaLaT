@@ -5,6 +5,7 @@
 // le mois attendu (le suivant du dernier connu), 29 ou 30 jours après le dernier début de mois.
 // Saisie manuelle possible : variable MANUAL_START=AAAA-MM-JJ (workflow_dispatch).
 import fs from 'node:fs';
+import { robotsAllows } from './officiel-lib.mjs';
 import { fileURLToPath } from 'node:url';
 import { computeDay } from '../js/prayer-calc.js';
 
@@ -162,13 +163,15 @@ export const sources = (m, y) => {
     { name: 'MAP Express (fr, API)', trust: 'official', url: `https://www.mapexpress.ma/wp-json/wp/v2/posts?search=${enc('Habous')}&per_page=12` },
     { name: 'MAP Express (ar, récents)', fast: true, trust: 'official', url: 'https://www.mapexpress.ma/ar/feed/' },
     { name: 'SNRT News (« هلال »)', fast: true, trust: 'official', url: 'https://snrtnews.com/taxonomy/term/174/feed' },   // 403 depuis GitHub en oct. 2026 : gardé (peut rouvrir), copie Google ci-dessous
-    // (Site du ministère, www.habous.gov.ma = version arabe : retiré. Son robots.txt interdit tous les robots (« User-agent: * Disallow: / »)
-    //  et sa chaîne TLS est incomplète (intermédiaire Sectigo absent) : la requête échouait de toute façon. La MAP diffuse le même communiqué.)
+    // Site du ministère (version arabe) : en veille. Son robots.txt interdit aujourd'hui tous les robots (« Disallow: / ») : seul ce
+    // fichier est lu, la page jamais. Le jour où il l'autorise (nouveau site), elle est lue — souvent en retard, mais c'est la source.
+    { name: 'Ministère des Habous (site)', trust: 'official', robots: true, url: 'https://www.habous.gov.ma/' },
     // ----- presse : il faut 2 médias différents -----
     // (X et Facebook, souvent plus rapides, ne se lisent pas automatiquement : connexion obligatoire, conditions d'utilisation,
     //  API payante ; 2M.ma refuse les robots. Google Actualités reprend leurs articles en quelques minutes.)
     // Hespress arabe : souvent le premier (11 oct. 2026 : 19:49, avant la MAP), exact et sérieux → validé seul, comme une source officielle
     { name: 'Hespress (ar, flux)', fast: true, trust: 'official', url: 'https://www.hespress.com/feed' },
+    { name: 'Alyaoum24 (ar, flux)', fast: true, trust: 'press', url: 'https://alyaoum24.com/feed/' },   // 11 oct. 2026 : 20:00, avant la MAP (robots.txt l'autorise)
     { name: 'Hespress (fr, flux)', fast: true, trust: 'press', url: 'https://fr.hespress.com/feed' },
     { name: 'Medi1 News (ar, page actualités)', fast: true, trust: 'press', url: 'https://www.medi1news.com/ar/categorie/news' },   // pas de flux RSS : page HTML (robots.txt l'autorise) ; 403 depuis GitHub en oct. 2026
     // Copies par Google Actualités, filtrées sur le domaine du média : MAP Express, SNRT et Medi1 bloquent depuis oct. 2026 les
@@ -184,6 +187,16 @@ export const sources = (m, y) => {
     { name: 'Bing Actualités', trust: 'press', url: `https://www.bing.com/news/search?q=${enc(`${ar} ${y} الأوقاف`)}&format=rss&setlang=ar` },
   ];
 };
+// robots.txt (lu une fois par heure et par site) : la page est-elle permise à tous les robots ?
+const robotsCache = new Map();
+async function robotsOk(url) {
+  const u = new URL(url), key = u.origin, now = Date.now(), c = robotsCache.get(key);
+  if (c && now - c.at < 3600e3) return c.ok;
+  let ok = false;
+  try { ok = robotsAllows(await get(`${key}/robots.txt`), u.pathname + u.search); } catch { ok = false; }
+  robotsCache.set(key, { ok, at: now });
+  return ok;
+}
 async function get(url) {
   const res = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (compatible; SaLaT-habous/1.1)', 'accept-language': 'ar,fr;q=0.8,en;q=0.5' }, signal: AbortSignal.timeout(20000) });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -226,6 +239,7 @@ async function main() {
     const list = sources(next.m, next.y).filter(src => !fast || round % 5 === 1 || src.fast);
     const cands = [];
     const res = await Promise.allSettled(list.map(async src => {
+      if (src.robots && !(await robotsOk(src.url))) return 'robots.txt l\'interdit : non lu';
       const items = parseAny(await get(src.url), hostOf(src.url)).filter(i => (!i.pub || i.pub >= (last + 27) * DAY) && (!src.onlyHost || i.host === src.onlyHost));   // ignore les vieux articles (et les autres domaines)
       let n = 0;
       for (const it of items) {
