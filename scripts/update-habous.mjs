@@ -111,7 +111,7 @@ export function extractAny(raw, last, expected) {
 
 // ---------- décision : qui croire ? ----------
 // Le ministère l'a lui-même signalé : de faux communiqués circulent. Donc :
-//  • source OFFICIELLE (MAP, télévision publique SNRT, site du ministère) : suffit à elle seule ;
+//  • source OFFICIELLE (MAP, télévision publique SNRT) ou Hespress arabe (choix de l'éditeur de SaLaTi) : suffit à elle seule ;
 //  • presse ordinaire : au moins 2 médias DIFFÉRENTS doivent donner la même date ;
 //  • désaccord : on ne change rien (l'officiel l'emporte sur la presse).
 export function decide(cands) {
@@ -167,7 +167,8 @@ export const sources = (m, y) => {
     // ----- presse : il faut 2 médias différents -----
     // (X et Facebook, souvent plus rapides, ne se lisent pas automatiquement : connexion obligatoire, conditions d'utilisation,
     //  API payante ; 2M.ma refuse les robots. Google Actualités reprend leurs articles en quelques minutes.)
-    { name: 'Hespress (ar, flux)', fast: true, trust: 'press', url: 'https://www.hespress.com/feed' },
+    // Hespress arabe : souvent le premier (11 oct. 2026 : 19:49, avant la MAP), exact et sérieux → validé seul, comme une source officielle
+    { name: 'Hespress (ar, flux)', fast: true, trust: 'official', url: 'https://www.hespress.com/feed' },
     { name: 'Hespress (fr, flux)', fast: true, trust: 'press', url: 'https://fr.hespress.com/feed' },
     { name: 'Medi1 News (ar, page actualités)', fast: true, trust: 'press', url: 'https://www.medi1news.com/ar/categorie/news' },   // pas de flux RSS : page HTML (robots.txt l'autorise) ; 403 depuis GitHub en oct. 2026
     // Copies par Google Actualités, filtrées sur le domaine du média : MAP Express, SNRT et Medi1 bloquent depuis oct. 2026 les
@@ -229,7 +230,7 @@ async function main() {
       let n = 0;
       for (const it of items) {
         const d = extractAny(it.text, last, next.m);
-        if (d) { cands.push({ day: d, trust: src.trust, host: it.host || hostOf(src.url), src: src.name }); n++; }
+        if (d) { cands.push({ day: d, trust: src.trust, host: it.host || hostOf(src.url), src: src.name }); n++; }   // (le premier trouvé est dans les notes du travail)
       }
       return `${items.length} article(s), ${n} annonce(s)`;
     }));

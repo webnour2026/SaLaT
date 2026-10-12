@@ -62,5 +62,8 @@ eq('2M : « correspondra au mardi 13 octobre » (sans Habous)', L("Le 1er Joumad
 eq('prévision astronomique refusée', L('Le 1er Joumada I 1448 devrait correspondre au mardi 13 octobre selon les calculs astronomiques', '2026-09-13', 5), null);
 eq('copies Google Actualités : 6 médias, filtrés sur leur domaine', sources(5, 1448).filter(x => x.onlyHost).map(x => x.onlyHost).join(' '), 'mapexpress.ma mapnews.ma snrtnews.com medi1news.com 2m.ma hespress.com');
 
+eq('Hespress arabe : validé seul', sources(5, 1448).find(x => x.name === 'Hespress (ar, flux)').trust, 'official');
+eq('Hespress français et copie Google : 2 médias requis', sources(5, 1448).filter(x => /Hespress/.test(x.name) && x.name !== 'Hespress (ar, flux)').map(x => x.trust).join(','), 'press,press');
+
 if (ko) { console.error(ko, 'échec(s)'); process.exit(1); }
 console.log('Tous les tests réussis');
