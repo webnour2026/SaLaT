@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [données] – 2026-10-12
+### Ajouté
+- Horaires officiels pour les 28 localités absentes du widget fm6oa.org (Sahara, petits centres) : tableau mensuel du site du ministère des Habous, contrôlé ligne par ligne contre le calcul. Les 191 localités ont désormais leurs horaires officiels.
+
 ## [2.25.0] – 2026-10-12 ⚠ nouvel AAB (version code 27, native=15)
 ### Ajouté
 - « Croissant non vu » pour **tous** les mois (plus seulement les 5 mois surveillés) : le soir du 29, après le communiqué, « لم يثبت هلال شهر جمادى الأولى — يستوفي شهر ربيع الآخر ثلاثين يومًا: غدًا متمّمه، وفاتح شهر جمادى الأولى يوم الثلاثاء إن شاء الله », même appli fermée.

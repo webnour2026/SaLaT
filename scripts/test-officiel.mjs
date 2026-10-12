@@ -1,6 +1,6 @@
 // Tests de la lecture des horaires officiels : analyse d'une page, contrôle contre le calcul, fusion, garde-fous de l'appli.
 import fs from 'node:fs';
-import { parsePage, analyse, mergeFile, robotsAllows } from './officiel-lib.mjs';
+import { parsePage, analyse, mergeFile, robotsAllows, parseHabousMonthly, habousSelected } from './officiel-lib.mjs';
 import { computeDay } from '../js/prayer-calc.js';
 import { localityByCode } from '../js/localites.js';
 
@@ -107,6 +107,20 @@ eq('téléchargement : fichier mal formé refusé', await refreshOfficiel(31, { 
 globalThis.fetch = async () => ({ ok: true, json: async () => ({ v: 1, code: 31, j: { '2026-10-05': same.join(' ') } }) });
 eq('téléchargement : bon fichier enregistré', await refreshOfficiel(31, { force: true }), true);
 eq('téléchargement : même fichier une seconde fois → pas de changement', await refreshOfficiel(31, { force: true }), false);
+
+// site du ministère des Habous : tableau mensuel (page réelle d'Imintanoute, Rabia II 1448, copiée le 12 oct. 2026)
+{
+  const fx = fs.readFileSync(new URL('./fixtures/habous-mensuel-305.html', import.meta.url), 'utf8');
+  const r = parseHabousMonthly(fx, Date.UTC(2026, 9, 12));
+  eq('Habous : 30 jours, du 13 sept. au 12 oct. 2026', [r.length, r[0].date, r.at(-1).date], [30, '2026-09-13', '2026-10-12']);
+  eq('Habous : ville affichée = celle demandée (Imintanoute)', habousSelected(fx), 305);
+  const h = analyse(305, r);
+  eq('Habous : heure légale (GMT+1) ramenée en UTC, 1 min d\'écart au plus avec le calcul', [h.ok, h.days['2026-09-13'], h.stats.max <= 1], [true, '0451 0613 1236 1602 1850 2001', true]);
+  eq('Habous : jours grégoriens incohérents avec le titre (septembre lu comme décembre) → rien', parseHabousMonthly(fx.replace('سبتمبر / أكتوبر 2026', 'دجنبر / يناير 2027'), Date.UTC(2026, 11, 20)), []);
+  eq('Habous : page d\'une autre mise en page → rien', parseHabousMonthly('<h2 class="habous-monthly-title">x</h2>'), []);
+  eq('Habous : robots.txt du site autorise la page', robotsAllows(fs.readFileSync(new URL('./fixtures/habous-robots.txt', import.meta.url), 'utf8'), '/mawaqit-shahria'), true);
+  eq('Habous : robots.txt « Disallow: / » → refus', robotsAllows('User-agent: *\nDisallow: /', '/mawaqit-shahria'), false);
+}
 
 console.log(fails ? `\n${fails} échec(s)` : '\nTous les tests réussis');
 process.exit(fails ? 1 : 0);

@@ -91,3 +91,40 @@ export function mergeFile(existing, code, days, now = Date.now()) {
   const changed = JSON.stringify(kept) !== JSON.stringify(existing?.j || {});
   return { file: { v: 1, code, maj: changed ? ymd(now) : (existing?.maj || ymd(now)), j: kept }, changed };
 }
+
+// ── Tableau mensuel du site du ministère des Habous (nouvelle version : « mawaqit-shahria?ville=<numéro> ») ──
+// Titre « شهر ربيع الثاني — سبتمبر / أكتوبر 2026 », puis une ligne par jour : jour de la semaine, jour hégirien,
+// jour grégorien (sans le mois), 6 heures à l'heure légale. Les numéros de ville sont ceux de notre liste (191 localités).
+const MOIS_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'ماي', 'يونيو', 'يوليوز', 'غشت', 'شتنبر', 'أكتوبر', 'نونبر', 'دجنبر'];
+const MOIS_AR_ALT = { 'سبتمبر': 9, 'نوفمبر': 11, 'ديسمبر': 12, 'أغسطس': 8, 'يوليو': 7, 'مايو': 5, 'ابريل': 4, 'إبريل': 4, 'اكتوبر': 10 };
+const monthAr = w => { const i = MOIS_AR.indexOf(w); return i >= 0 ? i + 1 : MOIS_AR_ALT[w] || 0; };
+
+/** Numéro de la ville affichée (option « selected » de la liste), ou 0. Une ville inconnue fait afficher Rabat : à vérifier. */
+export const habousSelected = html => Number((String(html).match(/<option value="(\d+)"[^>]*\bselected\b/) || [])[1] || 0);
+
+/** Lignes du tableau mensuel des Habous : [{ date: 'AAAA-MM-JJ', t: [minutes × 6] }] (même forme que parsePage). */
+export function parseHabousMonthly(html, now = Date.now()) {
+  const title = text((String(html).match(/habous-monthly-title[^>]*>([\s\S]*?)<\/h2>/) || [])[1] || '');
+  const tm = title.match(/—\s*(\S+)(?:\s*\/\s*(\S+))?\s+(\d{4})/);
+  if (!tm) return [];
+  const m1 = monthAr(tm[1]), y = +tm[3];
+  if (!m1) return [];
+  const found = [];
+  for (const chunk of String(html).split(/<tr[\s>]/i).slice(1)) {
+    const cells = [...chunk.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(m => text(m[1]));
+    if (cells.length !== 9 || !/^\d{1,2}$/.test(cells[2]) || !cells.slice(3).every(c => /^\d{1,2}:\d{2}$/.test(c))) continue;
+    found.push({ day: +cells[2], t: cells.slice(3).map(c => { const [h, mi] = c.split(':').map(Number); return h * 60 + mi; }) });
+  }
+  if (!found.length) return [];
+  // premier jour : mois du titre ; l'année du titre peut être celle du second mois (décembre / janvier) → la plus proche d'aujourd'hui
+  let start = null;
+  for (const yy of [y - 1, y]) { const ms = Date.UTC(yy, m1 - 1, found[0].day); if (new Date(ms).getUTCDate() !== found[0].day) continue; if (start === null || Math.abs(ms - now) < Math.abs(start - now)) start = ms; }
+  if (start === null) return [];
+  const rows = [];
+  for (let i = 0; i < found.length; i++) {
+    const ms = start + i * 864e5;
+    if (new Date(ms).getUTCDate() !== found[i].day) return [];          // jours non consécutifs : tableau mal lu, on n'en garde rien
+    rows.push({ date: ymd(ms), t: found[i].t });
+  }
+  return rows.length >= 20 ? rows : [];
+}
