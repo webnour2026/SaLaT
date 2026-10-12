@@ -1,0 +1,15 @@
+name: Sonde (temporaire)
+on: workflow_dispatch
+jobs:
+  sonde:
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash {0}
+        run: |
+          UA="Mozilla/5.0 (compatible; SaLaT-habous/1.1)"
+          for h in www.astronomycenter.net www.moonsighting.com www.spa.gov.sa www.dar-alifta.org; do
+            echo "::notice::ROBOTS $h $(curl -sSL -m 15 -A "$UA" -o r -w '%{http_code}' https://$h/robots.txt) $(grep -iv '^#' r | grep -i -A4 'user-agent: \*' | tr '\n' ' ' | cut -c1-160)"
+          done
+          for u in https://www.astronomycenter.net/res.html https://www.astronomycenter.net/rss.xml https://www.moonsighting.com/1448jmd.html https://www.spa.gov.sa/rss; do
+            echo "::notice::$u => $(curl -sSL -m 20 -A "$UA" -o p -w '%{http_code} %{content_type} %{size_download}' "$u" 2>&1 | cut -c1-80) t=$(grep -o '<title>[^<]*' p | head -1 | cut -c1-80)"
+          done
