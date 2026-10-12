@@ -1,0 +1,24 @@
+name: Sonde (temporaire)
+on: workflow_dispatch
+jobs:
+  sonde:
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash {0}
+        run: |
+          q() { python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$1"; }
+          for s in "site:mapnews.ma" "site:2m.ma" "site:mapnews.ma هلال" "site:2m.ma هلال" "site:mapnews.ma جمادى الأولى" "site:2m.ma جمادى الأولى"; do
+            curl -sS -m 20 "https://news.google.com/rss/search?q=$(q "$s")&hl=ar&gl=MA&ceid=MA:ar" -o f.xml
+            m=$(python3 - <<'PY'
+          import re
+          s=open('f.xml').read(); it=re.findall(r'<item>(.*?)</item>',s,re.S)
+          out=[str(len(it))]
+          for e in it[:3]:
+              t=re.search(r'<title>(.*?)</title>',e).group(1); p=re.search(r'<pubDate>(.*?)</pubDate>',e).group(1)
+              out.append(p[5:22]+' '+t[:60])
+          print(' | '.join(out))
+          PY
+          )
+            echo "::notice::GN [$s] $m"
+          done
+          echo "::notice::MAPNEWS-ROBOTS $(curl -sS -m 15 -o /dev/null -w '%{http_code}' https://www.mapnews.ma/robots.txt)"
