@@ -1,0 +1,13 @@
+name: Sonde (temporaire)
+on: workflow_dispatch
+jobs:
+  sonde:
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash {0}
+        run: |
+          for h in www.mapnews.ma mapnews.ma 2m.ma www.2m.ma; do echo "::notice::ROBOTS $h $(curl -sSL -m 20 https://$h/robots.txt | grep -iv '^#' | grep -i -A4 'user-agent: \*' | tr '\n' ' ' | cut -c1-250)"; done
+          for u in https://www.mapnews.ma/ar/rss.xml https://www.mapnews.ma/ar/feed https://www.mapnews.ma/rss.xml https://www.mapnews.ma/ar https://www.2m.ma/ar/rss.xml https://www.2m.ma/feed; do
+            r=$(curl -sSL -m 20 -A "Mozilla/5.0 SaLaTi" -o /tmp/p -w "%{http_code} %{content_type} %{size_download}" "$u" 2>&1 | cut -c1-120)
+            echo "::notice::$u => $r items=$(grep -c '<item' /tmp/p) links=$(grep -o 'href="[^"]*\(rss\|feed\)[^"]*"' /tmp/p | head -3 | tr '\n' ' ')"
+          done
