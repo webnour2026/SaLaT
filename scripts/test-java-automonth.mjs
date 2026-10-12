@@ -20,6 +20,7 @@ public class Main {
     System.out.println("D " + AutoMonthMath.accept(d, false, d + 29) + "," + AutoMonthMath.accept(d, false, d - 29) + "," + AutoMonthMath.accept(d + 30, true, d + 29) + "," + AutoMonthMath.accept(d + 30, false, d + 29) + "," + AutoMonthMath.accept(d, false, d) + "," + AutoMonthMath.accept(-1, false, d));
     System.out.println("E " + AutoMonthMath.nextMonth(12) + "," + AutoMonthMath.nextYear(12, 1447) + "," + AutoMonthMath.nextMonth(8) + "," + AutoMonthMath.nextYear(8, 1447));
     System.out.println("F " + AutoMonthMath.watched(1) + AutoMonthMath.watched(8) + AutoMonthMath.watched(9) + AutoMonthMath.watched(10) + AutoMonthMath.watched(12) + AutoMonthMath.watched(5) + AutoMonthMath.watched(11));
+    System.out.println("H " + AutoMonthMath.weekday(AutoMonthMath.dayOf("2026-10-13")) + AutoMonthMath.weekday(AutoMonthMath.dayOf("2026-10-11")) + AutoMonthMath.weekday(AutoMonthMath.dayOf("1969-12-31")));
     // une année appli fermée : chaque mois, le module apprend le début (29 ou 30 jours) ou, sans réseau, suppose 30 jours puis se corrige
     long last = d; int m = 4, y = 1448; boolean est = false; StringBuilder log = new StringBuilder();
     int[] real = {29, 30, 29, 30, 30, 29, 30, 29, 30, 29, 30, 29};      // longueurs réelles (exemple)
@@ -49,6 +50,7 @@ eq('relecture de secours : 14 oct. 09:00 UTC', out.C, '2026-10-14T09:00:00Z');
 eq('apprentissage : récent oui, ancien non, estimation corrigée oui, vrai début jamais reculé, doublon non, premier oui', out.D, 'true,false,true,false,false,true');
 eq('Dhou al-Hijja → Mouharram de l\'année suivante', out.E, '1,1448,9,1447');
 eq('mois surveillés : Mouharram, Chaabane, Ramadan, Chawwal, Dhou al-Hijja', out.F, 'truetruetruetruetruefalsefalse');
+eq('jour de la semaine : mardi 13 oct. 2026, dimanche 11 oct., mercredi 31 déc. 1969', out.H, '203');
 eq('une année entière appli fermée, 2 soirs sans réseau : chaque mois retrouvé', out.G, '5:ok 6:ok 7:ok 8:ok 9:ok 10:ok 11:ok 12:ok 1:ok 2:ok 3:ok 4:ok | 1449 4');
 console.log(fails ? `\n${fails} échec(s)` : '\nTous les tests réussis');
 process.exit(fails ? 1 : 0);

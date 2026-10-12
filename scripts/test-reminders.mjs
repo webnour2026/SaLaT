@@ -18,7 +18,8 @@ const { planNativeReminders, autoMonthTexts, reminderText: reminderTextRaw } = a
 const reminderTextOf = ev => reminderTextRaw(t, ev);
 
 const MONTHS = ['Mouharram', 'Safar', 'Rabia al-Awal', 'Rabia ath-Thani', 'Joumada al-Oula', 'Joumada ath-Thania', 'Rajab', 'Chaabane', 'Ramadan', 'Chawwal', 'Dhou al-Qi’da', 'Dhou al-Hijja'];
-const t = (k, v) => k === 'hijriMonths' ? MONTHS : `${k}${v ? JSON.stringify(v) : ''}`;
+const WD = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
+const t = (k, v) => k === 'hijriMonths' ? MONTHS : k === 'wdOn' ? WD : `${k}${v ? JSON.stringify(v) : ''}`;
 const DAY = 864e5, addDays = (k, n) => new Date(Date.parse(k + 'T00:00:00Z') + n * DAY).toISOString().slice(0, 10);
 const plan = (today, opts = {}) => {
   const limit = addDays(today, 42);
@@ -37,7 +38,7 @@ setHabous(HABOUS_BUILTIN); useHabous(true);
 
 // 30 septembre 2026 : Rabi' II a commencé le 13 sept (officiel). Le début de Joumada I n'est pas annoncé.
 let p = plan('2026-09-30');
-eq('30 sept : 2 veilles à surveiller (11 et 12 oct)', ids(p), '2026-10-11-month 2026-10-12-month');
+eq('30 sept : 2 veilles à surveiller (11 et 12 oct) + « non vu » le 11', ids(p), '2026-10-11-month 2026-10-11-nosight 2026-10-12-month');
 eq('30 sept : la veille du 29 vise le 12 octobre', p[0].watch, '2026-10-12');
 eq('30 sept : la veille du 30 vise le 13 octobre', p[1].watch, '2026-10-13');
 eq('30 sept : envoi 20 min après le Maghrib (19:40 → 20:00 UTC+1 = 19:00 UTC)', new Date(p[0].at).toISOString(), '2026-10-11T19:00:00.000Z');
@@ -126,7 +127,7 @@ eq('vendredi : coexiste avec les jours blancs (ids distincts)', String(new Set(p
   eq('Ramadan : « non vu » seulement si le mois commence le surlendemain (20 févr.)', no && no.watch, '2026-02-20');
   eq('Ramadan : « vu » toujours surveillé pour le lendemain (19 févr.)', q.find(e => e.id === '2026-02-18-month')?.watch, '2026-02-19');
   eq('Ramadan : ids distincts', String(new Set(q.map(e => e.id)).size === q.length), 'true');
-  eq('Ramadan : texte « non vu »', no && no.body, 'nosightRamadanBody{"m":"Ramadan","p":"Chaabane"}');
+  eq('Ramadan : texte « non vu »', no && no.body, 'nosightRamadanBody{"m":"Ramadan","p":"Chaabane","w":"ven"}');
   lastIs(9, 1447, '2026-02-19');                         // Ramadan → Chawwal (Aïd)
   q = planA('2026-03-10');
   eq('Aïd al-Fitr : observation + non vu', q.filter(e => e.kind === 'obs' || e.kind === 'nosight').map(e => e.id).join(' '), '2026-03-19-obs 2026-03-19-nosight');
@@ -135,13 +136,17 @@ eq('vendredi : coexiste avec les jours blancs (ids distincts)', String(new Set(p
   lastIs(12, 1447, '2026-05-18');                        // Dhou al-Hijja → Mouharram 1448
   q = planA('2026-06-10');
   eq('Mouharram : observation annoncée', String(q.some(e => e.id === '2026-06-15-obs')), 'true');
-  eq('Mouharram : mois précédent au génitif', q.find(e => e.kind === 'nosight').body, 'nosightNotifBody{"m":"Mouharram","p":"Dhou al-Hijja"}');
+  eq('Mouharram : mois précédent au génitif', q.find(e => e.kind === 'nosight').body, 'nosightNotifBody{"m":"Mouharram","p":"Dhou al-Hijja","w":"mer"}');
   eq('Mouharram : titre « nouvel an » si vu', q.find(e => e.id === '2026-06-15-month')?.title, 'newYearNotifTitle{"y":1448}');
   eq('Mouharram : désactivé avec les rappels de mois', String(planA('2026-06-10', { month: false }).some(e => e.kind === 'obs')), 'false');
   lastIs(11, 1447, '2026-04-19');                        // Dhou al-Qi'da → Dhou al-Hijja
   eq('Dhou al-Hijja : observation annoncée', String(planA('2026-05-10').some(e => e.kind === 'obs')), 'true');
   lastIs(4, 1448, '2026-09-13');                         // Rabi' II → Joumada I : mois ordinaire
-  eq('mois ordinaire (Joumada I) : ni observation ni « non vu »', String(planA('2026-10-05').some(e => e.kind === 'obs' || e.kind === 'nosight')), 'false');
+  q = planA('2026-10-05');
+  eq('mois ordinaire (Joumada I) : pas d\'annonce d\'observation', String(q.some(e => e.kind === 'obs')), 'false');
+  eq('mois ordinaire (Joumada I) : « non vu » le soir du 29 (11 oct.), si le mois commence le 13 (mardi)', JSON.stringify(q.filter(e => e.kind === 'nosight').map(e => [e.id, e.watch, e.body])),
+     JSON.stringify([['2026-10-11-nosight', '2026-10-13', 'nosightNotifBody{"m":"Joumada al-Oula","p":"Rabia ath-Thani","w":"mar"}']]));
+  eq('mois ordinaire : rien si les rappels de mois sont coupés', String(planA('2026-10-05', { month: false }).some(e => e.kind === 'nosight')), 'false');
   setHabous(HABOUS_BUILTIN);
 }
 
@@ -149,7 +154,10 @@ eq('vendredi : coexiste avec les jours blancs (ids distincts)', String(new Set(p
 {
   const a = autoMonthTexts({ t, prefs: { eid: true, month: true } });
   eq('module : textes pour les 12 mois', Object.keys(a).join(','), '1,2,3,4,5,6,7,8,9,10,11,12');
-  eq('module : observation + non vu seulement pour 1, 8, 9, 10, 12', Object.keys(a).filter(m => a[m].o && a[m].n).join(','), '1,8,9,10,12');
+  eq('module : observation seulement pour 1, 8, 9, 10, 12', Object.keys(a).filter(m => a[m].o).join(','), '1,8,9,10,12');
+  eq('module : « non vu » pour les 12 mois', Object.keys(a).filter(m => a[m].n).length, 12);
+  eq('module ancien : « après-demain » écrit en toutes lettres', a[5].n[1], 'nosightNotifBody{"m":"Joumada al-Oula","p":"Rabia ath-Thani","w":"dayAfterTomorrow"}');
+  eq('module ≥ 15 : « {w} » complété par le module', autoMonthTexts({ t, prefs: { eid: true, month: true }, weekday: true })[5].n[1], 'nosightNotifBody{"m":"Joumada al-Oula","p":"Rabia ath-Thani","w":"{w}"}');
   eq('module : Chawwal = Aïd', a[10].s[0], 'fitrNotifTitle');
   eq('module : Mouharram, année à compléter par le module', a[1].s[0], 'newYearNotifTitle{"y":"{y}"}');
   eq('module : mêmes textes que le plan de la page', JSON.stringify(a[9].n), JSON.stringify([reminderTextOf({ type: 'nosight', h: { d: 1, m: 9, y: 1 } }).title, reminderTextOf({ type: 'nosight', h: { d: 1, m: 9, y: 1 } }).body]));

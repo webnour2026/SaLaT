@@ -564,7 +564,7 @@ function mqMode(tNow = now()) {
 }
 const nativeMqCapable = () => isTwa() && localStorage.getItem('priere.nativeMq') === '1';
 // Version du module Android installé (paramètre « native » de l'adresse de démarrage de l'appli Play Store)
-const NATIVE_LATEST = 14;                                    // 4 = module 2.14 : rappels du croissant autonomes ; 5 = 2.15 : Adhans de Doha intégrés ; 8 = 2.18 : widget d'écran d'accueil ; 9 = 2.19 : widget redessiné ; 10 = 2.19.1 : nom de la prière en Reem Kufi ; 11 = 2.20 : 10 méthodes de calcul ajoutées ; 12 = 2.23 : avis de changement de fuseau ; 13 = 2.23.1 : calendrier relu chaque minute les soirs d'annonce ; 14 = 2.24 : Chaabane parmi les mois surveillés
+const NATIVE_LATEST = 15;                                    // 4 = module 2.14 : rappels du croissant autonomes ; 5 = 2.15 : Adhans de Doha intégrés ; 8 = 2.18 : widget d'écran d'accueil ; 9 = 2.19 : widget redessiné ; 10 = 2.19.1 : nom de la prière en Reem Kufi ; 11 = 2.20 : 10 méthodes de calcul ajoutées ; 12 = 2.23 : avis de changement de fuseau ; 13 = 2.23.1 : calendrier relu chaque minute les soirs d'annonce ; 14 = 2.24 : Chaabane parmi les mois surveillés ; 15 = 2.25 : « non vu » pour tous les mois, avec le jour du 1er
 const STORE_URL = 'https://play.google.com/store/apps/details?id=io.github.webnour2026.salat';
 const nativeLevel = () => Number(localStorage.getItem('priere.nativeLvl') || 0);
 const UPD_KEY = 'priere.updDismiss';
@@ -2194,7 +2194,8 @@ async function nativePayload() {
     mq: mqPayload(),   // Mode Mosquée
     // Maroc : dernier début de mois officiel + textes de chaque mois : le module prépare seul les rappels du croissant, appli fermée
     ...(() => { const hb = habousActive() ? habousInfo() : null; return hb && hb.last ? { hb: { y: hb.last.y, m: hb.last.m, d: hb.last.day } } : {}; })(),
-    amt: autoMonthTexts({ t, prefs: { eid: S().eidReminder !== false, month: S().monthReminder !== false } }),
+    amt: autoMonthTexts({ t, prefs: { eid: S().eidReminder !== false, month: S().monthReminder !== false }, weekday: nativeLevel() >= 15 }),
+    wd: t('wdOn'),   // module ≥ 15 : « {w} » du « non vu » → jour de la semaine du 1er du mois (dimanche d'abord)
     adj: S().adjust, en: !!a.enabled, na: !!a.notifyAt, nb: a.notifyBefore || 0, vib: !!a.vibrate, su, on: !!S().ongoing, gr: GRACE_MIN,
     hj: Array.from({ length: 31 }, (_, i) => fmtDates(Date.parse(`${addDays(today, i)}T12:00:00Z`)).hijri),
     ad: Object.fromEntries(PRAYERS.map(k => [k, a.enabled ? nativeSound(adhanFor(k)) : 'none'])),
@@ -2877,7 +2878,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.24.0';
+export const APP_VERSION = '2.25.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

@@ -81,6 +81,13 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.25.0] – 2026-10-12 ⚠ nouvel AAB (version code 27, native=15)
+### Ajouté
+- « Croissant non vu » pour **tous** les mois (plus seulement les 5 mois surveillés) : le soir du 29, après le communiqué, « لم يثبت هلال شهر جمادى الأولى — يستوفي شهر ربيع الآخر ثلاثين يومًا: غدًا متمّمه، وفاتح شهر جمادى الأولى يوم الثلاثاء إن شاء الله », même appli fermée.
+- Le jour de la semaine du 1er du mois est écrit dans la notification (module ≥ 15 ; sinon « بعد غد »).
+### Corrigé
+- Textes traduits : une variable répétée (« {p} … {p} ») n'était remplacée qu'une fois.
+
 ## [2.24.0] – 2026-10-11 ⚠ nouvel AAB (version code 26, native=14)
 ### Ajouté
 - Chaabane rejoint les mois surveillés (Mouharram, Chaabane, Ramadan, Chawwal, Dhou al-Hijja) : le 29 Rajab, « 🌙 الليلة ترقّب هلال شهر شعبان » à l'Asr, puis « لم يثبت هلال شهر شعبان — غدًا متمّم شهر رجب، وفاتح شهر شعبان بعد غد » si le croissant n'est pas vu, même appli fermée ; hors Maroc, rappel de vérifier l'annonce du pays.

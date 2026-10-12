@@ -6,9 +6,9 @@ package io.github.webnour2026.salat;
  *
  * À partir du dernier début de mois connu `last` (1er du mois en cours) :
  *   last + 28  = 29e jour : soir d'observation
- *     · Asr                 « ce soir, observation » (Mouharram, Ramadan, Chawwal, Dhou al-Hijja)
+ *     · Asr                 « ce soir, observation » (Mouharram, Chaabane, Ramadan, Chawwal, Dhou al-Hijja)
  *     · Maghrib + 20 min    « demain, 1er du mois »  si le calendrier annonce last + 29
- *     · Maghrib + 20 min    « croissant non vu »     si le calendrier annonce last + 30
+ *     · Maghrib + 20 min    « croissant non vu »     si le calendrier annonce last + 30 (tous les mois)
  *   last + 29  = 30e jour : Maghrib + 20 min « demain, 1er du mois » si le calendrier annonce last + 30
  *   last + 31, 09:00 UTC : rien appris (pas de réseau) → on relit le calendrier ; à défaut, on suppose 30 jours.
  */
@@ -21,6 +21,9 @@ final class AutoMonthMath {
     static int nextMonth(int m) { return m == 12 ? 1 : m + 1; }
     static int nextYear(int m, int y) { return m == 12 ? y + 1 : y; }
     static boolean watched(int m) { return m == 1 || m == 8 || m == 9 || m == 10 || m == 12; }   // comme WATCHED_MONTHS (js/reminders.js)
+
+    /** Jour de la semaine d'un jour d'époque : 0 = dimanche … 6 = samedi (le 1er janvier 1970 était un jeudi). */
+    static int weekday(long day) { return (int) Math.floorMod(day + 4, 7L); }
 
     /** Instant de la relecture de secours. */
     static long refreshAt(long last) { return (last + 31) * DAY + 9 * 3600000L; }

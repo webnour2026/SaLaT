@@ -69,11 +69,17 @@ final class AutoMonth {
     }
 
     private static JSONObject entry(String id, String kind, long at, long until, String watch, JSONArray txt, int year) throws Exception {
+        return entry(id, kind, at, until, watch, txt, year, null);
+    }
+
+    /** weekday : remplace « {w} » (jour de la semaine du 1er du mois, texte du « non vu »). */
+    private static JSONObject entry(String id, String kind, long at, long until, String watch, JSONArray txt, int year, String weekday) throws Exception {
         JSONObject e = new JSONObject();
         e.put("id", id); e.put("kind", kind); e.put("at", at); e.put("until", until);
         if (watch != null) e.put("watch", watch);
-        e.put("title", txt.optString(0, "").replace("{y}", String.valueOf(year)));
-        e.put("body", txt.optString(1, "").replace("{y}", String.valueOf(year)));
+        String w = weekday == null ? "" : weekday;
+        e.put("title", txt.optString(0, "").replace("{y}", String.valueOf(year)).replace("{w}", w));
+        e.put("body", txt.optString(1, "").replace("{y}", String.valueOf(year)).replace("{w}", w));
         return e;
     }
 
@@ -107,7 +113,9 @@ final class AutoMonth {
             }
             if (n != null && t29[3] > 0) {
                 long at = t29[3] + 20 * AutoMonthMath.MIN;
-                out.put(entry(eve29 + "-nosight", "nosight", at, at + AutoMonthMath.WATCH, AutoMonthMath.iso(last + 30), n, ny));
+                JSONArray wd = cfg.optJSONArray("wd");   // « يوم الأحد » … « يوم السبت » (dimanche d'abord)
+                String w = wd == null ? null : wd.optString(AutoMonthMath.weekday(last + 30), null);
+                out.put(entry(eve29 + "-nosight", "nosight", at, at + AutoMonthMath.WATCH, AutoMonthMath.iso(last + 30), n, ny, w));
             }
             if (s != null && t30[3] > 0) {
                 long at = t30[3] + 20 * AutoMonthMath.MIN;
