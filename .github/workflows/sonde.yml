@@ -1,0 +1,18 @@
+name: Sonde (temporaire)
+on: workflow_dispatch
+jobs:
+  sonde:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - shell: bash {0}
+        run: |
+          cat > t.mjs <<'JS'
+          import { sources, parseRss, extractAny } from './scripts/update-habous.mjs';
+          const DAY = 864e5, last = Date.UTC(2026, 8, 13) / DAY;
+          for (const src of sources(5, 1448).filter(s => /Hespress/.test(s.name))) {
+            const xml = await (await fetch(src.url, { headers: { 'user-agent': 'Mozilla/5.0 (compatible; SaLaT-habous/1.1)' } })).text();
+            for (const i of parseRss(xml)) { const d = extractAny(i.text, last, 5); if (d || /جمادى|Joumada|هلال/.test(i.text)) console.log(`::notice::${src.name} | ${new Date(i.pub).toISOString().slice(5,16)} | ${d ? new Date(d*DAY).toISOString().slice(0,10) : '-'} | ${i.text.slice(0, 150)}`); }
+          }
+          JS
+          node t.mjs
