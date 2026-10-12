@@ -39,7 +39,7 @@ on:
 env:
   PACKAGE_ID: io.github.webnour2026.salat
   HOST: webnour2026.github.io
-  START_URL: /SaLaT/?source=twa&native=15   # version du module : 3 = Mode Mosquée, 4 = rappels du croissant autonomes, 5 = Adhans de Doha, 6 = Adhan court de 40 s, 7 = Anas Tazi par défaut + Sirajul Islam, 8 = widget d'écran d'accueil, 9 = widget redessiné, 10 = nom de la prière du widget en Reem Kufi, 11 = 10 méthodes de calcul ajoutées, 12 = avis de changement de fuseau, 13 = calendrier relu chaque minute les soirs d'annonce, 14 = Chaabane parmi les mois surveillés, 15 = « non vu » pour tous les mois, avec le jour du 1er. À augmenter (et NATIVE_LATEST dans js/app.js) à chaque changement du module Android
+  START_URL: /SaLaT/?source=twa&native=16   # version du module : 3 = Mode Mosquée, 4 = rappels du croissant autonomes, 5 = Adhans de Doha, 6 = Adhan court de 40 s, 7 = Anas Tazi par défaut + Sirajul Islam, 8 = widget d'écran d'accueil, 9 = widget redessiné, 10 = nom de la prière du widget en Reem Kufi, 11 = 10 méthodes de calcul ajoutées, 12 = avis de changement de fuseau, 13 = calendrier relu chaque minute les soirs d'annonce, 14 = Chaabane parmi les mois surveillés, 15 = « non vu » pour tous les mois, avec le jour du 1er, 16 = hors Maroc, question « le mois a-t-il commencé aujourd'hui ? » avec boutons. À augmenter (et NATIVE_LATEST dans js/app.js) à chaque changement du module Android
   APP_NAME: SaLaTi
   SITE: https://webnour2026.github.io/SaLaT
 

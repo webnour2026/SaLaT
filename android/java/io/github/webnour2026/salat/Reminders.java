@@ -234,7 +234,23 @@ final class Reminders {
             if (vib) b.setVibrate(new long[]{0, 300, 150, 300});
             b.setPriority(Notification.PRIORITY_HIGH);
         }
+        int notifId = NOTIF_BASE + (e.optString("id", "").hashCode() & 0x7fff);
+        // hors Maroc, matin du 1er : « le mois a-t-il commencé aujourd'hui ? » — chaque bouton ouvre SaLaTi avec la correction choisie
+        JSONArray ask = e.optJSONArray("ask");
+        String base = cfg.optString("base", "");
+        if (ask != null && base.startsWith(SITE)) {
+            for (int i = 0; i < ask.length() && i < 3; i++) {
+                JSONArray a = ask.optJSONArray(i);
+                if (a == null) continue;
+                String url = base + (base.contains("?") ? "&" : "?") + a.optString(1, "") + "&native=" + AskActivity.LEVEL + "#calendar";
+                Intent it = new Intent(ctx, AskActivity.class).putExtra(AskActivity.URL, url).putExtra(AskActivity.NOTIF, notifId)
+                        .setAction("io.github.webnour2026.salat.ASK." + i).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                PendingIntent pi = PendingIntent.getActivity(ctx, 100 + i, it, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                b.addAction(0, a.optString(0, ""), pi);
+            }
+            if (Build.VERSION.SDK_INT >= 26) b.setTimeoutAfter(Math.max(60000L, e.optLong("until", 0) - Clock.now(ctx)));
+        }
         NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
-        nm.notify(NOTIF_BASE + (e.optString("id", "").hashCode() & 0x7fff), b.build());
+        nm.notify(notifId, b.build());
     }
 }

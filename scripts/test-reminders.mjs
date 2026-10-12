@@ -195,6 +195,15 @@ eq('vendredi : coexiste avec les jours blancs (ids distincts)', String(new Set(p
   eq('hors Maroc : texte « vérifiez l’annonce de votre pays »', o[0] && o[0].body, 'obsCalcBody{"m":"Ramadan"}');
   eq('hors Maroc : pas de « non vu » (inconnu sans annonce)', String(p.some(e => e.kind === 'nosight')), 'false');
   eq('hors Maroc : rappels de mois coupés → seulement l’observation de l’Aïd', plan(addDays(eve, -5), { prefs: { month: false } }).filter(e => e.kind === 'obs').map(e => e.id).join(' '), `${addDays(eve, 30)}-obs`);
+  // matin du 1er (calculé) : « le mois a-t-il commencé aujourd'hui dans votre pays ? » avec 3 réponses
+  const asks = plan(addDays(eve, -5), { prefs: { ask: true } }).filter(e => e.kind === 'ask');
+  const first = [1, 2].map(n => addDays(eve, n)).find(k => hijriOf(Date.parse(k + 'T12:00:00Z'), 0).d === 1);
+  eq('hors Maroc : question le matin du 1er Ramadan', asks[0] && asks[0].id, `${first}-ask`);
+  eq('hors Maroc : 3 réponses (aujourd’hui / demain / hier)', JSON.stringify(asks[0] && asks[0].ask.map(x => x[1])), JSON.stringify([`hjo=0&hjk=${first}`, `hjo=-1&hjk=${first}`, `hjo=1&hjk=${first}`]));
+  eq('hors Maroc : correction déjà faite depuis la veille → pas de question', plan(addDays(eve, -5), { prefs: { ask: true, offsetSetAt: Date.parse(eve + 'T20:00:00Z') } }).some(e => e.kind === 'ask' && e.id === `${first}-ask`), false);
+  eq('hors Maroc : module trop ancien (sans boutons) → pas de question', plan(addDays(eve, -5)).some(e => e.kind === 'ask'), false);
+  eq('hors Maroc : correction à +2 → pas de bouton « hier » (+3 impossible)', JSON.stringify(planNativeReminders({ today: addDays(eve, -5), t, addDays, now: Date.parse(addDays(eve, -5) + 'T00:00:00Z'), offset: 2, prefs: { eid: true, month: true, ask: true },
+    dayInfo: k => ({ Sunrise: Date.parse(k + 'T05:30:00Z'), Maghrib: Date.parse(k + 'T18:40:00Z'), Isha: Date.parse(k + 'T20:00:00Z') }) }).filter(e => e.kind === 'ask').slice(0, 1).map(e => e.ask.length)), '[2]');
   const sep = plan('2026-10-05').filter(e => e.kind === 'obs');
   eq('hors Maroc : mois non surveillé (Joumada) → rien', sep.length, 0);
 }

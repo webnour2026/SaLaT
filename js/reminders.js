@@ -14,6 +14,7 @@ export const WINDOW_OBS = 3 * 3600e3;      // « ce soir, observation du croissa
 export const WATCHED_MONTHS = [1, 8, 9, 10, 12];   // + Chaabane : on veut savoir à l'avance si Chaabane commence, pour compter jusqu'à Ramadan
 const iso = day => new Date(day * DAY).toISOString().slice(0, 10);
 export const FRIDAY_AT = [9, 30];          // rappel du vendredi : 09:30, heure du lieu
+export const ASK_AT = [9, 0];             // hors Maroc, matin du 1er : « le mois a-t-il commencé aujourd'hui ? »
 
 /** « يوم الثلاثاء » / « mardi » / « on Tuesday » pour une date « AAAA-MM-JJ » (null si inconnu). */
 export function weekdayOn(t, key) {
@@ -41,6 +42,7 @@ export function wallTime(key, h, m, tz) {
 /** Titre et corps d'un rappel { type: 'white' | 'month' | 'eid', kind?, h } */
 export function reminderText(t, ev) {
   if (ev.type === 'friday') return { title: t('fridayNotifTitle'), body: t('fridayNotifBody') };
+  if (ev.type === 'ask') { const m = t('hijriMonths')[ev.h.m - 1]; return { title: t('askNotifTitle', { m }), body: t('askNotifBody', { m }) }; }
   const gen = x => String(x).replace(/^ذو /, 'ذي ');                         // « هلال شهر ذي الحجة » (génitif arabe)
   const month = t('hijriMonths')[ev.h.m - 1];
   const prev = gen(t('hijriMonths')[(ev.h.m + 10) % 12]);                   // mois en cours (celui qui se termine)
@@ -90,6 +92,16 @@ export function planNativeReminders({ today, horizon = 40, dayInfo, addDays, off
       if (h.d === 29 && WATCHED_MONTHS.includes(nm) && on) {
         const hn = { d: 1, m: nm, y: h.m === 12 ? h.y + 1 : h.y };
         push({ id: `${key}-obs`, kind: 'obs', at: d.Asr || d.Maghrib - 90 * 60000, until: d.Maghrib + 30 * 60000, ...reminderText(t, { type: 'obs', h: hn, calc: true }) });
+        // le matin du 1er (calculé) : « le mois a-t-il commencé aujourd'hui dans votre pays ? » — un toucher règle la correction.
+        // Seulement si le module sait afficher les boutons (prefs.ask) et si l'utilisateur n'a pas déjà corrigé depuis ce soir-là.
+        const first = [1, 2].map(n => addDays(key, n)).find(k => { const x = hijriOf(Date.parse(`${k}T12:00:00Z`), offset); return x.m === nm && x.d === 1; });
+        const fd = first && dayInfo(first);
+        if (prefs.ask && first && fd && !(prefs.offsetSetAt >= Date.parse(`${key}T00:00:00Z`))) {
+          const at = tz ? wallTime(first, ASK_AT[0], ASK_AT[1], tz) : (fd.Sunrise || Date.parse(`${first}T09:00:00Z`)) + 3 * 3600e3;
+          const opt = (label, o) => (o >= -2 && o <= 2 ? [t(label), `hjo=${o}&hjk=${first}`] : null);
+          push({ id: `${first}-ask`, kind: 'ask', at, until: at + 12 * 3600e3, ...reminderText(t, { type: 'ask', h: hn }),
+            ask: [opt('askYes', offset), opt('askTomorrow', offset - 1), opt('askYesterday', offset + 1)].filter(Boolean) });
+        }
       }
     }
     if (d.Maghrib) {                                                  // début de mois ou Aïd déjà officiel : 20 min après le Maghrib

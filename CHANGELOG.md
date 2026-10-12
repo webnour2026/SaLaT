@@ -81,6 +81,12 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.26.0] – 2026-10-13 ⚠ nouvel AAB (version code 28, native=16)
+### Ajouté
+- Hors Maroc (calendrier calculé) : le matin du 1er de Mouharram, Chaabane, Ramadan, Chawwal et Dhou al-Hijja, notification « 🌙 Ramadan a-t-il commencé aujourd'hui dans votre pays ? » avec 3 boutons (Oui, aujourd'hui · Non, demain · C'était hier). Un toucher ouvre SaLaTi et règle la correction de la date hégirienne. Pas de question si l'utilisateur a déjà corrigé depuis la veille.
+### Corrigé
+- Version du module Android à 2 chiffres (≥ 10) ignorée : le bandeau « mise à jour » et la mention « Android N » restaient sur une ancienne version, et le jour du 1er dans le « non vu » n'était jamais activé.
+
 ## [2.25.1] – 2026-10-12
 ### Modifié
 - Horaires du mois (tableau, image partagée, texte) : comme les tableaux du ministère, tant que la fin du mois n'est pas proclamée, le 30e jour porte la mention « حسب نتيجة المراقبة » (selon l'observation du croissant). Il disparaît si le mois compte 29 jours, la mention disparaît s'il en compte 30.

@@ -195,6 +195,21 @@ function rerenderHijri() {
   if ($('#view-calendar') && !$('#view-calendar').hidden) renderCalendar();
   if ($('#view-cards') && !$('#view-cards').hidden) renderCards();      // dates des occasions : recalculées dès qu'un nouveau début de mois est annoncé
 }
+// Réponse touchée dans la notification « le mois a-t-il commencé aujourd'hui dans votre pays ? » (module Android ≥ 16) :
+// l'appli s'ouvre avec ?hjo=<correction>&hjk=<jour> ; on applique la correction une seule fois, puis on nettoie l'adresse.
+function applyHijriAnswer(url = location.href) {
+  let u; try { u = new URL(url, location.href); } catch { return; }
+  const o = u.searchParams.get('hjo'), k = u.searchParams.get('hjk') || '';
+  if (o === null || !/^-?[0-2]$/.test(o)) return;
+  if (localStorage.getItem('priere.hjoDone') !== `${k}:${o}`) {   // même bouton touché deux fois : une seule application
+    S().hijriOffset = Number(o); S().hijriOffsetAt = Date.now(); save();
+    try { localStorage.setItem('priere.hjoDone', `${k}:${o}`); } catch {}
+    rerenderHijri(); requestNativeSync();
+    if ($('#sHijri')) $('#sHijri').value = S().hijriOffset > 0 ? `+${S().hijriOffset}` : String(S().hijriOffset);
+    setTimeout(() => toast(t('askDone')), 600);
+  }
+  try { ['hjo', 'hjk'].forEach(p => u.searchParams.delete(p)); if (url === location.href) history.replaceState(null, '', u.pathname + u.search + u.hash); } catch {}
+}
 function checkHabous(force = false, every) {
   refreshHabous({ force, every }).then(changed => { if (changed) { rerenderHijri(); if (!$('#view-settings').hidden) renderSettings(); requestNativeSync(); } });
 }
@@ -564,7 +579,7 @@ function mqMode(tNow = now()) {
 }
 const nativeMqCapable = () => isTwa() && localStorage.getItem('priere.nativeMq') === '1';
 // Version du module Android installé (paramètre « native » de l'adresse de démarrage de l'appli Play Store)
-const NATIVE_LATEST = 15;                                    // 4 = module 2.14 : rappels du croissant autonomes ; 5 = 2.15 : Adhans de Doha intégrés ; 8 = 2.18 : widget d'écran d'accueil ; 9 = 2.19 : widget redessiné ; 10 = 2.19.1 : nom de la prière en Reem Kufi ; 11 = 2.20 : 10 méthodes de calcul ajoutées ; 12 = 2.23 : avis de changement de fuseau ; 13 = 2.23.1 : calendrier relu chaque minute les soirs d'annonce ; 14 = 2.24 : Chaabane parmi les mois surveillés ; 15 = 2.25 : « non vu » pour tous les mois, avec le jour du 1er
+const NATIVE_LATEST = 16;                                    // 4 = module 2.14 : rappels du croissant autonomes ; 5 = 2.15 : Adhans de Doha intégrés ; 8 = 2.18 : widget d'écran d'accueil ; 9 = 2.19 : widget redessiné ; 10 = 2.19.1 : nom de la prière en Reem Kufi ; 11 = 2.20 : 10 méthodes de calcul ajoutées ; 12 = 2.23 : avis de changement de fuseau ; 13 = 2.23.1 : calendrier relu chaque minute les soirs d'annonce ; 14 = 2.24 : Chaabane parmi les mois surveillés ; 15 = 2.25 : « non vu » pour tous les mois, avec le jour du 1er ; 16 = 2.26 : hors Maroc, « le mois a-t-il commencé aujourd'hui ? » avec boutons
 const STORE_URL = 'https://play.google.com/store/apps/details?id=io.github.webnour2026.salat';
 const nativeLevel = () => Number(localStorage.getItem('priere.nativeLvl') || 0);
 const UPD_KEY = 'priere.updDismiss';
@@ -2159,7 +2174,7 @@ function detectTwa(url = location.href) {
   if (Number(n) >= 4) { localStorage.setItem('priere.native', '1'); localStorage.setItem('priere.nativeRem', '1'); }
   if (Number(n) >= 3) localStorage.setItem('priere.nativeMq', '1');       // module ≥ 2.13 : Mode Mosquée (sonneries coupées)
   else if (n === '1' || n === '2') localStorage.removeItem('priere.nativeMq');
-  if (/^[1-9]$/.test(n || '')) localStorage.setItem('priere.nativeLvl', n);       // version du module : bandeau « mise à jour » s'il est ancien
+  if (/^[1-9]\d?$/.test(n || '')) localStorage.setItem('priere.nativeLvl', n);       // version du module : bandeau « mise à jour » s'il est ancien
   if (before && nativeLevel() > before && localStorage.getItem('priere.nativeAt')) localStorage.setItem('priere.nativeDirty', '1');   // module mis à jour : il reçoit la configuration au prochain toucher
   if (n === '0') { localStorage.removeItem('priere.native'); localStorage.removeItem('priere.nativeRem'); localStorage.removeItem('priere.nativeMq'); localStorage.removeItem('priere.nativeLvl'); }       // retour sans module : désactivé
   if (!isTwa()) { localStorage.removeItem('priere.nativeAt'); localStorage.removeItem('priere.nativeDirty'); localStorage.removeItem('priere.nativeRem'); localStorage.removeItem('priere.nativeMq'); }
@@ -2186,7 +2201,8 @@ async function nativePayload() {
   const su = S().silentUntil === -1 ? 32503680000000 : (S().silentUntil || 0);
   const rem = planNativeReminders({
     today, offset: S().hijriOffset, t, tz: tz(),
-    prefs: { eid: S().eidReminder !== false, month: S().monthReminder !== false, white: !!S().whiteDays, friday: S().fridayReminder !== false },
+    prefs: { eid: S().eidReminder !== false, month: S().monthReminder !== false, white: !!S().whiteDays, friday: S().fridayReminder !== false,
+             ask: nativeLevel() >= 16, offsetSetAt: S().hijriOffsetAt || 0 },   // module ≥ 16 : boutons « le mois a-t-il commencé aujourd'hui ? »
     addDays, dayInfo: key => { const d = getDay(S(), key); return d && d.times ? { Sunrise: d.times.Sunrise, Asr: d.times.Asr, Maghrib: d.times.Maghrib, Isha: d.times.Isha } : null; },
   });
   return {
@@ -2734,7 +2750,7 @@ function bindSettings() {
     S().tzMode = e.target.value; save();
     state.viewKey = null; loadDays(); renderAll(); refresh();   // le module Android est resynchronisé par le « change » de #view-settings
   });
-  on('#sHijri', 'change', e => { S().hijriOffset = Number(e.target.value); save(); rerenderHijri(); });
+  on('#sHijri', 'change', e => { S().hijriOffset = Number(e.target.value); S().hijriOffsetAt = Date.now(); save(); rerenderHijri(); });
   on('#sHijriSrc', 'change', e => { S().hijriSource = e.target.value; save(); rerenderHijri(); renderSettings(); });
   on('#sDecl', 'change', e => { S().declination = Math.max(-30, Math.min(30, Number(String(e.target.value).replace(',', '.')) || 0)); save(); state.decl = currentDeclination(); });
   on('#sQiblaBeep', 'change', e => { S().qiblaBeep = e.target.checked; save(); if (e.target.checked) playBeep(); });   // aperçu du bip à l'activation
@@ -2880,7 +2896,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.25.1';
+export const APP_VERSION = '2.26.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
@@ -2899,7 +2915,7 @@ function init() {
   // L'appli Android rouvre la page déjà ouverte (« focus-existing ») : l'adresse de lancement — donc la version du module
   // après une mise à jour — arrive par launchQueue, pas par location.
   if ('launchQueue' in window) {
-    try { window.launchQueue.setConsumer(p => { if (p && p.targetURL) { detectTwa(p.targetURL); renderUpdate(); renderNative(); } }); } catch {}
+    try { window.launchQueue.setConsumer(p => { if (p && p.targetURL) { detectTwa(p.targetURL); renderUpdate(); renderNative(); applyHijriAnswer(p.targetURL); } }); } catch {}
   }
   document.addEventListener('click', () => { if (nativeNeedsSync()) syncNative({ quiet: true, ask: !localStorage.getItem('priere.nativeAt') }); }, { capture: true });
   Promise.all([loadCustomAdhans(), loadSiteAdhans()]).then(([{ migratedTo }]) => {
@@ -2947,6 +2963,7 @@ function init() {
     refresh();
     recheckGps(true);
   }
+  applyHijriAnswer();  // ouverture depuis la notification « le mois a-t-il commencé aujourd'hui ? »
   syncClock().then(afterClockSync);
   checkHabous();       // nouveau début de mois annoncé ? (au plus une vérification toutes les 3 h)
   checkOfficiel();

@@ -37,6 +37,13 @@ comps = '''
                 <data android:scheme="salati" android:host="sync"/>
             </intent-filter>
         </activity>
+        <!-- Bouton « le mois a-t-il commencé aujourd'hui ? » (hors Maroc) -->
+        <activity android:name="io.github.webnour2026.salat.AskActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
         <receiver android:name="io.github.webnour2026.salat.AlarmReceiver" android:exported="false"/>
         <receiver android:name="io.github.webnour2026.salat.StopReceiver" android:exported="false"/>
         <receiver android:name="io.github.webnour2026.salat.ReminderReceiver" android:exported="false"/>
