@@ -4,8 +4,9 @@ jobs:
   sonde:
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          for h in 2MMaroc 2MInfo 2mtv 2MTVMaroc SNRTnews snrtnewsar Hespress Medi1TV ALAOULA; do
+      - shell: bash {0}
+        run: |
+          for h in 2mtv 2MTVMaroc 2Mmaroc_officiel SNRTnews snrtnewsar Hespress Medi1TV ALAOULA; do
             id=$(curl -sSL -m 20 -A "Mozilla/5.0" -H "Accept-Language: en" "https://www.youtube.com/@$h" | grep -o '"externalId":"UC[^"]*"\|<link rel="canonical" href="[^"]*"' | head -2 | tr '\n' ' ')
             cid=$(echo "$id" | grep -o 'UC[A-Za-z0-9_-]\{22\}' | head -1)
             if [ -n "$cid" ]; then
