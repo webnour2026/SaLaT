@@ -14,7 +14,7 @@ import { nearestLocality, moroccoReference, localityName, allLocalities, localit
 import { declination as wmmDeclination } from './wmm.js';
 import { sunPosition, timesAtAzimuth } from './sun.js';
 import { ADHANS, playAdhan, stopAdhan, unlockAudio, playBeep, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, removeCustomAdhan, loadCustomAdhans, customAdhans, loadSiteAdhans, DEFAULT_ADHAN, RETIRED } from './adhan.js';
-import { hijriMonth, upcomingWhiteDays, civilNoon, hijriOf, OCCASIONS, isWhiteDay, reminderFor } from './calendar.js';
+import { hijriMonth, upcomingWhiteDays, civilNoon, hijriOf, OCCASIONS, isWhiteDay, reminderFor, tableDays } from './calendar.js';
 import { PRESET_CITIES, METHOD_BY_COUNTRY, getGpsPosition, reverseGeocode, searchCity } from './location.js';
 import { clampDur, stepDur, effectiveMode, phaseAt, iqamaMin, PRAYER_SCREEN, PRAYER_SPAN, IQAMA_SCREEN } from './mosque.js';
 
@@ -805,10 +805,11 @@ function renderMonthTable(mon) {
   const dn = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'numeric', timeZone: 'UTC' });
   const cc = c => (ram && c === 'Maghrib' ? ' class="iftar"' : '');
   const head = `<thead><tr><th>${t('colDay')}</th>${cols.map(c => `<th${cc(c)}>${colLabel(c)}</th>`).join('')}</tr></thead>`;
-  const rows = mon.days.map(d => {
+  const rows = tableDays(mon, S().hijriOffset).map(d => {
     const day = getDay(S(), new Date(d.noon).toISOString().slice(0, 10));
-    const cls = [d.noon === todayNoon ? 'today' : '', !ram && d.white ? 'white' : '', ram && d.h.d === 27 ? 'qadr' : '', d.dow === 5 ? 'friday' : ''].filter(Boolean).join(' ');
-    return `<tr class="${cls}"><th scope="row"><b>${d.h.d}</b> <small>${wd.format(d.noon)} ${dn.format(d.noon)}</small></th>${cols.map(c => `<td${cc(c)}>${fmtTime(day.times[c])}</td>`).join('')}</tr>`;
+    const cls = [d.noon === todayNoon ? 'today' : '', !ram && d.white ? 'white' : '', ram && d.h.d === 27 ? 'qadr' : '', d.dow === 5 ? 'friday' : '', d.uncertain ? 'pending' : ''].filter(Boolean).join(' ');
+    const sight = d.uncertain ? `<small class="sight">${t('bySighting')}</small>` : '';
+    return `<tr class="${cls}"><th scope="row"><b>${d.h.d}</b> <small>${wd.format(d.noon)} ${dn.format(d.noon)}</small>${sight}</th>${cols.map(c => `<td${cc(c)}>${fmtTime(day.times[c])}</td>`).join('')}</tr>`;
   }).join('');
   $('#monthTable').innerHTML = head + `<tbody>${rows}</tbody>`;
 }
@@ -837,7 +838,8 @@ async function buildMonthImage(mon) {
   const rtl = document.documentElement.dir === 'rtl';
   const cols = tableCols(), ram = state.tableMode === 'ramadan';
   const W = 1080, M = 44, RH = 50, HEAD = 250, TH = 64, FOOT = 190;
-  const H = HEAD + TH + mon.days.length * RH + FOOT;
+  const days = tableDays(mon, S().hijriOffset);
+  const H = HEAD + TH + days.length * RH + FOOT;
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const g = cv.getContext('2d');
   const F = w => `${w} FONT "IBM Plex Sans Arabic", system-ui, sans-serif`;
@@ -873,7 +875,7 @@ async function buildMonthImage(mon) {
   const todayNoon = civilNoon(now(), tz());
   const wd = new Intl.DateTimeFormat(locale(), { weekday: 'short', timeZone: 'UTC' });
   const dn = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'numeric', timeZone: 'UTC' });
-  mon.days.forEach((d, r) => {
+  days.forEach((d, r) => {
     const day = getDay(S(), new Date(d.noon).toISOString().slice(0, 10));
     const qadr = ram && d.h.d === 27;
     g.fillStyle = d.noon === todayNoon ? '#D5EDE6' : qadr ? '#EDE3F7' : (!ram && d.white) ? '#F6ECD6' : r % 2 ? '#FFFFFF' : '#FAFBFC';
@@ -882,8 +884,8 @@ async function buildMonthImage(mon) {
     const bold = d.dow === 5 || d.noon === todayNoon || qadr;
     g.fillStyle = '#17222B'; g.textAlign = rtl ? 'right' : 'left';
     g.font = font(700, 26); g.fillText(String(d.h.d), X(M + 14), y + RH / 2);
-    g.font = font(bold ? 600 : 400, 22); g.fillStyle = '#5A6B78';
-    g.fillText(`${wd.format(d.noon)} ${dn.format(d.noon)}`, X(M + 62), y + RH / 2);
+    g.font = font(bold ? 600 : 400, d.uncertain ? 19 : 22); g.fillStyle = d.uncertain ? '#9A6B12' : '#5A6B78';
+    g.fillText(d.uncertain ? `${dn.format(d.noon)} · ${t('bySighting')}` : `${wd.format(d.noon)} ${dn.format(d.noon)}`, X(M + 62), y + RH / 2, dayW - 70);
     g.textAlign = 'center'; g.fillStyle = '#17222B'; g.font = font(bold ? 700 : 400, 25);
     cols.forEach((c, i) => g.fillText(fmtTime(day.times[c]), X(colX(i), colW) + colW / 2, y + RH / 2));
     g.fillStyle = '#E3E9ED'; g.fillRect(M, y + RH - 1, W - 2 * M, 1);
@@ -912,14 +914,14 @@ function monthShareText(mon) {
   if (state.tableMode === 'ramadan') {
     const wd = new Intl.DateTimeFormat(locale(), { weekday: 'short', day: 'numeric', month: 'numeric', timeZone: 'UTC' });
     return `🌙 ${tableTitle(mon)} · ${S().location?.name || ''}\n(${t('Imsak')} · ${t('iftar')})\n\n`
-      + mon.days.map(d => { const x = getDay(S(), new Date(d.noon).toISOString().slice(0, 10)).times;
-        return `${d.h.d} (${wd.format(d.noon)}) : ${fmtTime(x.Imsak)} · ${fmtTime(x.Maghrib)}`; }).join('\n')
+      + tableDays(mon, S().hijriOffset).map(d => { const x = getDay(S(), new Date(d.noon).toISOString().slice(0, 10)).times;
+        return `${d.h.d} (${wd.format(d.noon)})${d.uncertain ? ` [${t('bySighting')}]` : ''} : ${fmtTime(x.Imsak)} · ${fmtTime(x.Maghrib)}`; }).join('\n')
       + `\n\n📱 ${t('shareFooter')}\n${PLAY_URL}`;
   }
   const wd = new Intl.DateTimeFormat(locale(), { weekday: 'short', day: 'numeric', month: 'numeric', timeZone: 'UTC' });
-  const lines = mon.days.map(d => {
+  const lines = tableDays(mon, S().hijriOffset).map(d => {
     const x = getDay(S(), new Date(d.noon).toISOString().slice(0, 10)).times;
-    return `${d.h.d} (${wd.format(d.noon)}) : ${['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].map(k => fmtTime(x[k])).join(' · ')}`;
+    return `${d.h.d} (${wd.format(d.noon)})${d.uncertain ? ` [${t('bySighting')}]` : ''} : ${['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].map(k => fmtTime(x[k])).join(' · ')}`;
   });
   return `🕌 ${t('shareTitle')} — ${t('hijriMonths')[mon.m - 1]} ${mon.y} · ${S().location?.name || ''}\n`
     + `(${['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].map(k => t(k)).join(' · ')})\n\n`
@@ -2878,7 +2880,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.25.0';
+export const APP_VERSION = '2.25.1';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

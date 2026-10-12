@@ -47,6 +47,20 @@ export function hijriMonth(anchorNoon, offsetDays = 0) {
 }
 
 /**
+ * Jours d'un tableau mensuel, comme les tableaux du ministère : tant que la fin du mois n'est pas proclamée
+ * (calendrier des Habous, mois suivant pas encore annoncé), on montre 29 jours + un 30e « selon le résultat de l'observation »
+ * (uncertain: true). Hors calendrier des Habous, ou fin connue : les jours du mois tels quels.
+ */
+export function tableDays(mon, offsetDays = 0) {
+  if (!habousActive() || mon.days.length < 29) return mon.days;
+  const first = mon.days[0].noon;
+  if (isConfirmedStart(first + mon.days.length * DAY + offsetDays * DAY)) return mon.days;   // mois suivant proclamé : fin connue
+  const days = mon.days.slice(0, 29), t = first + 29 * DAY;
+  days.push({ noon: t, h: { ...days[28].h, d: 30 }, dow: new Date(t).getUTCDay(), white: false, occasion: null, uncertain: true });
+  return days;
+}
+
+/**
  * Rappel de début de mois : demain est le 1er d'un mois hégirien.
  * Avec le calendrier du Maroc, on n'annonce qu'un début de mois DÉJÀ proclamé par le ministère
  * (avant le communiqué du soir du 29, « demain = 1er » ne serait qu'une prévision).

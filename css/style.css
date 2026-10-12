@@ -497,6 +497,8 @@ main, .view { overflow-x: hidden; }
 .month-table tr.today { background: color-mix(in srgb, var(--zellige) 16%, transparent); font-weight: 600; }
 .month-table tr.white { background: color-mix(in srgb, var(--brass) 14%, transparent); }
 .month-table tr.friday td, .month-table tr.friday th b { font-weight: 700; }
+.month-table tr.pending td { opacity: .7; font-style: italic; }
+.month-table tr.pending th .sight { display: block; color: var(--brass); white-space: nowrap; }
 @media (max-width: 700px) {
   body.fit #view-home .daynav { margin: 0 0 4px; }
   body.fit .daynav .dn-btn { min-width: 44px; min-height: 44px; }

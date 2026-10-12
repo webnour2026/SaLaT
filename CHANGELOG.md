@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.25.1] – 2026-10-12
+### Modifié
+- Horaires du mois (tableau, image partagée, texte) : comme les tableaux du ministère, tant que la fin du mois n'est pas proclamée, le 30e jour porte la mention « حسب نتيجة المراقبة » (selon l'observation du croissant). Il disparaît si le mois compte 29 jours, la mention disparaît s'il en compte 30.
+
 ## [données] – 2026-10-12
 ### Ajouté
 - Horaires officiels pour les 28 localités absentes du widget fm6oa.org (Sahara, petits centres) : tableau mensuel du site du ministère des Habous, contrôlé ligne par ligne contre le calcul. Les 191 localités ont désormais leurs horaires officiels.

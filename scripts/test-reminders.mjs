@@ -150,6 +150,24 @@ eq('vendredi : coexiste avec les jours blancs (ids distincts)', String(new Set(p
   setHabous(HABOUS_BUILTIN);
 }
 
+// tableau du mois, comme le ministère : 29 jours + un 30e « حسب نتيجة المراقبة » tant que la fin n'est pas proclamée
+{
+  const { hijriMonth, tableDays } = await load('calendar.js');
+  useHabous(true);
+  setHabous({ updated: '2026-10-11', months: [{ y: 1448, m: 5, start: '2026-10-13' }] });
+  let mon = hijriMonth(Date.parse('2026-10-20T12:00:00Z')), td = tableDays(mon);
+  eq('Joumada I, fin inconnue : 30 lignes, la 30e « selon l\'observation » (11 nov.)', JSON.stringify([td.length, td.at(-1).h.d, !!td.at(-1).uncertain, new Date(td.at(-1).noon).toISOString().slice(0, 10), td.slice(0, 29).some(d => d.uncertain)]), JSON.stringify([30, 30, true, '2026-11-11', false]));
+  setHabous({ updated: '2026-11-09', months: [{ y: 1448, m: 5, start: '2026-10-13' }, { y: 1448, m: 6, start: '2026-11-11' }] });
+  mon = hijriMonth(Date.parse('2026-10-20T12:00:00Z')); td = tableDays(mon);
+  eq('Joumada I proclamé de 29 jours : 29 lignes, aucune incertaine', JSON.stringify([td.length, td.some(d => d.uncertain)]), '[29,false]');
+  setHabous({ updated: '2026-11-10', months: [{ y: 1448, m: 5, start: '2026-10-13' }, { y: 1448, m: 6, start: '2026-11-12' }] });
+  mon = hijriMonth(Date.parse('2026-10-20T12:00:00Z')); td = tableDays(mon);
+  eq('Joumada I proclamé de 30 jours : 30 lignes, aucune incertaine', JSON.stringify([td.length, td.some(d => d.uncertain)]), '[30,false]');
+  useHabous(false);
+  eq('hors Maroc : le mois tel quel', tableDays(hijriMonth(Date.parse('2026-10-20T12:00:00Z'))).some(d => d.uncertain), false);
+  useHabous(true); setHabous(HABOUS_BUILTIN);
+}
+
 // textes envoyés au module pour qu'il prépare seul les mois suivants (appli fermée)
 {
   const a = autoMonthTexts({ t, prefs: { eid: true, month: true } });
