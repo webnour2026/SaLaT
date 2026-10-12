@@ -159,7 +159,8 @@ export const sources = (m, y) => {
     { name: 'MAP Express (fr, API)', trust: 'official', url: `https://www.mapexpress.ma/wp-json/wp/v2/posts?search=${enc('Habous')}&per_page=12` },
     { name: 'MAP Express (ar, récents)', fast: true, trust: 'official', url: 'https://www.mapexpress.ma/ar/feed/' },
     { name: 'SNRT News (« هلال »)', fast: true, trust: 'official', url: 'https://snrtnews.com/taxonomy/term/174/feed' },
-    { name: 'Ministère des Habous (site)', trust: 'official', url: 'https://www.habous.gov.ma/' },      // souvent saturé la veille d'une fête : simple bonus
+    // (Site du ministère, www.habous.gov.ma = version arabe : retiré. Son robots.txt interdit tous les robots (« User-agent: * Disallow: / »)
+    //  et sa chaîne TLS est incomplète (intermédiaire Sectigo absent) : la requête échouait de toute façon. La MAP diffuse le même communiqué.)
     // ----- presse : il faut 2 médias différents -----
     // (X et Facebook, souvent plus rapides, ne se lisent pas automatiquement : connexion obligatoire, conditions d'utilisation,
     //  API payante ; 2M.ma refuse les robots. Google Actualités reprend leurs articles en quelques minutes.)
