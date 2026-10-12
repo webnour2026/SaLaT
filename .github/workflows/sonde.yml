@@ -1,15 +1,16 @@
 name: Sonde (temporaire)
 on: workflow_dispatch
+permissions:
+  contents: write
 jobs:
   sonde:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - shell: bash {0}
         run: |
-          B=https://habous.synerticlab.com
-          curl -sS -m 25 $B/mawaqit-shahria -o m.html
-          s=$(grep -o '<script[^>]*src="[^"]*habous_theme[^"]*"' m.html | grep -o 'src="[^"]*' | cut -c6- | sed 's/&amp;/\&/g' | head -1)
-          curl -sS -m 20 "$B$s" -o j.js
-          grep -o '.\{0,250\}habous-monthly-city.\{0,450\}' j.js | head -2 | while read -r l; do echo "::notice::M $l" | cut -c1-720; done
-          grep -o 'mawaqit-shahria[^"'"'"' ]\{0,80\}' j.js m.html | sort -u | head -5 | tr '\n' ' ' | sed 's/^/::notice::URL /'
-          for q in "ville=58" "city=58" "v=58"; do curl -sS -m 25 "$B/mawaqit-shahria?$q" -o x.html; echo "::notice::Q $q $(sed 's/<[^>]*>/ /g' x.html | tr -s ' \n' ' ' | grep -oE '([0-9]{2}:[0-9]{2} ){5}[0-9]{2}:[0-9]{2}' | head -1) sel=$(grep -o 'selected[^>]*>[^<]*' x.html | head -1)"; done
+          mkdir -p scripts/fixtures
+          curl -sS -m 30 "https://habous.synerticlab.com/mawaqit-shahria?ville=305" -o scripts/fixtures/habous-mensuel-305.html
+          curl -sS -m 30 "https://habous.synerticlab.com/robots.txt" -o scripts/fixtures/habous-robots.txt
+          git config user.name "github-actions[bot]"; git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add scripts/fixtures && git commit -m "Sonde : page mensuelle des Habous (Imintanoute) pour les tests" && git push
