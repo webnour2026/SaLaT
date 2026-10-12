@@ -43,7 +43,12 @@ eq('2 médias différents : accepté', dd([{ day: d13, trust: 'press', host: 'he
 eq('faux communiqué isolé contre MAP : MAP gagne', dd([{ day: d13, trust: 'official', host: 'mapexpress.ma' }, { day: d12, trust: 'press', host: 'faux.example' }]), '2026-09-13');
 eq('2 médias contre 1 : accepté', dd([{ day: d13, trust: 'press', host: 'a.ma' }, { day: d13, trust: 'press', host: 'b.ma' }, { day: d12, trust: 'press', host: 'c.ma' }]), '2026-09-13');
 eq('presse en désaccord (2 contre 2) : rien', dd([{ day: d13, trust: 'press', host: 'a.ma' }, { day: d13, trust: 'press', host: 'b.ma' }, { day: d12, trust: 'press', host: 'c.ma' }, { day: d12, trust: 'press', host: 'd.ma' }]), null);
-eq('officiels en désaccord : rien', dd([{ day: d13, trust: 'official', host: 'mapexpress.ma' }, { day: d12, trust: 'official', host: 'snrtnews.com' }]), null);
+eq('administrations publiques en désaccord (MAP ≠ SNRT) : rien', dd([{ day: d13, trust: 'official', host: 'mapexpress.ma' }, { day: d12, trust: 'official', host: 'snrtnews.com' }]), null);
+eq('Hespress seul (lu directement) : accepté', dd([{ day: d13, trust: 'official', host: 'hespress.com' }]), '2026-09-13');
+eq('Hespress ≠ MAP : la MAP (publique) l\'emporte', dd([{ day: d12, trust: 'official', host: 'hespress.com' }, { day: d13, trust: 'official', host: 'mapexpress.ma' }]), '2026-09-13');
+eq('Hespress ≠ Alyaoum24, 2M (copie Google) tranche', dd([{ day: d12, trust: 'official', host: 'hespress.com' }, { day: d13, trust: 'official', host: 'alyaoum24.com' }, { day: d13, trust: 'press', host: '2m.ma' }]), '2026-09-13');
+eq('Hespress ≠ Alyaoum24, sans source publique : rien', dd([{ day: d12, trust: 'official', host: 'hespress.com' }, { day: d13, trust: 'official', host: 'alyaoum24.com' }]), null);
+eq('copie Google de 2M seule : refusée', dd([{ day: d13, trust: 'press', host: '2m.ma' }]), null);
 eq('MAP + SNRT d\'accord', dd([{ day: d13, trust: 'official', host: 'mapexpress.ma' }, { day: d13, trust: 'official', host: 'snrtnews.com' }]), '2026-09-13');
 
 // ---- API WordPress de MAP Express ----

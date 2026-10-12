@@ -113,17 +113,29 @@ export function extractAny(raw, last, expected) {
 // ---------- décision : qui croire ? ----------
 // Le ministère l'a lui-même signalé : de faux communiqués circulent. Donc :
 //  • site lu DIRECTEMENT (MAP, SNRT, Hespress, Alyaoum24, Medi1, ministère) : suffit à lui seul (choix de l'éditeur de SaLaTi) ;
-//  • copie par Google / Bing Actualités : au moins 2 médias DIFFÉRENTS doivent donner la même date (ou un site direct confirme) ;
-//  • désaccord : on ne change rien (l'officiel l'emporte sur la presse).
+//  • copie par Google / Bing Actualités : au moins 2 médias DIFFÉRENTS doivent donner la même date ;
+//  • désaccord : on se fie aux ADMINISTRATIONS PUBLIQUES (ministère, MAP, SNRT, 2M), lues directement ou par Google ;
+//    si elles-mêmes divergent, ou si aucune ne tranche, on ne change rien.
+export const PUBLIC_HOSTS = ['habous.gov.ma', 'mapexpress.ma', 'mapnews.ma', 'map.ma', 'snrtnews.com', 'snrt.ma', '2m.ma'];
 export function decide(cands) {
-  const off = new Set(cands.filter(c => c.trust === 'official').map(c => c.day));
-  if (off.size === 1) return { day: [...off][0], why: 'source officielle' };
-  if (off.size > 1) return { day: null, why: 'sources officielles en désaccord' };
+  const days = list => new Set(list.map(c => c.day));
+  const pub = days(cands.filter(c => PUBLIC_HOSTS.includes(c.host)));
+  if (pub.size > 1) return { day: null, why: 'administrations publiques en désaccord' };
+  const pubDay = pub.size ? [...pub][0] : null;
+  const direct = days(cands.filter(c => c.trust === 'official'));
+  if (direct.size === 1) {
+    const d = [...direct][0];
+    if (pubDay === null || pubDay === d) return { day: d, why: 'site lu directement' };
+    return { day: pubDay, why: 'désaccord : administration publique retenue' };
+  }
+  if (direct.size > 1) return pubDay !== null ? { day: pubDay, why: 'sites en désaccord : administration publique retenue' } : { day: null, why: 'sites en désaccord' };
+  // seulement des copies (Google / Bing) : 2 médias différents
   const hosts = new Map();
   for (const c of cands) { if (!hosts.has(c.day)) hosts.set(c.day, new Set()); hosts.get(c.day).add(c.host || '?'); }
   const strong = [...hosts].filter(([, h]) => h.size >= 2).map(([d]) => d);
-  if (strong.length === 1) return { day: strong[0], why: `${hosts.get(strong[0]).size} médias concordent` };
-  if (strong.length > 1) return { day: null, why: 'presse en désaccord' };
+  if (strong.length === 1 && (pubDay === null || pubDay === strong[0])) return { day: strong[0], why: `${hosts.get(strong[0]).size} médias concordent` };
+  if (strong.length >= 1 && pubDay !== null && hosts.get(pubDay)?.size >= 2) return { day: pubDay, why: 'copies en désaccord : administration publique retenue' };
+  if (strong.length >= 1) return { day: null, why: 'copies en désaccord' };
   return { day: null, why: cands.length ? 'un seul média : pas assez fiable' : 'aucune annonce trouvée' };
 }
 
