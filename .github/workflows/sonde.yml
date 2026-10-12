@@ -1,0 +1,21 @@
+name: Sonde (temporaire)
+on: workflow_dispatch
+jobs:
+  sonde:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          for h in 2MMaroc 2MInfo 2mtv 2MTVMaroc SNRTnews snrtnewsar Hespress Medi1TV ALAOULA; do
+            id=$(curl -sSL -m 20 -A "Mozilla/5.0" -H "Accept-Language: en" "https://www.youtube.com/@$h" | grep -o '"externalId":"UC[^"]*"\|<link rel="canonical" href="[^"]*"' | head -2 | tr '\n' ' ')
+            cid=$(echo "$id" | grep -o 'UC[A-Za-z0-9_-]\{22\}' | head -1)
+            if [ -n "$cid" ]; then
+              f=$(curl -sS -m 20 "https://www.youtube.com/feeds/videos.xml?channel_id=$cid")
+              n=$(echo "$f" | grep -c '<entry>'); last=$(echo "$f" | grep -o '<published>[^<]*' | sed -n 2p); hil=$(echo "$f" | grep -o '<title>[^<]*هلال[^<]*' | head -2 | tr '\n' '|')
+              echo "::notice::YT @$h $cid entries=$n last=$last :: $hil"
+            else echo "::notice::YT @$h none"; fi
+          done
+          for c in le2m 2MInfos hespress snrtnews Medi1News mapexpress; do
+            r=$(curl -sS -m 20 "https://t.me/s/$c" -o /tmp/t -w "%{http_code}"); n=$(grep -c 'tgme_widget_message_text' /tmp/t); d=$(grep -o 'datetime="[^"]*' /tmp/t | tail -1)
+            echo "::notice::TG $c $r msgs=$n last=$d"
+          done
+          echo "::notice::TGROBOTS $(curl -sS https://t.me/robots.txt | tr '\n' ' ' | cut -c1-200)"
