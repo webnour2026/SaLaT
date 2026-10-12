@@ -112,8 +112,8 @@ export function extractAny(raw, last, expected) {
 
 // ---------- décision : qui croire ? ----------
 // Le ministère l'a lui-même signalé : de faux communiqués circulent. Donc :
-//  • source OFFICIELLE (MAP, télévision publique SNRT) ou Hespress arabe (choix de l'éditeur de SaLaTi) : suffit à elle seule ;
-//  • presse ordinaire : au moins 2 médias DIFFÉRENTS doivent donner la même date ;
+//  • site lu DIRECTEMENT (MAP, SNRT, Hespress, Alyaoum24, Medi1, ministère) : suffit à lui seul (choix de l'éditeur de SaLaTi) ;
+//  • copie par Google / Bing Actualités : au moins 2 médias DIFFÉRENTS doivent donner la même date (ou un site direct confirme) ;
 //  • désaccord : on ne change rien (l'officiel l'emporte sur la presse).
 export function decide(cands) {
   const off = new Set(cands.filter(c => c.trust === 'official').map(c => c.day));
@@ -171,14 +171,14 @@ export const sources = (m, y) => {
     //  API payante ; 2M.ma refuse les robots. Google Actualités reprend leurs articles en quelques minutes.)
     // Hespress arabe : souvent le premier (11 oct. 2026 : 19:49, avant la MAP), exact et sérieux → validé seul, comme une source officielle
     { name: 'Hespress (ar, flux)', fast: true, trust: 'official', url: 'https://www.hespress.com/feed' },
-    { name: 'Alyaoum24 (ar, flux)', fast: true, trust: 'press', url: 'https://alyaoum24.com/feed/' },   // 11 oct. 2026 : 20:00, avant la MAP (robots.txt l'autorise)
-    { name: 'Hespress (fr, flux)', fast: true, trust: 'press', url: 'https://fr.hespress.com/feed' },
-    { name: 'Medi1 News (ar, page actualités)', fast: true, trust: 'press', url: 'https://www.medi1news.com/ar/categorie/news' },   // pas de flux RSS : page HTML (robots.txt l'autorise) ; 403 depuis GitHub en oct. 2026
+    { name: 'Alyaoum24 (ar, flux)', fast: true, trust: 'official', url: 'https://alyaoum24.com/feed/' },   // 11 oct. 2026 : 20:00, avant la MAP (robots.txt l'autorise)
+    { name: 'Hespress (fr, flux)', fast: true, trust: 'official', url: 'https://fr.hespress.com/feed' },
+    { name: 'Medi1 News (ar, page actualités)', fast: true, trust: 'official', url: 'https://www.medi1news.com/ar/categorie/news' },   // pas de flux RSS : page HTML (robots.txt l'autorise) ; 403 depuis GitHub en oct. 2026
     // Copies par Google Actualités, filtrées sur le domaine du média : MAP Express, SNRT et Medi1 bloquent depuis oct. 2026 les
     // serveurs de GitHub (HTTP 403, pare-feu), MAP News et 2M aussi. Seuls les articles dont la source est exactement ce domaine
     // comptent (onlyHost). Plus lent (Google indexe en quelques minutes à quelques heures) mais toujours joignable.
     ...[
-      ['MAP Express', 'mapexpress.ma', 'official'], ['MAP News', 'mapnews.ma', 'official'], ['SNRT News', 'snrtnews.com', 'official'],
+      ['MAP Express', 'mapexpress.ma', 'press'], ['MAP News', 'mapnews.ma', 'press'], ['SNRT News', 'snrtnews.com', 'press'],
       ['Medi1 News', 'medi1news.com', 'press'], ['2M', '2m.ma', 'press'], ['Hespress', 'hespress.com', 'press'],
     ].map(([n, site, trust]) => ({ name: `${n} (via Google Actualités)`, fast: true, trust, onlyHost: site,
       url: `https://news.google.com/rss/search?q=${enc(`site:${site} (هلال OR "${HIJRI_AR[m]}" OR croissant OR Habous OR الأوقاف) when:3d`)}&hl=fr&gl=MA&ceid=MA:fr` })),

@@ -63,7 +63,8 @@ eq('prévision astronomique refusée', L('Le 1er Joumada I 1448 devrait correspo
 eq('copies Google Actualités : 6 médias, filtrés sur leur domaine', sources(5, 1448).filter(x => x.onlyHost).map(x => x.onlyHost).join(' '), 'mapexpress.ma mapnews.ma snrtnews.com medi1news.com 2m.ma hespress.com');
 
 eq('Hespress arabe : validé seul', sources(5, 1448).find(x => x.name === 'Hespress (ar, flux)').trust, 'official');
-eq('Hespress français et copie Google : 2 médias requis', sources(5, 1448).filter(x => /Hespress/.test(x.name) && x.name !== 'Hespress (ar, flux)').map(x => x.trust).join(','), 'press,press');
+eq('sites lus directement : validés seuls', sources(5, 1448).filter(x => !/Google|Bing/.test(x.name)).every(x => x.trust === 'official'), true);
+eq('copies Google / Bing : jamais seules', sources(5, 1448).filter(x => /Google|Bing/.test(x.name)).every(x => x.trust === 'press'), true);
 
 eq('Alyaoum24 suivi chaque minute', sources(5, 1448).some(x => /Alyaoum24/.test(x.name) && x.fast), true);
 eq('site du ministère : en veille derrière robots.txt', JSON.stringify(sources(5, 1448).filter(x => x.robots).map(x => [x.url, x.trust])), JSON.stringify([['https://www.habous.gov.ma/', 'official']]));
