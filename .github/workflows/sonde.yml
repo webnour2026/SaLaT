@@ -7,14 +7,8 @@ jobs:
       - run: |
           B=https://habous.synerticlab.com
           curl -sS -m 25 $B/mawaqit-shahria -o p.html
-          grep -o '<script[^>]*src="[^"]*"' p.html | grep -o 'src="[^"]*' | cut -c6- | grep -iv 'core/\|jquery' | head -20 | tr '\n' ' ' | sed 's/^/::notice::JS /'; echo
-          grep -oE '(https?:)?/[A-Za-z0-9_./?=&-]*(api|json|mawaqit|prayer|salat|horaires)[A-Za-z0-9_./?=&-]*' p.html | sort -u | head -20 | tr '\n' ' ' | sed 's/^/::notice::URLS /'; echo
-          grep -o 'drupalSettings[^<]\{0,600\}' p.html | head -1 | cut -c1-600 | sed 's/^/::notice::SET /'
-          for s in $(grep -o '<script[^>]*src="[^"]*"' p.html | grep -o 'src="[^"]*' | cut -c6- | grep -iv 'core/\|jquery'); do
-            case "$s" in http*) u=$s;; *) u=$B$s;; esac
-            curl -sS -m 20 "$u" -o j.js; m=$(grep -oE '["'"'"'`][^"'"'"'`]*(api|json|mawaqit|prayer|ville|city)[^"'"'"'`]*["'"'"'`]' j.js | sort -u | head -8 | tr '\n' ' ' | cut -c1-500)
-            [ -n "$m" ] && echo "::notice::IN $s :: $m"
-          done
-          grep -o '<select[^>]*>' p.html | head -3 | tr '\n' ' ' | sed 's/^/::notice::SELECT /'; echo
-          grep -o '<option value="[^"]*">[^<]*' p.html | head -5 | tr '\n' ' ' | sed 's/^/::notice::OPT /'; echo
-          echo "::notice::NOPT $(grep -c '<option' p.html)"
+          s=$(grep -o '<script[^>]*src="[^"]*habous_theme[^"]*"' p.html | grep -o 'src="[^"]*' | cut -c6- | sed 's/&amp;/\&/g' | head -1)
+          curl -sS -m 20 "$B$s" -o j.js
+          grep -o '.\{0,160\}fetch(.\{0,200\}' j.js | head -8 | while read -r l; do echo "::notice::F $l" | cut -c1-420; done
+          grep -oE '"(/|https)[^"]{3,120}"' j.js | sort -u | head -30 | tr '\n' ' ' | sed 's/^/::notice::STR /'; echo
+          grep -oE "'(/|https)[^']{3,120}'" j.js | sort -u | head -30 | tr '\n' ' ' | sed 's/^/::notice::STR2 /'; echo
