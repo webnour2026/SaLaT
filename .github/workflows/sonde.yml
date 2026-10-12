@@ -1,0 +1,14 @@
+name: Sonde (temporaire)
+on: workflow_dispatch
+jobs:
+  sonde:
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash {0}
+        run: |
+          echo "::notice::ROBOTS $(curl -sS -m 15 https://snrtnews.com/robots.txt | grep -iv '^#' | grep -i -A3 'user-agent: \*' | tr '\n' ' ' | cut -c1-200)"
+          for u in https://snrtnews.com/taxonomy/term/174/feed https://snrtnews.com/rss.xml https://snrtnews.com/fr/rss.xml https://snrtnews.com/fr/taxonomy/term/174/feed https://snrtnews.com/fr/feed https://snrtnews.com/ar/rss.xml; do
+            curl -sSL -m 20 -A "Mozilla/5.0 SaLaTi" -o p -w "%{http_code} %{size_download}" "$u" > r 2>&1
+            echo "::notice::$u => $(cat r) items=$(grep -c '<item' p) lang=$(grep -o '<language>[^<]*' p | head -1) last=$(grep -o '<pubDate>[^<]*' p | head -1) t=$(grep -o '<title>[^<]*' p | sed -n 2p | cut -c1-60)"
+          done
+          curl -sSL -m 20 https://snrtnews.com/fr -o fr.html; grep -o 'href="[^"]*\(rss\|feed\)[^"]*"' fr.html | sort -u | head -5 | tr '\n' ' ' | sed 's/^/::notice::FRLINKS /'
