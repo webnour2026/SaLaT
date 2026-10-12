@@ -1,0 +1,13 @@
+name: Sonde (temporaire)
+on: workflow_dispatch
+jobs:
+  sonde:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          for u in "https://www.habous.gov.ma/robots.txt" "https://www.habous.gov.ma/" "https://www.habous.gov.ma/ar" "https://www.habous.gov.ma/fr" "https://www.habous.gov.ma/index.php?format=feed&type=rss" "https://www.habous.gov.ma/ar/?format=feed&type=rss" "https://www.habous.gov.ma/ar/index.php?format=feed&type=rss"; do
+            r=$(curl -sSL -m 25 -A "Mozilla/5.0 SaLaTi" -o /tmp/p -w "%{http_code} %{url_effective} %{size_download}" "$u" 2>&1 | tail -c 200)
+            t=$(grep -o '<title>[^<]*' /tmp/p | head -1 | cut -c1-80); h=$(grep -o 'هلال' /tmp/p | wc -l); l=$(grep -io 'lang="[a-z-]*"' /tmp/p | head -1)
+            echo "::notice::$u => $r | $t | $l | هلال=$h"
+            case "$u" in *robots*) echo "::notice::robots: $(tr '\n' ' ' < /tmp/p | cut -c1-600)";; esac
+          done
