@@ -184,6 +184,7 @@ export const sources = (m, y) => {
     // Hespress arabe : souvent le premier (11 oct. 2026 : 19:49, avant la MAP), exact et sérieux → validé seul, comme une source officielle
     { name: 'Hespress (ar, flux)', fast: true, trust: 'official', url: 'https://www.hespress.com/feed' },
     { name: 'Alyaoum24 (ar, flux)', fast: true, trust: 'official', url: 'https://alyaoum24.com/feed/' },   // 11 oct. 2026 : 20:00, avant la MAP (robots.txt l'autorise)
+    { name: 'Madar21 (ar, flux)', fast: true, trust: 'official', url: 'https://madar21.com/feed/' },   // robots.txt l'autorise ; 11 oct. 2026 : « فاتح شهر جمادى الأولى … بعد غد الثلاثاء »
     { name: 'Hespress (fr, flux)', fast: true, trust: 'official', url: 'https://fr.hespress.com/feed' },
     { name: 'Medi1 News (ar, page actualités)', fast: true, trust: 'official', url: 'https://www.medi1news.com/ar/categorie/news' },   // pas de flux RSS : page HTML (robots.txt l'autorise) ; 403 depuis GitHub en oct. 2026
     // (Recherches Google / Bing ouvertes à tous les sites : retirées — un faux communiqué repris par deux sites inconnus suffisait.)

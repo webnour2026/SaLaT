@@ -75,5 +75,8 @@ eq('copies Google : toujours limitées à un média connu', sources(5, 1448).fil
 eq('Alyaoum24 suivi chaque minute', sources(5, 1448).some(x => /Alyaoum24/.test(x.name) && x.fast), true);
 eq('site du ministère : en veille derrière robots.txt', JSON.stringify(sources(5, 1448).filter(x => x.robots).map(x => [x.url, x.trust])), JSON.stringify([['https://www.habous.gov.ma/', 'official']]));
 
+eq('Madar21 : titre du 11 oct. 2026 lu', (() => { const r = extractAny('فاتح شهر جمادى الأولى لعام 1448 هـ بعد غد الثلاثاء', D('2026-09-13'), 5); return r && new Date(r * 864e5).toISOString().slice(0, 10); })(), '2026-10-13');
+eq('Madar21 suivi chaque minute', sources(5, 1448).some(x => /Madar21/.test(x.name) && x.fast && x.trust === 'official'), true);
+
 if (ko) { console.error(ko, 'échec(s)'); process.exit(1); }
 console.log('Tous les tests réussis');
