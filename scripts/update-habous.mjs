@@ -186,6 +186,7 @@ export const sources = (m, y) => {
     { name: 'Alyaoum24 (ar, flux)', fast: true, trust: 'official', url: 'https://alyaoum24.com/feed/' },   // 11 oct. 2026 : 20:00, avant la MAP (robots.txt l'autorise)
     { name: 'Hespress (fr, flux)', fast: true, trust: 'official', url: 'https://fr.hespress.com/feed' },
     { name: 'Medi1 News (ar, page actualités)', fast: true, trust: 'official', url: 'https://www.medi1news.com/ar/categorie/news' },   // pas de flux RSS : page HTML (robots.txt l'autorise) ; 403 depuis GitHub en oct. 2026
+    // (Recherches Google / Bing ouvertes à tous les sites : retirées — un faux communiqué repris par deux sites inconnus suffisait.)
     // Copies par Google Actualités, filtrées sur le domaine du média : MAP Express, SNRT et Medi1 bloquent depuis oct. 2026 les
     // serveurs de GitHub (HTTP 403, pare-feu), MAP News et 2M aussi. Seuls les articles dont la source est exactement ce domaine
     // comptent (onlyHost). Plus lent (Google indexe en quelques minutes à quelques heures) mais toujours joignable.
@@ -194,9 +195,6 @@ export const sources = (m, y) => {
       ['Medi1 News', 'medi1news.com', 'press'], ['2M', '2m.ma', 'press'], ['Hespress', 'hespress.com', 'press'],
     ].map(([n, site, trust]) => ({ name: `${n} (via Google Actualités)`, fast: true, trust, onlyHost: site,
       url: `https://news.google.com/rss/search?q=${enc(`site:${site} (هلال OR "${HIJRI_AR[m]}" OR croissant OR Habous OR الأوقاف) when:3d`)}&hl=fr&gl=MA&ceid=MA:fr` })),
-    { name: 'Google Actualités (mois)', trust: 'press', url: `https://news.google.com/rss/search?q=${enc(`${ar} ${y} الأوقاف`)}&hl=ar&gl=MA&ceid=MA:ar` },
-    { name: 'Google Actualités (5 j)', fast: true, trust: 'press', url: `https://news.google.com/rss/search?q=${enc('فاتح شهر وزارة الأوقاف هلال')}+when:5d&hl=ar&gl=MA&ceid=MA:ar` },
-    { name: 'Bing Actualités', trust: 'press', url: `https://www.bing.com/news/search?q=${enc(`${ar} ${y} الأوقاف`)}&format=rss&setlang=ar` },
   ];
 };
 // robots.txt (lu une fois par heure et par site) : la page est-elle permise à tous les robots ?

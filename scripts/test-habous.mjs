@@ -70,6 +70,7 @@ eq('copies Google Actualités : 6 médias, filtrés sur leur domaine', sources(5
 eq('Hespress arabe : validé seul', sources(5, 1448).find(x => x.name === 'Hespress (ar, flux)').trust, 'official');
 eq('sites lus directement : validés seuls', sources(5, 1448).filter(x => !/Google|Bing/.test(x.name)).every(x => x.trust === 'official'), true);
 eq('copies Google / Bing : jamais seules', sources(5, 1448).filter(x => /Google|Bing/.test(x.name)).every(x => x.trust === 'press'), true);
+eq('copies Google : toujours limitées à un média connu', sources(5, 1448).filter(x => /Google|Bing/.test(x.name)).every(x => x.onlyHost), true);
 
 eq('Alyaoum24 suivi chaque minute', sources(5, 1448).some(x => /Alyaoum24/.test(x.name) && x.fast), true);
 eq('site du ministère : en veille derrière robots.txt', JSON.stringify(sources(5, 1448).filter(x => x.robots).map(x => [x.url, x.trust])), JSON.stringify([['https://www.habous.gov.ma/', 'official']]));
