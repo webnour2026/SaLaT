@@ -7,18 +7,20 @@ jobs:
       - shell: bash {0}
         run: |
           q() { python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$1"; }
-          for s in "site:mapnews.ma" "site:2m.ma" "site:mapnews.ma هلال" "site:2m.ma هلال" "site:mapnews.ma جمادى الأولى" "site:2m.ma جمادى الأولى"; do
-            curl -sS -m 20 "https://news.google.com/rss/search?q=$(q "$s")&hl=ar&gl=MA&ceid=MA:ar" -o f.xml
+          for s in "fr|site:mapnews.ma" "fr|site:2m.ma" "fr|mapnews" "ar|هلال جمادى الأولى" "fr|2m.ma croissant" "bing|site:mapnews.ma" "bing|site:2m.ma هلال"; do
+            k=${s%%|*}; s=${s#*|}
+            case $k in fr) U="https://news.google.com/rss/search?q=$(q "$s")&hl=fr&gl=MA&ceid=MA:fr";; ar) U="https://news.google.com/rss/search?q=$(q "$s")&hl=ar&gl=MA&ceid=MA:ar";; bing) U="https://www.bing.com/news/search?q=$(q "$s")&format=rss";; esac
+            curl -sS -m 20 "$U" -o f.xml
             m=$(python3 - <<'PY'
           import re
           s=open('f.xml').read(); it=re.findall(r'<item>(.*?)</item>',s,re.S)
           out=[str(len(it))]
           for e in it[:3]:
               t=re.search(r'<title>(.*?)</title>',e).group(1); p=re.search(r'<pubDate>(.*?)</pubDate>',e).group(1)
-              out.append(p[5:22]+' '+t[:60])
+              src=re.search(r'<source[^>]*url="([^"]*)',e); out.append(p[5:22]+' '+t[:50]+' ['+(src.group(1) if src else '')+']')
           print(' | '.join(out))
           PY
           )
-            echo "::notice::GN [$s] $m"
+            echo "::notice::$k [$s] $m"
           done
           echo "::notice::MAPNEWS-ROBOTS $(curl -sS -m 15 -o /dev/null -w '%{http_code}' https://www.mapnews.ma/robots.txt)"
