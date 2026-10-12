@@ -6,9 +6,10 @@ jobs:
     steps:
       - run: |
           B=https://habous.synerticlab.com
-          curl -sS -m 25 $B/mawaqit-shahria -o p.html
-          s=$(grep -o '<script[^>]*src="[^"]*habous_theme[^"]*"' p.html | grep -o 'src="[^"]*' | cut -c6- | sed 's/&amp;/\&/g' | head -1)
-          curl -sS -m 20 "$B$s" -o j.js
-          grep -o '.\{0,160\}fetch(.\{0,200\}' j.js | head -8 | while read -r l; do echo "::notice::F $l" | cut -c1-420; done
-          grep -oE '"(/|https)[^"]{3,120}"' j.js | sort -u | head -30 | tr '\n' ' ' | sed 's/^/::notice::STR /'; echo
-          grep -oE "'(/|https)[^']{3,120}'" j.js | sort -u | head -30 | tr '\n' ' ' | sed 's/^/::notice::STR2 /'; echo
+          echo "::notice::ROBOTS-API $(curl -sS $B/robots.txt | grep -i 'habous-api\|Disallow: /$' | tr '\n' ' ')"
+          echo "::notice::HIJRI $(curl -sS -m 20 $B/habous-api/hijri-date | cut -c1-300)"
+          curl -sS -m 20 $B/habous-api/villes -o v.json; echo "::notice::VILLES $(head -c 400 v.json) ... n=$(grep -o '"id"' v.json | wc -l) bytes=$(wc -c < v.json)"
+          for v in 1 58 104 100 165; do echo "::notice::PT$v $(curl -sS -m 20 "$B/habous-api/prayer-times?ville=$v" | cut -c1-400)"; done
+          curl -sSI -m 20 "$B/habous-api/prayer-times?ville=1" | grep -i 'cache\|date\|access-control' | tr '\n' ' ' | sed 's/^/::notice::HDR /'
+          curl -sS -m 25 "$B/mawaqit-shahria?ville=58" -o m.html; sed 's/<[^>]*>/ /g' m.html | tr -s ' \n' ' ' | grep -oE '([0-9]{2}:[0-9]{2} ?){6}' | head -3 | tr '\n' '|' | sed 's/^/::notice::MONTH /'
+          grep -o 'habous-monthly[^"]*' m.html | sort -u | head | tr '\n' ' ' | sed 's/^/::notice::CLS /'
