@@ -8,7 +8,11 @@ import { robotsAllows, parseHabousMonthly, habousSelected, analyse, mergeFile } 
 import { allLocalities } from '../js/localites.js';
 
 const env = (k, d = '') => process.env[k] ?? d;
-const BASE = env('HABOUS_BASE', 'https://habous.synerticlab.com').replace(/\/$/, ''), PAGE = '/mawaqit-shahria';
+// Sites essayés dans l'ordre : l'officiel d'abord (aujourd'hui son robots.txt interdit tout → seul ce fichier est lu),
+// puis la version de test. Le jour où www.habous.gov.ma autorise la page, il est utilisé sans rien changer ici.
+const BASES = (env('HABOUS_BASE') ? [env('HABOUS_BASE')] : ['https://www.habous.gov.ma', 'https://habous.synerticlab.com']).map(b => b.replace(/\/$/, ''));
+const PAGE = '/mawaqit-shahria';
+let BASE = BASES[0];
 const UA = 'SaLaTi-verification/1.0 (appli de prière ; github.com/webnour2026/SaLaT)';
 const DRY = /^(1|true|oui)$/i.test(env('DRY_RUN')), FORCE = /^(1|true|oui)$/i.test(env('FORCE'));
 const ONLY = env('ONLY').split(/[\s,]+/).filter(Boolean).map(Number), DELAY = Number(env('DELAY_MS', '2500'));
@@ -41,9 +45,19 @@ async function fetchLocality(code) {
   return a.ok ? { ok: true, ...a } : { ok: false, why: `lignes incohérentes avec le calcul : ${a.rejects.slice(0, 3).join(' ; ')}` };
 }
 
-const robots = await get('/robots.txt').catch(e => ({ status: 0, why: e.message }));
-if (robots.status !== 200) { console.log(`Site des Habous injoignable (${robots.why || 'HTTP ' + robots.status}) : rien à faire.`); process.exit(0); }
-if (!robotsAllows(robots.body, PAGE)) { console.log('robots.txt du site des Habous interdit ce chemin : aucune page lue.'); process.exit(0); }
+// premier site joignable dont le robots.txt autorise la page et qui affiche bien un tableau mensuel
+let chosen = null;
+for (const b of BASES) {
+  BASE = b;
+  const robots = await get('/robots.txt').catch(e => ({ status: 0, why: e.message }));
+  if (robots.status !== 200) { say(`- ${b} : injoignable (${robots.why || 'HTTP ' + robots.status})`); continue; }
+  if (!robotsAllows(robots.body, PAGE)) { say(`- ${b} : robots.txt interdit la page → non lu`); continue; }
+  const probe = await get(`${PAGE}?ville=1`).catch(e => ({ status: 0, why: e.message }));
+  if (probe.status !== 200 || !parseHabousMonthly(probe.body).length) { say(`- ${b} : pas de tableau mensuel lisible`); continue; }
+  chosen = b; say(`- ${b} : utilisé`); break;
+}
+if (!chosen) { console.log('Aucun site des Habous utilisable : rien à faire.'); summary(); process.exit(0); }
+BASE = chosen;
 
 const covered = new Set(readJson('data/fm6oa-villes.json').villes.map(v => v[1]));
 let todo = allLocalities().filter(l => !covered.has(l.code)).map(l => ({ code: l.code, name: l.fr }));
@@ -62,7 +76,7 @@ for (const l of todo) {
   catch (e) { failed.push({ ...l, why: e.message }); if (/refuse/.test(e.message)) break; }
   await sleep(DELAY);
 }
-say(`## Horaires officiels (site des Habous) — ${new Date().toISOString().slice(0, 16)} UTC${DRY ? ' (essai : rien n\'est écrit)' : ''}`);
+say(`## Horaires officiels (${BASE}) — ${new Date().toISOString().slice(0, 16)} UTC${DRY ? ' (essai : rien n\'est écrit)' : ''}`);
 say(`Localités absentes de fm6oa.org, lues : ${results.length}/${todo.length}${failed.length ? ` · échecs : ${failed.length}` : ''}`);
 say(''); say('| Localité | Jours | Identiques au calcul | Écart max |'); say('|---|---|---|---|');
 for (const r of results) say(`| ${r.name} (${r.code}) | ${Object.keys(r.days).length} | ${r.stats.pct} % | ${r.stats.max} min |`);
