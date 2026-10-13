@@ -1,0 +1,14 @@
+name: sonde
+on: workflow_dispatch
+jobs:
+  s:
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash {0}
+        run: |
+          UA='SaLaTi-verification/1.0 (appli de prière ; github.com/webnour2026/SaLaT)'
+          for u in "code/index-fr.php?ville=1" "code/index.php?ville=1"; do
+            curl -sL -A "$UA" "https://fm6oa.org/prieres/$u" -o p.html
+            grep -oiE "<script[^>]*src=[^>]*>" p.html | sort -u | while read l; do echo "::notice title=src $u::$l"; done
+            grep -noiE ".{0,160}(praytimes|getTimes|\.adjust|\.tune|setMethod)[^;]{0,200}" p.html | head -8 | while IFS= read -r l; do echo "::notice title=pt $u::$(echo "$l" | tr -d '\r' | cut -c1-400)"; done
+          done
