@@ -42,7 +42,8 @@ const OUJDA = 31, lo = localityByCode(OUJDA);
 const a = analyse(OUJDA, parsed);
 eq('Oujda : analyse acceptée', a.ok, true);
 eq('Oujda : décalage GMT+1 retiré (04:00 → 03:00 UTC)', a.days['2026-06-17'].split(' ')[0], '0300');
-eq(`Oujda : ${lo.fr}, au moins 85 % d'heures identiques au calcul, 2 min au plus`, [a.stats.pct >= 85, a.stats.max <= 2], [true, true]);
+// seuil de lecture, pas de précision : extrait de la Fondation (Asr parfois 1 min sous le ministère) + 4 jours inventés
+eq(`Oujda : ${lo.fr}, au moins 80 % d'heures identiques au calcul, 2 min au plus`, [a.stats.pct >= 80, a.stats.max <= 2], [true, true]);
 
 // 3) Fuseau GMT (ligne par ligne) : le même jour décrit en GMT est reconnu
 const m = computeDay({ lat: lo.lat, lng: lo.lng, code: OUJDA }, '2026-10-05', 21, 0), base = Date.UTC(2026, 9, 5);

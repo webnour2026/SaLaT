@@ -66,6 +66,10 @@ export const MA_MODEL = {
   sr: { h0: 0.76, k: 0.032 },                                                  // horizon du lever (°) = h0 + k·√alt
   ss: { h0: 1.10, k: 0.028 },                                                  // horizon du coucher (°)
   off: { Fajr: -45, Sunrise: -94, Dhuhr: 300, Asr: 0, Maghrib: 65, Isha: -15 },     // secondes
+  // Asr : ombres du Soleil apparent (réfraction) et déclinaison prise 3 h après l'Asr. Ajusté sur 820 Asr des tableaux du
+  // ministère et des délégations (mars 2025 → nov. 2026, 14 localités, toutes saisons) : 88,5 % → 95,6 % identiques ;
+  // tableaux de la Fondation (Rabia II 2026, 191 localités) : 83,9 % → 89,8 %.
+  asrDeclShift: 3,
 };
 
 /**
@@ -90,9 +94,13 @@ export function computeDay({ lat, lng, snap = true, code = null }, dateStr, meth
     const T = darccos((-dsin(angle) - dsin(decl) * dsin(lat)) / (dcos(decl) * dcos(lat))) / 15;
     return midDay(t) + (ccw ? -T : T);
   };
-  const asrTime = (factor, t) => {
+  const asrTime = (factor, t, apparent = false) => {
     const { decl } = sunPosition(jd + t);
-    return angleTime(-darccot(factor + dtan(Math.abs(lat - decl))), t);
+    if (!apparent) return angleTime(-darccot(factor + dtan(Math.abs(lat - decl))), t);
+    // Maroc : ombres mesurées sur le Soleil apparent (réfraction de Saemundsson à midi et à l'Asr)
+    const refr = h => 1.02 / dtan(h + 10.3 / (h + 5.11)) / 60;
+    const noon = 90 - Math.abs(lat - decl), hApp = darccot(factor + 1 / dtan(noon + refr(noon)));
+    return angleTime(-(hApp - refr(hApp)), t);
   };
 
   // heures solaires locales (première estimation / 24)
@@ -100,9 +108,10 @@ export function computeDay({ lat, lng, snap = true, code = null }, dateStr, meth
     Fajr: angleTime(fajrAngle, 5 / 24, true),
     Sunrise: angleTime(hRise, 6 / 24, true),
     Dhuhr: midDay(12 / 24),
-    Asr: asrTime(school === 1 ? 2 : 1, 13 / 24),
+    Asr: asrTime(school === 1 ? 2 : 1, 13 / 24, isMA),
     Sunset: angleTime(hSet, 18 / 24),
   };
+  if (isMA) for (let i = 0; i < 2; i++) h.Asr = asrTime(school === 1 ? 2 : 1, (h.Asr + MA_MODEL.asrDeclShift) / 24, true);
   h.Maghrib = p.maghrib ? angleTime(p.maghrib, 18 / 24) : h.Sunset + (p.maghribMin || 0) / 60;
   h.Isha = p.ishaMin ? h.Maghrib + p.ishaMin / 60 : angleTime(ishaAngle, 18 / 24);
   // Hautes latitudes (Europe du Nord en été…) : quand le Soleil n'atteint pas l'angle, Fajr/Isha n'existent pas ou sont aberrants.

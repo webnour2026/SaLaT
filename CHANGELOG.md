@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.28.0] – 2026-10-13 ⚠ module Android (prochain AAB)
+### Modifié
+- **Asr (Maroc) recalé sur les tableaux du ministère, toutes saisons** : les ombres sont mesurées sur le Soleil apparent (réfraction de Saemundsson à midi et à l'heure de l'Asr) et la déclinaison est prise 3 h après l'Asr (itéré). Vérifié sur 820 Asr relevés sur 23 tableaux officiels du ministère et des délégations (Chawwal 1446 → Joumada I 1448, de Tanger à Guelmim) : **88,5 % → 95,6 %** d'Asr identiques à la minute (hiver 63-78 % → 93-98 %) ; tableaux de la Fondation (Rabia II 2026, 191 localités) 83,9 % → 89,8 %. Les autres prières ne changent pas.
+
 ## [2.27.2] – 2026-10-13 ⚠ module Android (sans urgence : prochain AAB)
 ### Modifié
 - Asr (Maroc) : marge de +3 s supprimée, l'Asr redevient exactement celui de PrayTimes.js (fichier présent sur fm6oa.org/prieres/, déposé le 21/04/2026). Asr identique : tableaux de la Fondation Rabia II 2026 (191 localités) 79,1 % → 83,9 % ; Joumada I 1448 (7 villes + 3 délégations) 12 → 9 écarts ; année officielle 2021 inchangée (88 %).
