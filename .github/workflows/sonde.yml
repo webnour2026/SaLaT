@@ -6,9 +6,8 @@ jobs:
     steps:
       - shell: bash {0}
         run: |
-          UA="Mozilla/5.0 (compatible; SaLaT-habous/1.1)"
-          echo "::notice::ROBOTS $(curl -sSL -m 15 -A "$UA" -o r -w '%{http_code}' https://medias24.com/robots.txt) $(grep -iv '^#' r | grep -i -A6 'user-agent: \*' | tr '\n' ' ' | cut -c1-250)"
-          for u in https://medias24.com/feed/ https://medias24.com/feed https://medias24.com/rss https://www.medias24.com/feed/ https://medias24.com/ar/feed/; do
-            echo "::notice::$u => $(curl -sSL -m 20 -A "$UA" -o p -w '%{http_code} %{content_type} %{size_download}' "$u" 2>&1 | cut -c1-80) items=$(grep -c '<item' p) last=$(grep -o '<pubDate>[^<]*' p | head -1)"
+          for q in "site:medias24.com" "medias24 Habous" "Médias24 croissant" "site:medias24.com croissant"; do
+            e=$(python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$q")
+            curl -sS -m 20 "https://news.google.com/rss/search?q=$e&hl=fr&gl=MA&ceid=MA:fr" -o g
+            echo "::notice::[$q] items=$(grep -c '<item' g) src=$(grep -o '<source url="[^"]*' g | sort | uniq -c | sort -rn | head -3 | tr -s ' ' | tr '\n' ' ')"
           done
-          curl -sS -m 20 "https://news.google.com/rss/search?q=site:medias24.com+when:7d&hl=fr&gl=MA&ceid=MA:fr" -o g; echo "::notice::GN medias24 items=$(grep -c '<item' g)"
