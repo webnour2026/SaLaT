@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.28.3] – 2026-10-13
+### Modifié
+- Calendrier, écran ajusté : chaque occasion de la liste tient sur une ligne (titre · dates, avec points de suspension) au lieu de deux lignes coupées à moitié sous la carte « Prochaine occasion » ; la liste repart du haut à chaque mois et garde au moins une ligne visible ; carte « Prochaine occasion » plus compacte.
+
 ## [2.28.2] – 2026-10-13
 ### Modifié
 - Calendrier : la prévision du croissant quitte la liste des occasions (où, sur écran ajusté, elle était coupée au défilement) pour une ligne à part, toujours visible sous la légende : « 🔭 Observation du croissant · 10 nov. · bonne (29 jours probables) ». La visibilité est en couleur et n'est jamais tronquée.

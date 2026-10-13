@@ -790,6 +790,7 @@ function renderCalendar() {
       cp.hidden = false;
     }
   }
+  $('#calEvents').scrollTop = 0;
   requestAnimationFrame(setFit);                          // la hauteur change d'un mois à l'autre (5 ou 6 lignes) : on re-vérifie que tout tient
 }
 /** Bloc « prochaine occasion » du calendrier : la plus proche à partir d'aujourd'hui (jours blancs et occasions, pas le vendredi) */
@@ -2931,7 +2932,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.28.2';
+export const APP_VERSION = '2.28.3';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
