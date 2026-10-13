@@ -65,9 +65,10 @@ export const MA_MODEL = {
   fajr: 18.95, isha: 17.05,                                                    // ≈ 19° et 17°
   sr: { h0: 0.76, k: 0.032 },                                                  // horizon du lever (°) = h0 + k·√alt
   ss: { h0: 1.10, k: 0.028 },                                                  // horizon du coucher (°)
-  off: { Fajr: -45, Sunrise: -94, Dhuhr: 300, Asr: 0, Maghrib: 65, Isha: -15 },     // secondes
-  // Asr : déclinaison du Soleil prise ~3 h après l'instant de l'Asr (itéré). Ajusté sur l'année officielle 2021 complète
-  // (76 localités, 27 700 jours) et vérifié sur les tableaux 2026 de la Fondation (191 localités) : Asr identique 79 % → 97 %.
+  off: { Fajr: -45, Sunrise: -94, Dhuhr: 300, Asr: 10, Maghrib: 65, Isha: -15 },    // secondes
+  // Asr : déclinaison du Soleil prise 3 h après l'instant de l'Asr (itéré deux fois), puis +10 s. Ajusté sur 555 Asr des tableaux
+  // du ministère et des délégations (nov. 2025 → nov. 2026, 8 localités) : 86,8 % → 98,4 % identiques ; écart saisonnier
+  // (−11 s en septembre, +16 s en hiver) qu'un simple décalage ne corrige pas. Été 2026 (juin-septembre) encore à vérifier.
   asrDeclShift: 3,
 };
 
