@@ -81,6 +81,13 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.27.0] – 2026-10-13 ⚠ nouvel AAB (version code 29, native=17)
+### Ajouté
+- **Prévision astronomique de la visibilité du croissant**, pour tous les mois : le soir du 29, la notification de l'Asr (« 🌙 الليلة ترقّب هلال شهر … ») indique « 🔭 الحساب الفلكي: رؤية الهلال الليلة متعذرة / عسيرة / ممكنة / واضحة » et le nombre de jours probable, avec « والعبرة بالإعلان الرسمي ». Aussi dans le calendrier (« 🔭 مراقبة الهلال — … »).
+- Calcul (js/moon.js) : positions du Soleil et de la Lune (Meeus), critères du manuel de « التوقيت » du ministère (3e année, leçon 22) : naissance avant le coucher, mekth ≥ 48 min, hauteur ≥ 7°, élongation 10° / 12° / 14°. Au Maroc, meilleur de 6 lieux (Tanger → Dakhla) ; ailleurs, le lieu de l'utilisateur.
+- Vérifié : conjonction du 1er avril 2022 à 06:25 GMT comme le manuel ; sur les mois annoncés depuis janvier 2026, toutes les prévisions franches (impossible / possible / bonne) conformes au ministère.
+- L'annonce de l'observation (Asr du 29) concerne désormais tous les mois ; la question du matin du 1er (hors Maroc) reste pour les 5 mois surveillés.
+
 ## [2.26.0] – 2026-10-13 ⚠ nouvel AAB (version code 28, native=16)
 ### Ajouté
 - Hors Maroc (calendrier calculé) : le matin du 1er de Mouharram, Chaabane, Ramadan, Chawwal et Dhou al-Hijja, notification « 🌙 Ramadan a-t-il commencé aujourd'hui dans votre pays ? » avec 3 boutons (Oui, aujourd'hui · Non, demain · C'était hier). Un toucher ouvre SaLaTi et règle la correction de la date hégirienne. Pas de question si l'utilisateur a déjà corrigé depuis la veille.

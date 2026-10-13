@@ -1,5 +1,5 @@
 // Service worker — changer VERSION à chaque déploiement pour forcer la mise à jour.
-const VERSION = 'salati-v2.26.0';
+const VERSION = 'salati-v2.27.0';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
@@ -36,6 +36,7 @@ const APP_SHELL = [
   'js/qibla.js',
   'js/storage.js',
   'js/sun.js',
+  'js/moon.js',
   'js/wmm.js',
   'icons/apple-touch-icon.png',
   'icons/icon-144.png',

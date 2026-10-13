@@ -78,10 +78,19 @@ final class AutoMonth {
         e.put("id", id); e.put("kind", kind); e.put("at", at); e.put("until", until);
         if (watch != null) e.put("watch", watch);
         String w = weekday == null ? "" : weekday;
-        e.put("title", txt.optString(0, "").replace("{y}", String.valueOf(year)).replace("{w}", w));
-        e.put("body", txt.optString(1, "").replace("{y}", String.valueOf(year)).replace("{w}", w));
+        e.put("title", txt.optString(0, "").replace("{y}", String.valueOf(year)).replace("{w}", w).replace("{v}", ""));
+        e.put("body", txt.optString(1, "").replace("{y}", String.valueOf(year)).replace("{w}", w).replace("{v}", pred == null ? "" : pred));
         return e;
     }
+
+    /** Prévision de visibilité du croissant pour ce soir-là (cfg.cv : jour → niveau, cfg.pv : niveau → texte), ou null. */
+    static String prediction(JSONObject cfg, String day) {
+        JSONObject cv = cfg == null ? null : cfg.optJSONObject("cv"), pv = cfg == null ? null : cfg.optJSONObject("pv");
+        if (cv == null || pv == null) return null;
+        String g = cv.optString(day, "");
+        return g.length() == 0 ? null : pv.optString(g, null);
+    }
+    private static String pred;   // prévision du soir en cours de préparation (entries)
 
     /** Rappels du mois suivant le dernier début connu (au Maroc seulement : cfg.hb présent). */
     static JSONArray entries(Context ctx, JSONObject cfg) {
@@ -105,8 +114,11 @@ final class AutoMonth {
             String eve29 = AutoMonthMath.iso(last + 28), eve30 = AutoMonthMath.iso(last + 29);
             String kind = nm == 10 ? "eid" : "month";
             JSONArray s = tx.optJSONArray("s"), o = tx.optJSONArray("o"), n = tx.optJSONArray("n");
-            if (o != null && t29[2] > 0 && t29[3] > 0)
+            if (o != null && t29[2] > 0 && t29[3] > 0) {
+                pred = prediction(cfg, eve29);
                 out.put(entry(eve29 + "-obs", "obs", t29[2], t29[3] + 30 * AutoMonthMath.MIN, null, o, ny));
+                pred = null;
+            }
             if (s != null && t29[3] > 0) {
                 long at = t29[3] + 20 * AutoMonthMath.MIN;
                 out.put(entry(eve29 + "-" + kind, kind, at, at + AutoMonthMath.WATCH, AutoMonthMath.iso(last + 29), s, ny));

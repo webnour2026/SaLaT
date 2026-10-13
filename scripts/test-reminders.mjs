@@ -38,13 +38,15 @@ setHabous(HABOUS_BUILTIN); useHabous(true);
 
 // 30 septembre 2026 : Rabi' II a commencé le 13 sept (officiel). Le début de Joumada I n'est pas annoncé.
 let p = plan('2026-09-30');
-eq('30 sept : 2 veilles à surveiller (11 et 12 oct) + « non vu » le 11', ids(p), '2026-10-11-month 2026-10-11-nosight 2026-10-12-month');
-eq('30 sept : la veille du 29 vise le 12 octobre', p[0].watch, '2026-10-12');
-eq('30 sept : la veille du 30 vise le 13 octobre', p[1].watch, '2026-10-13');
-eq('30 sept : envoi 20 min après le Maghrib (19:40 → 20:00 UTC+1 = 19:00 UTC)', new Date(p[0].at).toISOString(), '2026-10-11T19:00:00.000Z');
-eq('30 sept : surveillance pendant 4 h', String((p[0].until - p[0].at) / 3600e3), '4');
-eq('30 sept : titre du mois suivant (Joumada al-Oula)', p[0].title, 'monthNotifTitle{"m":"Joumada al-Oula"}');
-eq('30 sept : le doua est dans le corps', String(p[0].body.startsWith('monthDua')), 'true');
+eq('30 sept : observation (Asr du 29) + 2 veilles à surveiller (11 et 12 oct) + « non vu » le 11', ids(p), '2026-10-11-obs 2026-10-11-month 2026-10-11-nosight 2026-10-12-month');
+const pm = p.filter(e => e.kind === 'month');
+eq('30 sept : la veille du 29 vise le 12 octobre', pm[0].watch, '2026-10-12');
+eq('30 sept : la veille du 30 vise le 13 octobre', pm[1].watch, '2026-10-13');
+eq('30 sept : envoi 20 min après le Maghrib (19:40 → 20:00 UTC+1 = 19:00 UTC)', new Date(pm[0].at).toISOString(), '2026-10-11T19:00:00.000Z');
+eq('30 sept : surveillance pendant 4 h', String((pm[0].until - pm[0].at) / 3600e3), '4');
+eq('30 sept : titre du mois suivant (Joumada al-Oula)', pm[0].title, 'monthNotifTitle{"m":"Joumada al-Oula"}');
+eq('30 sept : le doua est dans le corps', String(pm[0].body.startsWith('monthDua')), 'true');
+eq('30 sept : observation du 11 oct. avec la prévision astronomique (croissant difficile — il n\'a pas été vu)', p.find(e => e.kind === 'obs').body, 'obsNotifBody{"m":"Joumada al-Oula"}\npredDifficult');
 eq('30 sept : pas de jours blancs prévus (mois non annoncé)', String(p.filter(e => e.kind === 'white').length), '0');
 
 // 10 mars 2026 : Aïd al-Fitr (20 mars) et jours blancs de Chawwal (13, 14, 15)
@@ -143,7 +145,7 @@ eq('vendredi : coexiste avec les jours blancs (ids distincts)', String(new Set(p
   eq('Dhou al-Hijja : observation annoncée', String(planA('2026-05-10').some(e => e.kind === 'obs')), 'true');
   lastIs(4, 1448, '2026-09-13');                         // Rabi' II → Joumada I : mois ordinaire
   q = planA('2026-10-05');
-  eq('mois ordinaire (Joumada I) : pas d\'annonce d\'observation', String(q.some(e => e.kind === 'obs')), 'false');
+  eq('mois ordinaire (Joumada I) : observation annoncée aussi (tous les mois)', String(q.some(e => e.kind === 'obs')), 'true');
   eq('mois ordinaire (Joumada I) : « non vu » le soir du 29 (11 oct.), si le mois commence le 13 (mardi)', JSON.stringify(q.filter(e => e.kind === 'nosight').map(e => [e.id, e.watch, e.body])),
      JSON.stringify([['2026-10-11-nosight', '2026-10-13', 'nosightNotifBody{"m":"Joumada al-Oula","p":"Rabia ath-Thani","w":"mar"}']]));
   eq('mois ordinaire : rien si les rappels de mois sont coupés', String(planA('2026-10-05', { month: false }).some(e => e.kind === 'nosight')), 'false');
@@ -172,7 +174,8 @@ eq('vendredi : coexiste avec les jours blancs (ids distincts)', String(new Set(p
 {
   const a = autoMonthTexts({ t, prefs: { eid: true, month: true } });
   eq('module : textes pour les 12 mois', Object.keys(a).join(','), '1,2,3,4,5,6,7,8,9,10,11,12');
-  eq('module : observation seulement pour 1, 8, 9, 10, 12', Object.keys(a).filter(m => a[m].o).join(','), '1,8,9,10,12');
+  eq('module : observation pour les 12 mois', Object.keys(a).filter(m => a[m].o).length, 12);
+  eq('module ≥ 17 : « {v} » à la fin du texte d\'observation (prévision complétée par le module)', autoMonthTexts({ t, prefs: { eid: true, month: true }, pred: true })[5].o[1], 'obsNotifBody{"m":"Joumada al-Oula"}{v}');
   eq('module : « non vu » pour les 12 mois', Object.keys(a).filter(m => a[m].n).length, 12);
   eq('module ancien : « après-demain » écrit en toutes lettres', a[5].n[1], 'nosightNotifBody{"m":"Joumada al-Oula","p":"Rabia ath-Thani","w":"dayAfterTomorrow"}');
   eq('module ≥ 15 : « {w} » complété par le module', autoMonthTexts({ t, prefs: { eid: true, month: true }, weekday: true })[5].n[1], 'nosightNotifBody{"m":"Joumada al-Oula","p":"Rabia ath-Thani","w":"{w}"}');
@@ -205,7 +208,7 @@ eq('vendredi : coexiste avec les jours blancs (ids distincts)', String(new Set(p
   eq('hors Maroc : correction à +2 → pas de bouton « hier » (+3 impossible)', JSON.stringify(planNativeReminders({ today: addDays(eve, -5), t, addDays, now: Date.parse(addDays(eve, -5) + 'T00:00:00Z'), offset: 2, prefs: { eid: true, month: true, ask: true },
     dayInfo: k => ({ Sunrise: Date.parse(k + 'T05:30:00Z'), Maghrib: Date.parse(k + 'T18:40:00Z'), Isha: Date.parse(k + 'T20:00:00Z') }) }).filter(e => e.kind === 'ask').slice(0, 1).map(e => e.ask.length)), '[2]');
   const sep = plan('2026-10-05').filter(e => e.kind === 'obs');
-  eq('hors Maroc : mois non surveillé (Joumada) → rien', sep.length, 0);
+  eq('hors Maroc : observation pour tous les mois (Joumada aussi)', sep.length > 0, true);
 }
 
 // taille de la charge utile envoyée au module (limite 60 000 caractères une fois décodée, mais on reste très en dessous)

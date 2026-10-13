@@ -8,7 +8,8 @@ import { Compass } from './compass.js';
 import { formatHijri, useHabous, habousActive, habousInfo } from './hijri.js';
 import { initHabous, refreshHabous } from './habous.js';
 import { refreshOfficiel } from './officiel.js';
-import { planNativeReminders, reminderText, wallTime, FRIDAY_AT, autoMonthTexts } from './reminders.js';
+import { planNativeReminders, reminderText, wallTime, FRIDAY_AT, autoMonthTexts, PRED_KEYS, predictionFor } from './reminders.js';
+import { conjunctionBefore } from './moon.js';
 import { hasWaqf, drawArabicLine } from './waqf.js';
 import { nearestLocality, moroccoReference, localityName, allLocalities, localityByCode, sameLocalityName, SNAP_KM } from './localites.js';
 import { declination as wmmDeclination } from './wmm.js';
@@ -579,7 +580,7 @@ function mqMode(tNow = now()) {
 }
 const nativeMqCapable = () => isTwa() && localStorage.getItem('priere.nativeMq') === '1';
 // Version du module Android installé (paramètre « native » de l'adresse de démarrage de l'appli Play Store)
-const NATIVE_LATEST = 16;                                    // 4 = module 2.14 : rappels du croissant autonomes ; 5 = 2.15 : Adhans de Doha intégrés ; 8 = 2.18 : widget d'écran d'accueil ; 9 = 2.19 : widget redessiné ; 10 = 2.19.1 : nom de la prière en Reem Kufi ; 11 = 2.20 : 10 méthodes de calcul ajoutées ; 12 = 2.23 : avis de changement de fuseau ; 13 = 2.23.1 : calendrier relu chaque minute les soirs d'annonce ; 14 = 2.24 : Chaabane parmi les mois surveillés ; 15 = 2.25 : « non vu » pour tous les mois, avec le jour du 1er ; 16 = 2.26 : hors Maroc, « le mois a-t-il commencé aujourd'hui ? » avec boutons
+const NATIVE_LATEST = 17;                                    // 4 = module 2.14 : rappels du croissant autonomes ; 5 = 2.15 : Adhans de Doha intégrés ; 8 = 2.18 : widget d'écran d'accueil ; 9 = 2.19 : widget redessiné ; 10 = 2.19.1 : nom de la prière en Reem Kufi ; 11 = 2.20 : 10 méthodes de calcul ajoutées ; 12 = 2.23 : avis de changement de fuseau ; 13 = 2.23.1 : calendrier relu chaque minute les soirs d'annonce ; 14 = 2.24 : Chaabane parmi les mois surveillés ; 15 = 2.25 : « non vu » pour tous les mois, avec le jour du 1er ; 16 = 2.26 : hors Maroc, « le mois a-t-il commencé aujourd'hui ? » avec boutons ; 17 = 2.27 : prévision de visibilité du croissant, appli fermée
 const STORE_URL = 'https://play.google.com/store/apps/details?id=io.github.webnour2026.salat';
 const nativeLevel = () => Number(localStorage.getItem('priere.nativeLvl') || 0);
 const UPD_KEY = 'priere.updDismiss';
@@ -772,6 +773,20 @@ function renderCalendar() {
     }
     return li;
   }));
+  // soir du 29 à venir : prévision astronomique de visibilité du croissant (au Maroc : tant que la fin du mois n'est pas proclamée)
+  const d29 = mon.days.find(d => d.h.d === 29);
+  if (d29 && d29.noon >= todayNoon && (!habousActive() || tableDays(mon, S().hijriOffset).some(d => d.uncertain))) {
+    const key29 = new Date(d29.noon).toISOString().slice(0, 10);
+    const g = predictionFor(key29, habousActive() ? null : { lat: S().location.lat, lng: S().location.lng });
+    if (g) {
+      const li = document.createElement('li');
+      li.className = 'pred pred-' + g;
+      li.innerHTML = '<span></span><span></span>';
+      li.firstChild.textContent = `🔭 ${t('predCal')} — ${df.format(d29.noon)}`;
+      li.lastChild.textContent = t('predVis', { v: t('predShort')[g] });
+      $('#calEvents').append(li);
+    }
+  }
   requestAnimationFrame(setFit);                          // la hauteur change d'un mois à l'autre (5 ou 6 lignes) : on re-vérifie que tout tient
 }
 /** Bloc « prochaine occasion » du calendrier : la plus proche à partir d'aujourd'hui (jours blancs et occasions, pas le vendredi) */
@@ -827,6 +842,21 @@ function renderMonthTable(mon) {
     return `<tr class="${cls}"><th scope="row"><b>${d.h.d}</b> <small>${wd.format(d.noon)} ${dn.format(d.noon)}</small>${sight}</th>${cols.map(c => `<td${cc(c)}>${fmtTime(day.times[c])}</td>`).join('')}</tr>`;
   }).join('');
   $('#monthTable').innerHTML = head + `<tbody>${rows}</tbody>`;
+}
+// Prévisions de visibilité du croissant (Maroc) pour les soirs possibles du 29 des 12 prochains mois : la veille, le jour et les
+// deux soirs qui suivent chaque conjonction. Calcul d'environ 50 soirs : mis en cache pour la journée.
+function predictionMap() {
+  const today = new Date().toISOString().slice(0, 10);
+  try { const c = JSON.parse(localStorage.getItem('priere.predMap') || 'null'); if (c && c.day === today) return c.map; } catch {}
+  const map = {};
+  let t = Date.now() - 2 * 864e5;
+  for (let i = 0; i < 13; i++) {
+    const conj = conjunctionBefore(t + 29.53 * 864e5);
+    for (let k = -1; k <= 2; k++) { const key = new Date(conj + k * 864e5).toISOString().slice(0, 10); const g = predictionFor(key); if (g) map[key] = g; }
+    t = conj + 2 * 864e5;
+  }
+  try { localStorage.setItem('priere.predMap', JSON.stringify({ day: today, map })); } catch {}
+  return map;
 }
 // Lien affiché dans les messages partagés. Mettez ici votre lien court (TinyURL, ou votre domaine).
 const SHARE_URL = 'https://tinyurl.com/salati-app';
@@ -2200,7 +2230,7 @@ async function nativePayload() {
   const a = S().adhan;
   const su = S().silentUntil === -1 ? 32503680000000 : (S().silentUntil || 0);
   const rem = planNativeReminders({
-    today, offset: S().hijriOffset, t, tz: tz(),
+    today, offset: S().hijriOffset, t, tz: tz(), site: habousActive() ? null : { lat: S().location.lat, lng: S().location.lng },
     prefs: { eid: S().eidReminder !== false, month: S().monthReminder !== false, white: !!S().whiteDays, friday: S().fridayReminder !== false,
              ask: nativeLevel() >= 16, offsetSetAt: S().hijriOffsetAt || 0 },   // module ≥ 16 : boutons « le mois a-t-il commencé aujourd'hui ? »
     addDays, dayInfo: key => { const d = getDay(S(), key); return d && d.times ? { Sunrise: d.times.Sunrise, Asr: d.times.Asr, Maghrib: d.times.Maghrib, Isha: d.times.Isha } : null; },
@@ -2212,7 +2242,9 @@ async function nativePayload() {
     mq: mqPayload(),   // Mode Mosquée
     // Maroc : dernier début de mois officiel + textes de chaque mois : le module prépare seul les rappels du croissant, appli fermée
     ...(() => { const hb = habousActive() ? habousInfo() : null; return hb && hb.last ? { hb: { y: hb.last.y, m: hb.last.m, d: hb.last.day } } : {}; })(),
-    amt: autoMonthTexts({ t, prefs: { eid: S().eidReminder !== false, month: S().monthReminder !== false }, weekday: nativeLevel() >= 15 }),
+    amt: autoMonthTexts({ t, prefs: { eid: S().eidReminder !== false, month: S().monthReminder !== false }, weekday: nativeLevel() >= 15, pred: nativeLevel() >= 17 }),
+    // module ≥ 17, Maroc : prévision de visibilité pour les soirs d'observation des 12 prochains mois (« {v} » des textes d'observation)
+    ...(nativeLevel() >= 17 && habousActive() ? { cv: predictionMap(), pv: Object.fromEntries(Object.entries(PRED_KEYS).map(([g, k]) => [g, '\n' + t(k)])) } : {}),
     wd: t('wdOn'),   // module ≥ 15 : « {w} » du « non vu » → jour de la semaine du 1er du mois (dimanche d'abord)
     adj: S().adjust, en: !!a.enabled, na: !!a.notifyAt, nb: a.notifyBefore || 0, vib: !!a.vibrate, su, on: !!S().ongoing, gr: GRACE_MIN,
     hj: Array.from({ length: 31 }, (_, i) => fmtDates(Date.parse(`${addDays(today, i)}T12:00:00Z`)).hijri),
@@ -2896,7 +2928,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.26.0';
+export const APP_VERSION = '2.27.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

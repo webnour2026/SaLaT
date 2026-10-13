@@ -3,18 +3,24 @@
 // et à celle du module Android (appli fermée), qui reçoit la liste construite par planNativeReminders().
 import { reminderFor, isWhiteDay, hijriOf, monthConfirmed } from './calendar.js';
 import { habousActive, habousInfo } from './hijri.js';
+import { crescent, crescentMorocco } from './moon.js';
 
 const DAY = 864e5;
 export const WINDOW_FIXED = 6 * 3600e3;    // rappel « certain » : on peut le recevoir jusqu'à 6 h après l'heure prévue
 export const WINDOW_FRIDAY = 3 * 3600e3;   // rappel du vendredi (09:30) : utile jusqu'à la prière de la Joumou'a
 export const WINDOW_WATCH = 4 * 3600e3;    // rappel « à surveiller » : le module interroge le calendrier pendant 4 h
 export const WINDOW_OBS = 3 * 3600e3;      // « ce soir, observation du croissant » : jusqu'au Maghrib environ
-/** Mois dont l'observation du croissant est annoncée à l'avance (Asr du 29) : Mouharram, Chaabane, Ramadan, Chawwal, Dhou al-Hijja.
- *  Le « non vu » (mois de 30 jours), lui, est signalé pour tous les mois. */
+/** Mois « surveillés » : hors Maroc, question du matin du 1er (« le mois a-t-il commencé aujourd'hui ? »).
+ *  L'observation du croissant (Asr du 29, avec la prévision astronomique) et le « non vu » sont annoncés pour tous les mois. */
 export const WATCHED_MONTHS = [1, 8, 9, 10, 12];   // + Chaabane : on veut savoir à l'avance si Chaabane commence, pour compter jusqu'à Ramadan
 const iso = day => new Date(day * DAY).toISOString().slice(0, 10);
 export const FRIDAY_AT = [9, 30];          // rappel du vendredi : 09:30, heure du lieu
-export const ASK_AT = [9, 0];             // hors Maroc, matin du 1er : « le mois a-t-il commencé aujourd'hui ? »
+export const ASK_AT = [9, 0];
+export const PRED_KEYS = { impossible: 'predImpossible', difficult: 'predDifficult', possible: 'predPossible', clear: 'predClear' };
+/** Prévision de visibilité le soir `key` : au Maroc, meilleur lieu du royaume ; ailleurs, le lieu de l'utilisateur. null si incalculable. */
+export function predictionFor(key, site) {
+  try { const r = site ? crescent(key, site.lat, site.lng) : crescentMorocco(key); return r ? r.grade : null; } catch { return null; }
+}             // hors Maroc, matin du 1er : « le mois a-t-il commencé aujourd'hui ? »
 
 /** « يوم الثلاثاء » / « mardi » / « on Tuesday » pour une date « AAAA-MM-JJ » (null si inconnu). */
 export function weekdayOn(t, key) {
@@ -47,7 +53,10 @@ export function reminderText(t, ev) {
   const month = t('hijriMonths')[ev.h.m - 1];
   const prev = gen(t('hijriMonths')[(ev.h.m + 10) % 12]);                   // mois en cours (celui qui se termine)
   // soir du 29 : le ministère observe le croissant ; puis, s'il n'est pas vu, le mois en cours compte 30 jours
-  if (ev.type === 'obs') return { title: t('obsNotifTitle', { m: gen(month) }), body: t(ev.calc ? 'obsCalcBody' : 'obsNotifBody', { m: gen(month) }) };
+  if (ev.type === 'obs') {
+    const pred = ev.pred === '{v}' ? '{v}' : ev.pred && PRED_KEYS[ev.pred] ? '\n' + t(PRED_KEYS[ev.pred]) : '';   // « {v} » : à compléter par le module
+    return { title: t('obsNotifTitle', { m: gen(month) }), body: t(ev.calc ? 'obsCalcBody' : 'obsNotifBody', { m: gen(month) }) + pred };
+  }
   // ev.w : « يوم الثلاثاء » / « mardi » ; « {w} » = à compléter par le module ; absent = « après-demain »
   if (ev.type === 'nosight') return { title: t('nosightNotifTitle', { m: gen(month) }),
     body: t(ev.h.m === 10 ? 'nosightFitrBody' : ev.h.m === 9 ? 'nosightRamadanBody' : 'nosightNotifBody', { m: gen(month), p: prev, w: ev.w || t('dayAfterTomorrow') }) };
@@ -67,7 +76,7 @@ export function reminderText(t, ev) {
  *    (au Maroc, le début du mois suivant n'est connu que le soir du 29, après le communiqué du ministère).
  * today : clé « AAAA-MM-JJ » du jour local ; dayInfo(clé) → { Maghrib, Isha } en ms, ou null ; addDays(clé, n) → clé.
  */
-export function planNativeReminders({ today, horizon = 40, dayInfo, addDays, offset = 0, prefs, t, now = Date.now(), tz = null }) {
+export function planNativeReminders({ today, horizon = 40, dayInfo, addDays, offset = 0, prefs, t, now = Date.now(), tz = null, site = null }) {
   const out = [], seen = new Set();
   const push = e => { if (e.until > now && !seen.has(e.id)) { seen.add(e.id); out.push(e); } };
   for (let i = 0; i < horizon; i++) {
@@ -89,14 +98,14 @@ export function planNativeReminders({ today, horizon = 40, dayInfo, addDays, off
     if (!habousActive() && d.Maghrib) {
       const h = hijriOf(Date.parse(`${key}T12:00:00Z`), offset), nm = h.m === 12 ? 1 : h.m + 1;
       const on = nm === 10 || nm === 12 ? (prefs.eid || prefs.month) : prefs.month;
-      if (h.d === 29 && WATCHED_MONTHS.includes(nm) && on) {
+      if (h.d === 29 && on) {
         const hn = { d: 1, m: nm, y: h.m === 12 ? h.y + 1 : h.y };
-        push({ id: `${key}-obs`, kind: 'obs', at: d.Asr || d.Maghrib - 90 * 60000, until: d.Maghrib + 30 * 60000, ...reminderText(t, { type: 'obs', h: hn, calc: true }) });
+        push({ id: `${key}-obs`, kind: 'obs', at: d.Asr || d.Maghrib - 90 * 60000, until: d.Maghrib + 30 * 60000, ...reminderText(t, { type: 'obs', h: hn, calc: true, pred: site ? predictionFor(key, site) : null }) });
         // le matin du 1er (calculé) : « le mois a-t-il commencé aujourd'hui dans votre pays ? » — un toucher règle la correction.
         // Seulement si le module sait afficher les boutons (prefs.ask) et si l'utilisateur n'a pas déjà corrigé depuis ce soir-là.
         const first = [1, 2].map(n => addDays(key, n)).find(k => { const x = hijriOf(Date.parse(`${k}T12:00:00Z`), offset); return x.m === nm && x.d === 1; });
         const fd = first && dayInfo(first);
-        if (prefs.ask && first && fd && !(prefs.offsetSetAt >= Date.parse(`${key}T00:00:00Z`))) {
+        if (prefs.ask && WATCHED_MONTHS.includes(nm) && first && fd && !(prefs.offsetSetAt >= Date.parse(`${key}T00:00:00Z`))) {
           const at = tz ? wallTime(first, ASK_AT[0], ASK_AT[1], tz) : (fd.Sunrise || Date.parse(`${first}T09:00:00Z`)) + 3 * 3600e3;
           const opt = (label, o) => (o >= -2 && o <= 2 ? [t(label), `hjo=${o}&hjk=${first}`] : null);
           push({ id: `${first}-ask`, kind: 'ask', at, until: at + 12 * 3600e3, ...reminderText(t, { type: 'ask', h: hn }),
@@ -129,10 +138,8 @@ export function planNativeReminders({ today, horizon = 40, dayInfo, addDays, off
     const on = nm === 10 || nm === 12 ? (prefs.eid || prefs.month) : prefs.month;
     const eveKey = iso(hb.last.day + 28), d = on ? dayInfo(eveKey) : null;
     if (d && d.Maghrib) {
-      if (WATCHED_MONTHS.includes(nm)) {
-        const obsAt = d.Asr || d.Maghrib - 90 * 60000;                     // à l'Asr : avant que l'observation commence
-        push({ id: `${eveKey}-obs`, kind: 'obs', at: obsAt, until: d.Maghrib + 30 * 60000, ...reminderText(t, { type: 'obs', h }) });
-      }
+      const obsAt = d.Asr || d.Maghrib - 90 * 60000;                       // à l'Asr : avant que l'observation commence (tous les mois)
+      push({ id: `${eveKey}-obs`, kind: 'obs', at: obsAt, until: d.Maghrib + 30 * 60000, ...reminderText(t, { type: 'obs', h, pred: predictionFor(eveKey) }) });
       const at = d.Maghrib + 20 * 60000, first = iso(hb.last.day + 30);   // le ministère annonce que le mois commence le SURLENDEMAIN
       push({ id: `${eveKey}-nosight`, kind: 'nosight', at, until: at + WINDOW_WATCH, watch: first, ...reminderText(t, { type: 'nosight', h, w: weekdayOn(t, first) }) });
     }
@@ -144,10 +151,10 @@ export function planNativeReminders({ today, horizon = 40, dayInfo, addDays, off
  * Textes de tous les mois pour le module Android, qui prépare lui-même les rappels du croissant mois après mois
  * (appli fermée). { "<mois>": { s: [titre, texte] (vu), o: […] (observation), n: […] (non vu) } ; « {y} » = année hégirienne.
  * Mêmes règles que planNativeReminders : début de mois si prefs.month (Chawwal : Aïd si prefs.eid) ;
- * « non vu » pour tous les mois, observation pour les mois surveillés.
+ * « non vu » et observation (avec prévision « {v} » si le module ≥ 17) pour tous les mois.
  * weekday : le module (≥ 15) remplace « {w} » par le jour de la semaine (liste cfg.wd) ; sinon « après-demain ».
  */
-export function autoMonthTexts({ t, prefs, weekday = false }) {
+export function autoMonthTexts({ t, prefs, weekday = false, pred = false }) {
   const out = {}, pair = r => [r.title, r.body];
   for (let m = 1; m <= 12; m++) {
     const h = { d: 1, m, y: '{y}' }, e = {};
@@ -155,7 +162,7 @@ export function autoMonthTexts({ t, prefs, weekday = false }) {
     if (rem) e.s = pair(reminderText(t, rem));
     const on = m === 10 || m === 12 ? (prefs.eid || prefs.month) : prefs.month;
     if (on) e.n = pair(reminderText(t, { type: 'nosight', h, w: weekday ? '{w}' : null }));
-    if (WATCHED_MONTHS.includes(m) && on) e.o = pair(reminderText(t, { type: 'obs', h }));
+    if (on) e.o = pair(reminderText(t, { type: 'obs', h, pred: pred ? '{v}' : null }));   // module ≥ 17 : « {v} » = prévision (cfg.cv)
     if (Object.keys(e).length) out[m] = e;
   }
   return out;
