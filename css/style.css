@@ -460,7 +460,7 @@ main { max-width: 560px; margin: 0 auto; padding: 0 16px; }
   body.fit #calToday + .note, body.fit #view-calendar .note { display: none; }
 }
 @media (max-width: 700px) {
-  body.fit .cal-events { flex: 1; min-height: 2.4em; overflow-y: auto; margin-bottom: 4px; }
+  body.fit .cal-events { flex: 1; min-height: 2.4em; overflow-y: auto; overflow-anchor: none; margin-bottom: 4px; }
   /* écran ajusté : la place sous la carte « Prochaine occasion » est courte → une ligne par occasion (pas de ligne coupée à moitié) */
   body.fit .cal-events li { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 7px 2px; }
   body.fit .cal-events li span:last-child { font-size: .85rem; }

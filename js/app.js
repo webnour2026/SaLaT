@@ -752,8 +752,7 @@ function renderCalendar() {
   renderNextOcc();
   // seulement ce qui reste à venir (aujourd'hui compris) : les événements passés du mois ne sont plus listés
   const events = mon.days.filter(d => d.occasion && d.noon >= todayNoon).map(d => [occTitle(d.occasion, d.h), d]);
-  const whites = mon.days.filter(d => d.white && d.noon >= todayNoon);
-  if (whites.length) events.push([t('whiteDays'), whites[0], null, whites]);
+  // jours blancs : déjà visibles dans la grille (cases colorées + légende) → pas répétés dans la liste
   events.sort((x, y) => x[1].noon - y[1].noon);
   const and = new Intl.ListFormat(locale(), { type: 'conjunction' });
   const wdl = new Intl.DateTimeFormat(locale(), { weekday: 'long', timeZone: 'UTC' });
@@ -790,8 +789,7 @@ function renderCalendar() {
       cp.hidden = false;
     }
   }
-  $('#calEvents').scrollTop = 0;
-  requestAnimationFrame(setFit);                          // la hauteur change d'un mois à l'autre (5 ou 6 lignes) : on re-vérifie que tout tient
+  requestAnimationFrame(() => { setFit(); $('#calEvents').scrollTop = 0; });                          // la hauteur change d'un mois à l'autre (5 ou 6 lignes) : on re-vérifie que tout tient
 }
 /** Bloc « prochaine occasion » du calendrier : la plus proche à partir d'aujourd'hui (jours blancs et occasions, pas le vendredi) */
 function renderNextOcc() {
@@ -2932,7 +2930,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.28.3';
+export const APP_VERSION = '2.28.4';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
