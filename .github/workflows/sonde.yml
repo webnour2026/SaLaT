@@ -6,9 +6,5 @@ jobs:
     steps:
       - shell: bash {0}
         run: |
-          UA='SaLaTi-verification/1.0 (appli de prière ; github.com/webnour2026/SaLaT)'
-          for u in "" "index.php" "index-fr.php" "code/js/scripts.js"; do
-            curl -sL -A "$UA" "https://fm6oa.org/prieres/$u" -o p.html; echo "::notice title=size $u::$(wc -c < p.html)"
-            grep -oiE "<script[^>]*src=[^>]*>" p.html | sort -u | head -6 | while read l; do echo "::notice title=src $u::$l"; done
-            tr '\n' ' ' < p.html | grep -oiE ".{0,200}(new PrayTimes|prayTimes\.|getTimes|\.adjust\(|\.tune\(|setMethod)[^;]{0,250}" | head -6 | while IFS= read -r l; do echo "::notice title=pt $u::$(echo "$l" | cut -c1-450)"; done
-          done
+          curl -sL -A 'SaLaTi-verification/1.0' "https://fm6oa.org/prieres/" | tr '\n' ' ' | grep -oE 'href="[^"]+"</a>[^<]*</td><td align="right">[^<]*' | sed 's/<[^>]*>/ /g' | while IFS= read -r l; do echo "::notice title=ls::$l"; done
+          curl -sL -A 'SaLaTi-verification/1.0' "https://fm6oa.org/prieres/code/" | tr '\n' ' ' | grep -oE 'href="[^"]+"</a>[^<]*</td><td align="right">[^<]*' | sed 's/<[^>]*>/ /g' | head -9 | while IFS= read -r l; do echo "::notice title=code::$l"; done
