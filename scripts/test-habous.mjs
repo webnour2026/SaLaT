@@ -65,7 +65,7 @@ eq('sources : la presse est marquée « press »', String(src.filter(x => x.trus
 // titres repris par Google Actualités (sans le mot « Habous ») : annonce ferme acceptée, prévision refusée
 eq('2M : « correspondra au mardi 13 octobre » (sans Habous)', L("Le 1er Joumada I de l'an 1448 de l'Hégire correspondra au mardi 13 octobre - 2M", '2026-09-13', 5), '2026-10-13');
 eq('prévision astronomique refusée', L('Le 1er Joumada I 1448 devrait correspondre au mardi 13 octobre selon les calculs astronomiques', '2026-09-13', 5), null);
-eq('copies Google Actualités : 6 médias, filtrés sur leur domaine', sources(5, 1448).filter(x => x.onlyHost).map(x => x.onlyHost).join(' '), 'mapexpress.ma mapnews.ma snrtnews.com medi1news.com 2m.ma hespress.com');
+eq('copies Google Actualités : 6 médias, filtrés sur leur domaine', sources(5, 1448).filter(x => x.onlyHost).map(x => x.onlyHost).join(' '), 'mapexpress.ma mapnews.ma snrtnews.com medi1news.com 2m.ma hespress.com medias24.com');
 
 eq('Hespress arabe : validé seul', sources(5, 1448).find(x => x.name === 'Hespress (ar, flux)').trust, 'official');
 eq('sites lus directement : validés seuls', sources(5, 1448).filter(x => !/Google|Bing/.test(x.name)).every(x => x.trust === 'official'), true);

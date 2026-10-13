@@ -194,6 +194,7 @@ export const sources = (m, y) => {
     ...[
       ['MAP Express', 'mapexpress.ma', 'press'], ['MAP News', 'mapnews.ma', 'press'], ['SNRT News', 'snrtnews.com', 'press'],
       ['Medi1 News', 'medi1news.com', 'press'], ['2M', '2m.ma', 'press'], ['Hespress', 'hespress.com', 'press'],
+      ['Médias24', 'medias24.com', 'press'],   // site bloqué depuis GitHub (403) ; très actif aux annonces de Ramadan et des Aïds
     ].map(([n, site, trust]) => ({ name: `${n} (via Google Actualités)`, fast: true, trust, onlyHost: site,
       url: `https://news.google.com/rss/search?q=${enc(`site:${site} (هلال OR "${HIJRI_AR[m]}" OR croissant OR Habous OR الأوقاف) when:3d`)}&hl=fr&gl=MA&ceid=MA:fr` })),
   ];
