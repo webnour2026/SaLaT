@@ -81,6 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.28.2] – 2026-10-13
+### Modifié
+- Calendrier : la prévision du croissant quitte la liste des occasions (où, sur écran ajusté, elle était coupée au défilement) pour une ligne à part, toujours visible sous la légende : « 🔭 Observation du croissant · 10 nov. · bonne (29 jours probables) ». La visibilité est en couleur et n'est jamais tronquée.
+- L'occasion du jour n'est plus répétée dans la liste : elle est déjà dans la carte « Prochaine occasion ».
+
 ## [2.28.1] – 2026-10-13 ⚠ nouvel AAB (version code 30, native=18)
 ### Modifié
 - Horaires officiels : si le site du ministère (version test) publie le nouveau mois avant fm6oa.org, il sert de relais pour les 191 localités (jours manquants seulement, sans écraser ceux de fm6oa.org). habous.gov.ma reste essayé en premier, dès que son robots.txt l'autorisera.

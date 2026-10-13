@@ -758,7 +758,8 @@ function renderCalendar() {
   const and = new Intl.ListFormat(locale(), { type: 'conjunction' });
   const wdl = new Intl.DateTimeFormat(locale(), { weekday: 'long', timeZone: 'UTC' });
   const mf = new Intl.DateTimeFormat(locale(), { month: 'long', timeZone: 'UTC' });
-  $('#calEvents').replaceChildren(...events.map(([name, d1, , list]) => {
+  // l'occasion du jour est déjà dans la carte « Prochaine occasion » : pas de doublon dans la liste
+  $('#calEvents').replaceChildren(...events.filter(([, d1, , list]) => list || d1.noon !== todayNoon).map(([name, d1, , list]) => {
     const li = document.createElement('li');
     li.innerHTML = '<span></span><span></span>';
     if (list) {   // jours blancs : « 13، 14 و15 ربيع الآخر — الموافق للخميس 24 والجمعة 25 والسبت 26 شتنبر »
@@ -775,16 +776,18 @@ function renderCalendar() {
   }));
   // soir du 29 à venir : prévision astronomique de visibilité du croissant (au Maroc : tant que la fin du mois n'est pas proclamée)
   const d29 = mon.days.find(d => d.h.d === 29);
-  if (d29 && d29.noon >= todayNoon && (!habousActive() || tableDays(mon, S().hijriOffset).some(d => d.uncertain))) {
+  const cp = $('#calPred'); if (cp) cp.hidden = true;
+  if (cp && d29 && d29.noon >= todayNoon && (!habousActive() || tableDays(mon, S().hijriOffset).some(d => d.uncertain))) {
     const key29 = new Date(d29.noon).toISOString().slice(0, 10);
     const g = predictionFor(key29, habousActive() ? null : { lat: S().location.lat, lng: S().location.lng });
-    if (g) {
-      const li = document.createElement('li');
-      li.className = 'pred pred-' + g;
-      li.innerHTML = '<span></span><span></span>';
-      li.firstChild.textContent = `🔭 ${t('predCal')} — ${df.format(d29.noon)}`;
-      li.lastChild.textContent = t('predVis', { v: t('predShort')[g] });
-      $('#calEvents').append(li);
+    if (g) {                                               // ligne à part, toujours visible (la liste des occasions peut défiler)
+      const sf = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: getLang() === 'ar' ? 'long' : 'short', timeZone: 'UTC' });   // court : la visibilité doit rester lisible sur une ligne
+      cp.className = 'cal-pred pred-' + g;
+      cp.querySelector('.cp-t').textContent = `${t('predCal')} · ${sf.format(d29.noon)}`;
+      const [gw, ...hint] = t('predShort')[g].split(' (');               // « bonne » + « (29 jours probables) »
+      cp.querySelector('.cp-g').textContent = gw;
+      cp.querySelector('.cp-h').textContent = hint.length ? ' (' + hint.join(' (') : '';
+      cp.hidden = false;
     }
   }
   requestAnimationFrame(setFit);                          // la hauteur change d'un mois à l'autre (5 ou 6 lignes) : on re-vérifie que tout tient
@@ -2928,7 +2931,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.28.1';
+export const APP_VERSION = '2.28.2';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
