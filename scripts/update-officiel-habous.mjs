@@ -19,6 +19,7 @@ const ONLY = env('ONLY').split(/[\s,]+/).filter(Boolean).map(Number), DELAY = Nu
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const lines = [];
 const say = (s = '') => { console.log(s); lines.push(s); };
+process.on('exit', () => { if (env('GITHUB_ACTIONS')) console.log(`::notice title=Habous::${lines.filter(l => /^- |lues|Rien|Fichiers|Essai|illisible|Aucun/.test(l)).join(' · ').slice(0, 900)}`); });
 const summary = () => { if (env('GITHUB_STEP_SUMMARY')) fs.appendFileSync(env('GITHUB_STEP_SUMMARY'), lines.join('\n') + '\n'); };
 
 async function get(path) {
@@ -56,7 +57,7 @@ for (const b of BASES) {
   if (probe.status !== 200 || !parseHabousMonthly(probe.body).length) { say(`- ${b} : pas de tableau mensuel lisible`); continue; }
   chosen = b; say(`- ${b} : utilisé`); break;
 }
-if (!chosen) { console.log('Aucun site des Habous utilisable : rien à faire.'); summary(); process.exit(0); }
+if (!chosen) { say('Aucun site des Habous utilisable : rien à faire.'); summary(); process.exit(0); }
 BASE = chosen;
 
 const covered = new Set(readJson('data/fm6oa-villes.json').villes.map(v => v[1]));
@@ -74,8 +75,8 @@ fs.mkdirSync('data/officiel', { recursive: true });
 
 if (!FORCE && !ONLY.length && todo.length && !relay) {                     // une seule page si rien de nouveau (début de mois)
   const s = await fetchLocality(todo[0].code).catch(e => ({ ok: false, why: e.message }));
-  if (!s.ok) { console.log(`Page de contrôle (${todo[0].name}) illisible : ${s.why}. Rien n'est écrit.`); process.exit(0); }
-  if (!mergeFile(readJson(file(todo[0].code)), todo[0].code, s.days).changed) { console.log(`Rien de nouveau (${todo[0].name} est déjà à jour).`); process.exit(0); }
+  if (!s.ok) { say(`Page de contrôle (${todo[0].name}) illisible : ${s.why}. Rien n'est écrit.`); process.exit(0); }
+  if (!mergeFile(readJson(file(todo[0].code)), todo[0].code, s.days).changed) { say(`Rien de nouveau (${todo[0].name} est déjà à jour).`); process.exit(0); }
 }
 
 const results = [], failed = [];
