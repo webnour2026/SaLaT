@@ -65,7 +65,7 @@ export const MA_MODEL = {
   fajr: 18.95, isha: 17.05,                                                    // ≈ 19° et 17°
   sr: { h0: 0.76, k: 0.032 },                                                  // horizon du lever (°) = h0 + k·√alt
   ss: { h0: 1.10, k: 0.028 },                                                  // horizon du coucher (°)
-  off: { Fajr: -45, Sunrise: -94, Dhuhr: 300, Asr: 3, Maghrib: 65, Isha: -15 },     // secondes
+  off: { Fajr: -45, Sunrise: -94, Dhuhr: 300, Asr: 0, Maghrib: 65, Isha: -15 },     // secondes
 };
 
 /**
