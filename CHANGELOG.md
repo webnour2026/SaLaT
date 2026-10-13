@@ -81,6 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.27.1] – 2026-10-13
+### Modifié
+- Prévision du croissant : durée de présence minimale ramenée de 48 à 35 min. Les tableaux officiels des délégations (Joumada I 1448 : Chefchaouen, El Jebha, Bab Berred) annoncent « الرؤية واضحة جنوبا » le 10/11/2026, pour 39 min de présence à Dakhla (hauteur 7,5°, arc de lumière 17°) ; SaLaTi indiquait « عسيرة ».
+- Vérifié sur ces trois tableaux : 513/522 horaires identiques au calcul, 1 min d'écart au plus.
+
 ## [2.27.0] – 2026-10-13 ⚠ nouvel AAB (version code 29, native=17)
 ### Ajouté
 - **Prévision astronomique de la visibilité du croissant**, pour tous les mois : le soir du 29, la notification de l'Asr (« 🌙 الليلة ترقّب هلال شهر … ») indique « 🔭 الحساب الفلكي: رؤية الهلال الليلة متعذرة / عسيرة / ممكنة / واضحة » et le nombre de jours probable, avec « والعبرة بالإعلان الرسمي ». Aussi dans le calendrier (« 🔭 مراقبة الهلال — … »).

@@ -847,7 +847,7 @@ function renderMonthTable(mon) {
 // deux soirs qui suivent chaque conjonction. Calcul d'environ 50 soirs : mis en cache pour la journée.
 function predictionMap() {
   const today = new Date().toISOString().slice(0, 10);
-  try { const c = JSON.parse(localStorage.getItem('priere.predMap') || 'null'); if (c && c.day === today) return c.map; } catch {}
+  try { const c = JSON.parse(localStorage.getItem('priere.predMap') || 'null'); if (c && c.day === today && c.v === APP_VERSION) return c.map; } catch {}
   const map = {};
   let t = Date.now() - 2 * 864e5;
   for (let i = 0; i < 13; i++) {
@@ -855,7 +855,7 @@ function predictionMap() {
     for (let k = -1; k <= 2; k++) { const key = new Date(conj + k * 864e5).toISOString().slice(0, 10); const g = predictionFor(key); if (g) map[key] = g; }
     t = conj + 2 * 864e5;
   }
-  try { localStorage.setItem('priere.predMap', JSON.stringify({ day: today, map })); } catch {}
+  try { localStorage.setItem('priere.predMap', JSON.stringify({ day: today, v: APP_VERSION, map })); } catch {}
   return map;
 }
 // Lien affiché dans les messages partagés. Mettez ici votre lien court (TinyURL, ou votre domaine).
@@ -2928,7 +2928,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.27.0';
+export const APP_VERSION = '2.27.1';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

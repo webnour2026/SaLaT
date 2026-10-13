@@ -2,6 +2,8 @@
 // Positions : Soleil et Lune d'après Meeus (« Astronomical Algorithms », ch. 25 et 47, termes principaux : ~0,05° pour la Lune).
 // Critères : ceux du manuel de « التوقيت » du ministère des Habous (3e année, leçon 22, « أوجه الحكم بإمكانية رؤية الهلال ») :
 //   ولادة الهلال قبل الغروب · مدة المكث ≥ 48 min · ارتفاع القمر ≥ 7° · بعد السواء ≥ 10° (12° ممكنة، 14° واضحة).
+// Durée de présence ramenée à 35 min : les tableaux des délégations (Joumada I 1448) annoncent « الرؤية واضحة جنوبا » le 10/11/2026
+// pour 39 min de présence à Dakhla (hauteur 7,5°, arc de lumière 17°).
 const rad = d => d * Math.PI / 180, deg = r => r * 180 / Math.PI;
 const norm = a => ((a % 360) + 360) % 360;
 const DAY = 864e5;
@@ -106,7 +108,7 @@ export function crescent(dateKey, lat, lng) {
   const lagMin = moonset && moonset > sunset ? (moonset - sunset) / 60000 : 0;
   let grade;
   if (!born || lagMin <= 0 || elong < 10) grade = 'impossible';
-  else if (elong < 12 || lagMin < 48 || alt < 7) grade = 'difficult';
+  else if (elong < 12 || lagMin < 35 || alt < 7) grade = 'difficult';
   else if (elong < 14) grade = 'possible';
   else grade = 'clear';
   return { grade, born, lagMin: Math.round(lagMin), alt: Math.round(alt * 10) / 10, elong: Math.round(elong * 10) / 10, sunset, moonset, conj };
