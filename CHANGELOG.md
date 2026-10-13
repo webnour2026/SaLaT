@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.28.5] – 2026-10-13
+### Modifié
+- Description du site et du manifeste : « horaires de prière conformes au ministère des Habous, prévision et annonce du croissant, Adhan, Qibla et calendrier hégirien » (au lieu de « précis par GPS »). Nom sur l'écran d'accueil inchangé : SaLaTi.
+
 ## [2.28.4] – 2026-10-13
 ### Modifié
 - Calendrier : les jours blancs ne sont plus répétés dans la liste sous la grille (déjà visibles dans les cases colorées et la légende) ; la liste ne garde que les occasions (début du mois, fêtes, nuits) et repart du haut après la mise en page, sans ligne coupée.

@@ -2,7 +2,7 @@
   "id": "./",
   "name": "SaLaTi – صلاتي",
   "short_name": "SaLaTi",
-  "description": "SaLaTi : horaires de prière précis par GPS, compte à rebours, Qibla, Adhan et calendrier hégirien. Sans publicité.",
+  "description": "SaLaTi : horaires de prière conformes au ministère des Habous, prévision et annonce du croissant, Adhan appli fermée, Qibla et calendrier hégirien. Sans publicité.",
   "lang": "fr",
   "dir": "auto",
   "start_url": "./?source=pwa#home",
