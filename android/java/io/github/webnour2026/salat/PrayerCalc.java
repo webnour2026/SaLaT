@@ -13,7 +13,8 @@ final class PrayerCalc {
     // ---- modèle commun du Maroc (voir MA_MODEL dans js/prayer-calc.js) ----
     private static final double MA_FAJR = 18.95, MA_ISHA = 17.05;
     private static final double SR_H0 = 0.76, SR_K = 0.032, SS_H0 = 1.10, SS_K = 0.028;
-    private static final double OFF_FAJR = -45, OFF_SUNRISE = -94, OFF_DHUHR = 300, OFF_ASR = 3, OFF_MAGHRIB = 65, OFF_ISHA = -15;   // secondes
+    private static final double ASR_DECL_SHIFT = 3;   // heures
+    private static final double OFF_FAJR = -45, OFF_SUNRISE = -94, OFF_DHUHR = 300, OFF_ASR = 0, OFF_MAGHRIB = 65, OFF_ISHA = -15;   // secondes
 
     // ---- localités officielles (js/localites-data.js) : code, latitude, longitude, altitude ----
     private static final int SNAP_KM = 25;
@@ -176,6 +177,11 @@ final class PrayerCalc {
         double[] s13 = sun(jd + 13 / 24.0);
         double asrAngle = -deg(Math.atan(1 / ((school == 1 ? 2 : 1) + dtan(Math.abs(lat - s13[0])))));
         double asr = angleTime(jd, lat, asrAngle, 13 / 24.0, false);
+        if (ma) for (int i = 0; i < 2; i++) {               // Asr : déclinaison ~3 h après l'Asr (comme MA_MODEL.asrDeclShift)
+            double t = (asr + ASR_DECL_SHIFT) / 24.0;
+            double a = -deg(Math.atan(1 / ((school == 1 ? 2 : 1) + dtan(Math.abs(lat - sun(jd + t)[0])))));
+            asr = angleTime(jd, lat, a, t, false);
+        }
         double sunset = angleTime(jd, lat, hSet, 18 / 24.0, false);
         double maghrib = p.length > 3 && p[3] > 0 ? angleTime(jd, lat, p[3], 18 / 24.0, false)
                 : sunset + (p.length > 4 ? p[4] : 0) / 60;

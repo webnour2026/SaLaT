@@ -65,7 +65,10 @@ export const MA_MODEL = {
   fajr: 18.95, isha: 17.05,                                                    // ≈ 19° et 17°
   sr: { h0: 0.76, k: 0.032 },                                                  // horizon du lever (°) = h0 + k·√alt
   ss: { h0: 1.10, k: 0.028 },                                                  // horizon du coucher (°)
-  off: { Fajr: -45, Sunrise: -94, Dhuhr: 300, Asr: 3, Maghrib: 65, Isha: -15 },     // secondes
+  off: { Fajr: -45, Sunrise: -94, Dhuhr: 300, Asr: 0, Maghrib: 65, Isha: -15 },     // secondes
+  // Asr : déclinaison du Soleil prise ~3 h après l'instant de l'Asr (itéré). Ajusté sur l'année officielle 2021 complète
+  // (76 localités, 27 700 jours) et vérifié sur les tableaux 2026 de la Fondation (191 localités) : Asr identique 79 % → 97 %.
+  asrDeclShift: 3,
 };
 
 /**
@@ -103,6 +106,7 @@ export function computeDay({ lat, lng, snap = true, code = null }, dateStr, meth
     Asr: asrTime(school === 1 ? 2 : 1, 13 / 24),
     Sunset: angleTime(hSet, 18 / 24),
   };
+  if (isMA) for (let i = 0; i < 2; i++) h.Asr = asrTime(school === 1 ? 2 : 1, (h.Asr + MA_MODEL.asrDeclShift) / 24);
   h.Maghrib = p.maghrib ? angleTime(p.maghrib, 18 / 24) : h.Sunset + (p.maghribMin || 0) / 60;
   h.Isha = p.ishaMin ? h.Maghrib + p.ishaMin / 60 : angleTime(ishaAngle, 18 / 24);
   // Hautes latitudes (Europe du Nord en été…) : quand le Soleil n'atteint pas l'angle, Fajr/Isha n'existent pas ou sont aberrants.
