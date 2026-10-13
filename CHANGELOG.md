@@ -81,7 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
-## [2.28.0] – 2026-10-13 ⚠ module Android (prochain AAB)
+## [2.28.1] – 2026-10-13 ⚠ nouvel AAB (version code 30, native=18)
+### Modifié
+- Module Android au niveau 18 : le widget et les notifications calculent l'Asr comme l'appli (Soleil apparent), voir 2.28.0.
+
+## [2.28.0] – 2026-10-13
 ### Modifié
 - **Asr (Maroc) recalé sur les tableaux du ministère, toutes saisons** : les ombres sont mesurées sur le Soleil apparent (réfraction de Saemundsson à midi et à l'heure de l'Asr) et la déclinaison est prise 3 h après l'Asr (itéré). Vérifié sur 820 Asr relevés sur 23 tableaux officiels du ministère et des délégations (Chawwal 1446 → Joumada I 1448, de Tanger à Guelmim) : **88,5 % → 95,6 %** d'Asr identiques à la minute (hiver 63-78 % → 93-98 %) ; tableaux de la Fondation (Rabia II 2026, 191 localités) 83,9 % → 89,8 %. Les autres prières ne changent pas.
 
