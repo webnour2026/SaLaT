@@ -94,6 +94,11 @@ eq('appli : jour officiel identique au calcul → utilisé', Math.abs(officialDa
 const plus1 = same.map((x, i) => (i === 4 ? String(Number(x) + 1).padStart(4, '0') : x)).join(' ');
 localStorage.setItem('priere.officiel.31', JSON.stringify({ v: 1, code: 31, j: { '2026-10-05': plus1 } }));
 eq('appli : +1 min sur le Maghrib → les heures officielles remplacent le calcul', officialDay(31, '2026-10-05', mod).Maghrib - mod.Maghrib, 60000);
+const asrM1 = same.map((x, i) => (i === 3 ? String(Number(x) - 1).padStart(4, '0') : i === 4 ? String(Number(x) + 1).padStart(4, '0') : x)).join(' ');
+localStorage.setItem('priere.officiel.31', JSON.stringify({ v: 1, code: 31, src: 'fm6oa', j: { '2026-10-05': asrM1 } }));
+eq('appli : Fondation, Asr 1 min plus tôt → Asr du calcul gardé, autres heures officielles', [officialDay(31, '2026-10-05', mod).Asr - mod.Asr, officialDay(31, '2026-10-05', mod).Maghrib - mod.Maghrib], [0, 60000]);
+localStorage.setItem('priere.officiel.31', JSON.stringify({ v: 1, code: 31, src: 'habous', j: { '2026-10-05': asrM1 } }));
+eq('appli : site du ministère, Asr 1 min plus tôt → Asr officiel', officialDay(31, '2026-10-05', mod).Asr - mod.Asr, -60000);
 const plus9 = same.map((x, i) => (i === 4 ? String(Number(x) + 9).padStart(4, '0') : x)).join(' ');
 localStorage.setItem('priere.officiel.31', JSON.stringify({ v: 1, code: 31, j: { '2026-10-05': plus9 } }));
 eq('appli : +9 min sur une heure → fichier douteux, calcul conservé', officialDay(31, '2026-10-05', mod), null);

@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.28.6] – 2026-10-13
+### Modifié
+- Horaires officiels : les fichiers indiquent leur origine (`src` : `fm6oa` = Fondation Mohammed VI, 163 localités ; `habous` = site du ministère, 28 localités). Pour les tableaux de la Fondation, quand l'Asr diffère du calcul d'une minute exactement, l'Asr du calcul est gardé : le tableau du ministère de Rabat (Rabia II 1448) et celui de la Fondation sont identiques sauf l'Asr, 1 min plus tôt chez la Fondation 5 jours sur 30, et le calcul suit le ministère 30 jours sur 30. Les autres horaires restent ceux du tableau officiel ; rien ne change pour les tableaux du ministère.
+
 ## [2.28.5] – 2026-10-13
 ### Modifié
 - Description du site et du manifeste : « horaires de prière conformes au ministère des Habous, prévision et annonce du croissant, Adhan, Qibla et calendrier hégirien » (au lieu de « précis par GPS »). Nom sur l'écran d'accueil inchangé : SaLaTi.

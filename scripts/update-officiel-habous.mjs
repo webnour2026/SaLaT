@@ -93,7 +93,7 @@ if (failed.length) { say(''); say('**Échecs :**'); for (const f of failed) say(
 if (failed.length > Math.max(3, Math.round(todo.length * 0.15))) { say(''); say('**Trop d\'échecs : aucune donnée écrite.**'); summary(); process.exit(0); }
 let changed = 0;
 if (!DRY) for (const r of results) {
-  const m = mergeFile(readJson(file(r.code)), r.code, r.days);
+  const old = readJson(file(r.code)), m = mergeFile(old, r.code, r.days, Date.now(), covered.has(r.code) ? (old?.src || 'fm6oa') : 'habous');
   if (m.changed) { fs.writeFileSync(file(r.code), JSON.stringify(m.file) + '\n'); changed++; }
 }
 say(''); say(DRY ? 'Essai terminé : aucun fichier modifié.' : `Fichiers mis à jour : ${changed}`);

@@ -81,7 +81,7 @@ if (failed.length > Math.max(3, Math.round(todo.length * 0.15))) {
 }
 let changed = 0;
 if (!DRY) for (const r of results) {
-  const m = mergeFile(readJson(file(r.code)), r.code, r.days);
+  const m = mergeFile(readJson(file(r.code)), r.code, r.days, Date.now(), 'fm6oa');
   if (m.changed) { fs.writeFileSync(file(r.code), JSON.stringify(m.file) + '\n'); changed++; }
 }
 say(''); say(DRY ? 'Essai terminé : aucun fichier modifié.' : `Fichiers mis à jour : ${changed}`);

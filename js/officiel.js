@@ -18,6 +18,9 @@ export function officialDay(code, dateKey, model) {
   const [y, m, d] = dateKey.split('-').map(Number), base = Date.UTC(y, m - 1, d), out = {};
   v.split(' ').forEach((p, i) => { out[OFFICIEL_KEYS[i]] = base + (Number(p.slice(0, 2)) * 60 + Number(p.slice(2))) * 60000; });
   for (const k of OFFICIEL_KEYS) if (!(Math.abs(out[k] - model[k]) <= TOL_MIN * 60000)) return null;
+  // Asr des tableaux de la Fondation : parfois 1 min plus tôt que le tableau du ministère, que le calcul suit (Rabat, Rabia II 1448 :
+  // 5 jours sur 30, tous les autres horaires identiques) → à une minute près, l'Asr du calcul est gardé.
+  if (readOfficiel(code)?.src === 'fm6oa' && Math.abs(out.Asr - model.Asr) === 60000) out.Asr = model.Asr;
   return out;
 }
 

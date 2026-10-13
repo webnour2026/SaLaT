@@ -84,12 +84,14 @@ export function analyse(code, rows) {
 }
 
 /** Fusionne les jours reçus dans le fichier existant ; garde une année glissante (de J−400 à J+45). Renvoie { file, changed }. */
-export function mergeFile(existing, code, days, now = Date.now()) {
+// `src` : origine des tableaux de la localité ('fm6oa' = Fondation Mohammed VI, 'habous' = site du ministère). L'appli s'en sert
+// pour l'Asr : celui de la Fondation est parfois 1 min plus tôt que celui du ministère (vérifié sur Rabat, Rabia II 1448).
+export function mergeFile(existing, code, days, now = Date.now(), src = existing?.src) {
   const j = { ...(existing?.j || {}), ...days };
   const lo = ymd(now - 400 * 864e5), hi = ymd(now + 45 * 864e5);
   const kept = Object.fromEntries(Object.entries(j).filter(([k]) => k >= lo && k <= hi).sort(([a], [b]) => (a < b ? -1 : 1)));
   const changed = JSON.stringify(kept) !== JSON.stringify(existing?.j || {});
-  return { file: { v: 1, code, maj: changed ? ymd(now) : (existing?.maj || ymd(now)), j: kept }, changed };
+  return { file: { v: 1, code, ...(src ? { src } : {}), maj: changed ? ymd(now) : (existing?.maj || ymd(now)), j: kept }, changed: changed || (src || null) !== (existing?.src || null) };
 }
 
 // ── Tableau mensuel du site du ministère des Habous (nouvelle version : « mawaqit-shahria?ville=<numéro> ») ──
