@@ -7,8 +7,8 @@ jobs:
       - shell: bash {0}
         run: |
           UA='SaLaTi-verification/1.0 (appli de prière ; github.com/webnour2026/SaLaT)'
-          for u in "code/index-fr.php?ville=1" "code/index.php?ville=1"; do
-            curl -sL -A "$UA" "https://fm6oa.org/prieres/$u" -o p.html
-            grep -oiE "<script[^>]*src=[^>]*>" p.html | sort -u | while read l; do echo "::notice title=src $u::$l"; done
-            grep -noiE ".{0,160}(praytimes|getTimes|\.adjust|\.tune|setMethod)[^;]{0,200}" p.html | head -8 | while IFS= read -r l; do echo "::notice title=pt $u::$(echo "$l" | tr -d '\r' | cut -c1-400)"; done
+          for u in "" "index.php" "index-fr.php" "code/js/scripts.js"; do
+            curl -sL -A "$UA" "https://fm6oa.org/prieres/$u" -o p.html; echo "::notice title=size $u::$(wc -c < p.html)"
+            grep -oiE "<script[^>]*src=[^>]*>" p.html | sort -u | head -6 | while read l; do echo "::notice title=src $u::$l"; done
+            tr '\n' ' ' < p.html | grep -oiE ".{0,200}(new PrayTimes|prayTimes\.|getTimes|\.adjust\(|\.tune\(|setMethod)[^;]{0,250}" | head -6 | while IFS= read -r l; do echo "::notice title=pt $u::$(echo "$l" | cut -c1-450)"; done
           done
