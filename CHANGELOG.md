@@ -83,6 +83,7 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 
 ## [2.28.1] – 2026-10-13 ⚠ nouvel AAB (version code 30, native=18)
 ### Modifié
+- Horaires officiels : si le site du ministère (version test) publie le nouveau mois avant fm6oa.org, il sert de relais pour les 191 localités (jours manquants seulement, sans écraser ceux de fm6oa.org). habous.gov.ma reste essayé en premier, dès que son robots.txt l'autorisera.
 - Module Android au niveau 18 : le widget et les notifications calculent l'Asr comme l'appli (Soleil apparent), voir 2.28.0.
 
 ## [2.28.0] – 2026-10-13

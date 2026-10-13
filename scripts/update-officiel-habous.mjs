@@ -60,11 +60,19 @@ if (!chosen) { console.log('Aucun site des Habous utilisable : rien à faire.');
 BASE = chosen;
 
 const covered = new Set(readJson('data/fm6oa-villes.json').villes.map(v => v[1]));
-let todo = allLocalities().filter(l => !covered.has(l.code)).map(l => ({ code: l.code, name: l.fr }));
+// Relais : si ce site publie déjà des jours que fm6oa.org n'a pas encore (page de Rabat-Salé), il sert pour TOUTES les localités,
+// mais n'ajoute que les jours absents (jamais d'écrasement des jours déjà lus sur fm6oa.org).
+const newDaysOnly = (code, days) => { const have = readJson(file(code))?.j || {}; return Object.fromEntries(Object.entries(days).filter(([d]) => !(d in have))); };
+let relay = false;
+if (!ONLY.length) {
+  const r = await fetchLocality(1).catch(e => ({ ok: false, why: e.message }));
+  if (r.ok && Object.keys(newDaysOnly(1, r.days)).length) { relay = true; say(`- relais : ce site a ${Object.keys(newDaysOnly(1, r.days)).length} jour(s) que fm6oa.org n'a pas encore → toutes les localités`); }
+}
+let todo = allLocalities().filter(l => relay || !covered.has(l.code)).map(l => ({ code: l.code, name: l.fr }));
 if (ONLY.length) todo = todo.filter(l => ONLY.includes(l.code));
 fs.mkdirSync('data/officiel', { recursive: true });
 
-if (!FORCE && !ONLY.length && todo.length) {                     // une seule page si rien de nouveau (début de mois)
+if (!FORCE && !ONLY.length && todo.length && !relay) {                     // une seule page si rien de nouveau (début de mois)
   const s = await fetchLocality(todo[0].code).catch(e => ({ ok: false, why: e.message }));
   if (!s.ok) { console.log(`Page de contrôle (${todo[0].name}) illisible : ${s.why}. Rien n'est écrit.`); process.exit(0); }
   if (!mergeFile(readJson(file(todo[0].code)), todo[0].code, s.days).changed) { console.log(`Rien de nouveau (${todo[0].name} est déjà à jour).`); process.exit(0); }
@@ -72,12 +80,12 @@ if (!FORCE && !ONLY.length && todo.length) {                     // une seule pa
 
 const results = [], failed = [];
 for (const l of todo) {
-  try { const r = await fetchLocality(l.code); (r.ok ? results : failed).push({ ...l, ...r }); }
+  try { const r = await fetchLocality(l.code); if (r.ok && covered.has(l.code)) r.days = newDaysOnly(l.code, r.days); (r.ok ? results : failed).push({ ...l, ...r }); }
   catch (e) { failed.push({ ...l, why: e.message }); if (/refuse/.test(e.message)) break; }
   await sleep(DELAY);
 }
 say(`## Horaires officiels (${BASE}) — ${new Date().toISOString().slice(0, 16)} UTC${DRY ? ' (essai : rien n\'est écrit)' : ''}`);
-say(`Localités absentes de fm6oa.org, lues : ${results.length}/${todo.length}${failed.length ? ` · échecs : ${failed.length}` : ''}`);
+say(`${relay ? 'Relais de fm6oa.org (toutes les localités, jours manquants seulement)' : 'Localités absentes de fm6oa.org'}, lues : ${results.length}/${todo.length}${failed.length ? ` · échecs : ${failed.length}` : ''}`);
 say(''); say('| Localité | Jours | Identiques au calcul | Écart max |'); say('|---|---|---|---|');
 for (const r of results) say(`| ${r.name} (${r.code}) | ${Object.keys(r.days).length} | ${r.stats.pct} % | ${r.stats.max} min |`);
 if (failed.length) { say(''); say('**Échecs :**'); for (const f of failed) say(`- ${f.name} (${f.code}) : ${f.why}`); }
