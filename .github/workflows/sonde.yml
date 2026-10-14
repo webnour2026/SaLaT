@@ -1,0 +1,16 @@
+name: sonde
+on: workflow_dispatch
+jobs:
+  s:
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash {0}
+        run: |
+          UA='SaLaTi-verification/1.0 (appli de prière ; github.com/webnour2026/SaLaT)'
+          for u in "horaire-1.php?ville=69" "horaire-2.php?ville=1" "horaire-1.php?ville=1&date=2026-10-20" "horaire-3.php?ville=1"; do
+            curl -sL -A "$UA" "http://habous.gov.ma/horaire%20de%20priere%20fr/fr/$u" -o p.html -w "%{http_code} %{url_effective}" > c.txt
+            txt=$(sed 's/<[^>]*>/ /g' p.html | tr -s ' \n\r\t' ' ' | head -c 700)
+            echo "::notice title=$u $(cat c.txt | cut -c1-90)::$txt"
+            echo "::notice title=opts $u::$(grep -oE '<option[^>]*value=\"?[0-9]+\"?[^>]*>[^<]*' p.html | head -5 | tr '\n' '|') total=$(grep -c '<option' p.html)"
+            echo "::notice title=forms $u::$(grep -oiE '<(form|input|select|script)[^>]*>' p.html | head -8 | tr '\n' ' ' | cut -c1-600)"
+          done
