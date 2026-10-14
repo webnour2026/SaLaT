@@ -4,7 +4,8 @@
 #   · complément : widget de la Fondation Mohammed VI des Ouléma Africains (fm6oa.org), jours encore absents seulement ;
 #   · garde-fous : lignes écartées si elles diffèrent de plus de 2 min du calcul ; rien n'est écrit si plus de 15 % des
 #     localités échouent ;
-#   · bilan : data/conformite.json compare le calcul à tous les jours officiels conservés.
+#   · bilan : data/conformite.json compare le calcul à tous les jours officiels conservés ; data/calibration.json propose
+#     les réglages du calcul qui colleraient le mieux (appliqués à la main après vérification).
 # Premier essai : Actions → « Officiel » → Run workflow → essai coché, « only » = 1 31 100 → lire le résumé du travail.
 name: Officiel
 on:
@@ -56,10 +57,10 @@ jobs:
           FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force || 'false' }}
           ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.only || '' }}
       - name: Bilan de conformité du calcul
-        run: node scripts/rapport-conformite.mjs
+        run: node scripts/rapport-conformite.mjs && node scripts/calibrer.mjs
       - name: Publier si les horaires ont changé
         run: |
-          git add data/officiel data/conformite.json
+          git add data/officiel data/conformite.json data/calibration.json
           if git diff --cached --quiet; then
             echo "Rien de nouveau"
           else
