@@ -1,0 +1,18 @@
+name: sonde
+on: workflow_dispatch
+jobs:
+  s:
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash {0}
+        run: |
+          UA='SaLaTi-verification/1.0 (appli de priere ; github.com/webnour2026/SaLaT)'
+          B=https://www.habous.gov.ma
+          c() { curl -sL --max-time 30 -A "$UA" "$@"; }
+          r=$(c "$B/prieres/" -o p.html -w "%{http_code}|%{size_download}|%{url_effective}" 2>&1); echo "::notice title=V1::verified-TLS $r"
+          r=$(c -k "$B/prieres/" -o p.html -w "%{http_code}|%{size_download}|%{url_effective}"); echo "::notice title=K1::$r"
+          echo "::notice title=LINKS::$(grep -oiE '(href|src|action)=\"[^\"]*\"' p.html | grep -viE '\.(css|png|jpg|gif|svg|ico|woff)' | sort -u | head -40 | tr '\n' ' ' | tr -d ',:' )"
+          echo "::notice title=TXT::$(sed 's/<[^>]*>/ /g' p.html | tr -s ' \n\r\t' ' ' | tr -d ':,' | head -c 900)"
+          echo "::notice title=OPT::$(grep -oE '<option[^>]*>[^<]*' p.html | head -6 | tr '\n' '|' | tr -d ':,') n=$(grep -c '<option' p.html)"
+          echo | openssl s_client -connect www.habous.gov.ma:443 -servername www.habous.gov.ma -showcerts 2>/dev/null | grep -E '^ *[0-9] s:|i:' | tr '\n' ' ' | tr -d ',' | sed 's/^/::notice title=CHAIN::/'; echo
+          echo | openssl s_client -connect www.habous.gov.ma:443 -servername www.habous.gov.ma 2>/dev/null | openssl x509 -noout -text | grep -A1 'Authority Information' | tr '\n' ' ' | tr -d ',' | sed 's/:/ /g; s/^/::notice title=AIA::/'; echo
