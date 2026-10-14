@@ -1,47 +1,47 @@
 {
- "jusquau": "2026-10",
+ "jusquau": "2026-11",
  "source": "toutes",
  "global": {
-  "n": 34380,
-  "identiques": 95.6,
-  "a1min": 4.4,
+  "n": 68760,
+  "identiques": 96.8,
+  "a1min": 3.2,
   "plus": 0
  },
  "parPriere": {
   "Fajr": {
-   "n": 5730,
-   "identiques": 98.9,
-   "a1min": 1.1,
+   "n": 11460,
+   "identiques": 98.6,
+   "a1min": 1.4,
    "plus": 0
   },
   "Sunrise": {
-   "n": 5730,
+   "n": 11460,
    "identiques": 98.4,
    "a1min": 1.6,
    "plus": 0
   },
   "Dhuhr": {
-   "n": 5730,
-   "identiques": 98.8,
-   "a1min": 1.2,
+   "n": 11460,
+   "identiques": 99.3,
+   "a1min": 0.7,
    "plus": 0
   },
   "Asr": {
-   "n": 5730,
-   "identiques": 89.8,
-   "a1min": 10.2,
+   "n": 11460,
+   "identiques": 94.1,
+   "a1min": 5.9,
    "plus": 0
   },
   "Maghrib": {
-   "n": 5730,
-   "identiques": 93.4,
-   "a1min": 6.6,
+   "n": 11460,
+   "identiques": 93.5,
+   "a1min": 6.5,
    "plus": 0
   },
   "Isha": {
-   "n": 5730,
-   "identiques": 94.6,
-   "a1min": 5.4,
+   "n": 11460,
+   "identiques": 96.7,
+   "a1min": 3.3,
    "plus": 0
   }
  },
@@ -53,23 +53,23 @@
    "plus": 0
   },
   "2026-10": {
-   "n": 13752,
-   "identiques": 95.8,
-   "a1min": 4.2,
+   "n": 35526,
+   "identiques": 97.1,
+   "a1min": 2.9,
+   "plus": 0
+  },
+  "2026-11": {
+   "n": 12606,
+   "identiques": 97.8,
+   "a1min": 2.2,
    "plus": 0
   }
  },
  "parSource": {
-  "fm6oa": {
-   "n": 29340,
-   "identiques": 95.4,
-   "a1min": 4.6,
-   "plus": 0
-  },
   "habous": {
-   "n": 5040,
-   "identiques": 97,
-   "a1min": 3,
+   "n": 68760,
+   "identiques": 96.8,
+   "a1min": 3.2,
    "plus": 0
   }
  },
@@ -77,47 +77,23 @@
   {
    "code": 84,
    "nom": "Boulemane",
-   "n": 180,
-   "identiques": 88.3,
-   "a1min": 11.7,
-   "plus": 0
-  },
-  {
-   "code": 145,
-   "nom": "Assoul",
-   "n": 180,
-   "identiques": 88.9,
-   "a1min": 11.1,
+   "n": 360,
+   "identiques": 89.7,
+   "a1min": 10.3,
    "plus": 0
   },
   {
    "code": 72,
    "nom": "Zaouia Ahensal",
-   "n": 180,
-   "identiques": 90,
-   "a1min": 10,
+   "n": 360,
+   "identiques": 90.8,
+   "a1min": 9.2,
    "plus": 0
   },
   {
-   "code": 38,
-   "nom": "Taourirt",
-   "n": 180,
-   "identiques": 90.6,
-   "a1min": 9.4,
-   "plus": 0
-  },
-  {
-   "code": 97,
-   "nom": "Ketama",
-   "n": 180,
-   "identiques": 91.1,
-   "a1min": 8.9,
-   "plus": 0
-  },
-  {
-   "code": 146,
-   "nom": "Msemrir",
-   "n": 180,
+   "code": 145,
+   "nom": "Assoul",
+   "n": 360,
    "identiques": 91.1,
    "a1min": 8.9,
    "plus": 0
@@ -125,33 +101,57 @@
   {
    "code": 317,
    "nom": "Iguisse",
-   "n": 180,
-   "identiques": 91.1,
-   "a1min": 8.9,
+   "n": 360,
+   "identiques": 91.4,
+   "a1min": 8.6,
    "plus": 0
   },
   {
-   "code": 27,
-   "nom": "Oued laou",
-   "n": 180,
-   "identiques": 91.7,
-   "a1min": 8.3,
+   "code": 157,
+   "nom": "Smara",
+   "n": 360,
+   "identiques": 93.1,
+   "a1min": 6.9,
    "plus": 0
   },
   {
-   "code": 46,
-   "nom": "Tendrara",
-   "n": 180,
-   "identiques": 91.7,
-   "a1min": 8.3,
+   "code": 308,
+   "nom": "Ait Aque",
+   "n": 360,
+   "identiques": 93.1,
+   "a1min": 6.9,
    "plus": 0
   },
   {
-   "code": 74,
-   "nom": "Azilal",
-   "n": 180,
-   "identiques": 91.7,
-   "a1min": 8.3,
+   "code": 45,
+   "nom": "Talsint",
+   "n": 360,
+   "identiques": 93.3,
+   "a1min": 6.7,
+   "plus": 0
+  },
+  {
+   "code": 309,
+   "nom": "Agdal Imilchil",
+   "n": 360,
+   "identiques": 93.3,
+   "a1min": 6.7,
+   "plus": 0
+  },
+  {
+   "code": 318,
+   "nom": "Kors",
+   "n": 360,
+   "identiques": 93.3,
+   "a1min": 6.7,
+   "plus": 0
+  },
+  {
+   "code": 146,
+   "nom": "Msemrir",
+   "n": 360,
+   "identiques": 93.6,
+   "a1min": 6.4,
    "plus": 0
   }
  ]
