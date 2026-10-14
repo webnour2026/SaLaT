@@ -81,6 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.29.0] – 2026-10-14 ⚠ module Android (native=19)
+### Modifié
+- Maghrib (Maroc) : l'effet de l'altitude sur le coucher était trop fort (k 0,028 → 0,0265, décalage 65 → 75 s). Ajusté sur Joumada I 1448 lu sur le site du ministère (191 localités) et sur 20 tableaux de délégations d'autres saisons (Muharram 1448, Rajab et Ramadan 1447 : Assoul, Zaouia Ahensal, Rissani, Oujda, Aknoul, Guelmim, Agadir, Biougra, Bab Berred, Smara, Tinghir, Boumalne Dadès, Oued Amlil, Laâyoune, Sidi Slimane, Sidi Ifni, Fam El Hisn). Maghrib identique à la minute : 93,4 → 95,1 % (Rabia II), 93,6 → 94,8 % (Joumada I) et 86,7 → 93,8 % (autres saisons) ; plus aucun écart au-delà d'une minute.
+- Horaires officiels : le site du ministère (www.habous.gov.ma/prieres/) devient la source principale pour les 191 localités ; bilan de conformité (`data/conformite.json`) et calibrage proposé (`data/calibration.json`) à chaque passage.
+
 ## [2.28.6] – 2026-10-13
 ### Modifié
 - Horaires officiels : les fichiers indiquent leur origine (`src` : `fm6oa` = Fondation Mohammed VI, 163 localités ; `habous` = site du ministère, 28 localités). Pour les tableaux de la Fondation, quand l'Asr diffère du calcul d'une minute exactement, l'Asr du calcul est gardé : le tableau du ministère de Rabat (Rabia II 1448) et celui de la Fondation sont identiques sauf l'Asr, 1 min plus tôt chez la Fondation 5 jours sur 30, et le calcul suit le ministère 30 jours sur 30. Les autres horaires restent ceux du tableau officiel ; rien ne change pour les tableaux du ministère.

@@ -64,11 +64,13 @@ function sunPosition(jd) {
 export const MA_MODEL = {
   fajr: 18.95, isha: 17.05,                                                    // ≈ 19° et 17°
   sr: { h0: 0.76, k: 0.032 },                                                  // horizon du lever (°) = h0 + k·√alt
-  ss: { h0: 1.10, k: 0.028 },                                                  // horizon du coucher (°)
-  off: { Fajr: -45, Sunrise: -94, Dhuhr: 300, Asr: 0, Maghrib: 65, Isha: -15 },     // secondes
+  ss: { h0: 1.10, k: 0.0265 },                                                  // horizon du coucher (°)
+  off: { Fajr: -45, Sunrise: -94, Dhuhr: 300, Asr: 0, Maghrib: 75, Isha: -15 },     // secondes
   // Asr : ombres du Soleil apparent (réfraction) et déclinaison prise 3 h après l'Asr. Ajusté sur 820 Asr des tableaux du
   // ministère et des délégations (mars 2025 → nov. 2026, 14 localités, toutes saisons) : 88,5 % → 95,6 % identiques ;
   // tableaux de la Fondation (Rabia II 2026, 191 localités) : 83,9 % → 89,8 %.
+  // Maghrib : k 0,028 → 0,0265 et +75 s (au lieu de 65), ajusté sur Joumada I 1448 (191 localités) et 20 tableaux de
+  // délégations (Muharram 1448, Rajab et Ramadan 1447) : 93,6 → 94,8 % et 86,7 → 93,8 % identiques.
   asrDeclShift: 3,
 };
 

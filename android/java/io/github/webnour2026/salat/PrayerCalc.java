@@ -12,11 +12,11 @@ final class PrayerCalc {
 
     // ---- modèle commun du Maroc (voir MA_MODEL dans js/prayer-calc.js) ----
     private static final double MA_FAJR = 18.95, MA_ISHA = 17.05;
-    private static final double SR_H0 = 0.76, SR_K = 0.032, SS_H0 = 1.10, SS_K = 0.028;
+    private static final double SR_H0 = 0.76, SR_K = 0.032, SS_H0 = 1.10, SS_K = 0.0265;
     private static final double ASR_DECL_SHIFT = 3;   // heures
     /** Réfraction (°) pour une hauteur apparente h (Saemundsson). */
     private static double refraction(double h) { return 1.02 / dtan(h + 10.3 / (h + 5.11)) / 60; }
-    private static final double OFF_FAJR = -45, OFF_SUNRISE = -94, OFF_DHUHR = 300, OFF_ASR = 0, OFF_MAGHRIB = 65, OFF_ISHA = -15;   // secondes
+    private static final double OFF_FAJR = -45, OFF_SUNRISE = -94, OFF_DHUHR = 300, OFF_ASR = 0, OFF_MAGHRIB = 75, OFF_ISHA = -15;   // secondes
 
     // ---- localités officielles (js/localites-data.js) : code, latitude, longitude, altitude ----
     private static final int SNAP_KM = 25;
