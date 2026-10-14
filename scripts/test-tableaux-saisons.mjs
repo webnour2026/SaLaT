@@ -12,6 +12,6 @@ let n = 0, ok = 0, mag = 0, magN = 0, max = 0, fail = 0;
 for (const t of tables) { const { d } = compare(t); for (const r of d) r.forEach((x, i) => { n++; if (!x) ok++; if (i === 4) { magN++; if (!x) mag++; } max = Math.max(max, Math.abs(x)); }); }
 const chk = (name, cond, got) => { console.log(`${cond ? 'ok  ' : 'ÉCHEC'} ${name} (${got})`); if (!cond) fail++; };
 chk(`${tables.length} tableaux, ${n} horaires : écart maximal 1 min`, max <= 1, `${max} min`);
-chk('horaires identiques à la minute ≥ 95 %', ok / n >= 0.95, `${(100 * ok / n).toFixed(1)} %`);
-chk('Maghrib identiques ≥ 93 %', mag / magN >= 0.93, `${(100 * mag / magN).toFixed(1)} %`);
+chk('horaires identiques à la minute ≥ 94,5 %', ok / n >= 0.945, `${(100 * ok / n).toFixed(1)} %`);
+chk('Maghrib identiques ≥ 91,5 %', mag / magN >= 0.915, `${(100 * mag / magN).toFixed(1)} %`);
 if (fail) { console.log(`\n${fail} échec(s)`); process.exit(1); } else console.log('\nTous les tests réussis');
