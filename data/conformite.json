@@ -1,0 +1,158 @@
+{
+ "jusquau": "2026-10",
+ "source": "toutes",
+ "global": {
+  "n": 34380,
+  "identiques": 95.6,
+  "a1min": 4.4,
+  "plus": 0
+ },
+ "parPriere": {
+  "Fajr": {
+   "n": 5730,
+   "identiques": 98.9,
+   "a1min": 1.1,
+   "plus": 0
+  },
+  "Sunrise": {
+   "n": 5730,
+   "identiques": 98.4,
+   "a1min": 1.6,
+   "plus": 0
+  },
+  "Dhuhr": {
+   "n": 5730,
+   "identiques": 98.8,
+   "a1min": 1.2,
+   "plus": 0
+  },
+  "Asr": {
+   "n": 5730,
+   "identiques": 89.8,
+   "a1min": 10.2,
+   "plus": 0
+  },
+  "Maghrib": {
+   "n": 5730,
+   "identiques": 93.4,
+   "a1min": 6.6,
+   "plus": 0
+  },
+  "Isha": {
+   "n": 5730,
+   "identiques": 94.6,
+   "a1min": 5.4,
+   "plus": 0
+  }
+ },
+ "parMois": {
+  "2026-09": {
+   "n": 20628,
+   "identiques": 95.5,
+   "a1min": 4.5,
+   "plus": 0
+  },
+  "2026-10": {
+   "n": 13752,
+   "identiques": 95.8,
+   "a1min": 4.2,
+   "plus": 0
+  }
+ },
+ "parSource": {
+  "fm6oa": {
+   "n": 29340,
+   "identiques": 95.4,
+   "a1min": 4.6,
+   "plus": 0
+  },
+  "habous": {
+   "n": 5040,
+   "identiques": 97,
+   "a1min": 3,
+   "plus": 0
+  }
+ },
+ "moinsConformes": [
+  {
+   "code": 84,
+   "nom": "Boulemane",
+   "n": 180,
+   "identiques": 88.3,
+   "a1min": 11.7,
+   "plus": 0
+  },
+  {
+   "code": 145,
+   "nom": "Assoul",
+   "n": 180,
+   "identiques": 88.9,
+   "a1min": 11.1,
+   "plus": 0
+  },
+  {
+   "code": 72,
+   "nom": "Zaouia Ahensal",
+   "n": 180,
+   "identiques": 90,
+   "a1min": 10,
+   "plus": 0
+  },
+  {
+   "code": 38,
+   "nom": "Taourirt",
+   "n": 180,
+   "identiques": 90.6,
+   "a1min": 9.4,
+   "plus": 0
+  },
+  {
+   "code": 97,
+   "nom": "Ketama",
+   "n": 180,
+   "identiques": 91.1,
+   "a1min": 8.9,
+   "plus": 0
+  },
+  {
+   "code": 146,
+   "nom": "Msemrir",
+   "n": 180,
+   "identiques": 91.1,
+   "a1min": 8.9,
+   "plus": 0
+  },
+  {
+   "code": 317,
+   "nom": "Iguisse",
+   "n": 180,
+   "identiques": 91.1,
+   "a1min": 8.9,
+   "plus": 0
+  },
+  {
+   "code": 27,
+   "nom": "Oued laou",
+   "n": 180,
+   "identiques": 91.7,
+   "a1min": 8.3,
+   "plus": 0
+  },
+  {
+   "code": 46,
+   "nom": "Tendrara",
+   "n": 180,
+   "identiques": 91.7,
+   "a1min": 8.3,
+   "plus": 0
+  },
+  {
+   "code": 74,
+   "nom": "Azilal",
+   "n": 180,
+   "identiques": 91.7,
+   "a1min": 8.3,
+   "plus": 0
+  }
+ ]
+}

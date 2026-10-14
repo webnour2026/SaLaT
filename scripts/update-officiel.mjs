@@ -28,6 +28,8 @@ async function get(path) {
 
 const readJson = f => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return null; } };
 const file = code => `data/officiel/${code}.json`;
+// fichiers déjà alimentés par le site du ministère (src 'habous') : fm6oa.org n'y ajoute que les jours absents
+const fill = (old, days) => old?.src === 'habous' ? Object.fromEntries(Object.entries(days).filter(([d]) => !(d in old.j))) : days;
 
 async function fetchLocality(fm, code) {
   const { status, body } = await get(PAGE + fm);
@@ -48,7 +50,7 @@ fs.mkdirSync('data/officiel', { recursive: true });
 if (!FORCE && !ONLY.length) {
   const s = await fetchLocality(sentinel[0], sentinel[1]).catch(e => ({ ok: false, why: e.message }));
   if (!s.ok) { console.error('Échec de la page de contrôle (Rabat-Salé) :', s.why); process.exit(1); }
-  if (!mergeFile(readJson(file(1)), 1, s.days).changed) { console.log('Rien de nouveau (la page de Rabat-Salé est déjà à jour).'); process.exit(0); }
+  if (!mergeFile(readJson(file(1)), 1, fill(readJson(file(1)), s.days)).changed) { console.log('Rien de nouveau (la page de Rabat-Salé est déjà à jour).'); process.exit(0); }
   say('Nouveaux jours détectés sur la page de contrôle : mise à jour de toutes les localités.');
 }
 
@@ -81,7 +83,7 @@ if (failed.length > Math.max(3, Math.round(todo.length * 0.15))) {
 }
 let changed = 0;
 if (!DRY) for (const r of results) {
-  const m = mergeFile(readJson(file(r.code)), r.code, r.days, Date.now(), 'fm6oa');
+  const old = readJson(file(r.code)), m = mergeFile(old, r.code, fill(old, r.days), Date.now(), old?.src === 'habous' ? 'habous' : 'fm6oa');
   if (m.changed) { fs.writeFileSync(file(r.code), JSON.stringify(m.file) + '\n'); changed++; }
 }
 say(''); say(DRY ? 'Essai terminé : aucun fichier modifié.' : `Fichiers mis à jour : ${changed}`);

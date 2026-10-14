@@ -102,12 +102,18 @@ const MOIS_AR_ALT = { 'سبتمبر': 9, 'نوفمبر': 11, 'ديسمبر': 12,
 const monthAr = w => { const i = MOIS_AR.indexOf(w); return i >= 0 ? i + 1 : MOIS_AR_ALT[w] || 0; };
 
 /** Numéro de la ville affichée (option « selected » de la liste), ou 0. Une ville inconnue fait afficher Rabat : à vérifier. */
-export const habousSelected = html => Number((String(html).match(/<option value="(\d+)"[^>]*\bselected\b/) || [])[1] || 0);
+// ancienne mise en page : <option value="305" selected> ; site officiel /prieres/ : <option value='index.php?ville=305' selected=selected>
+export const habousSelected = html => Number((String(html).match(/<option value=["'](?:[^"']*ville=)?(\d+)["'][^>]*\bselected\b/) || [])[1] || 0);
 
 /** Lignes du tableau mensuel des Habous : [{ date: 'AAAA-MM-JJ', t: [minutes × 6] }] (même forme que parsePage). */
 export function parseHabousMonthly(html, now = Date.now()) {
   const title = text((String(html).match(/habous-monthly-title[^>]*>([\s\S]*?)<\/h2>/) || [])[1] || '');
-  const tm = title.match(/—\s*(\S+)(?:\s*\/\s*(\S+))?\s+(\d{4})/);
+  let tm = title.match(/—\s*(\S+)(?:\s*\/\s*(\S+))?\s+(\d{4})/);
+  // site officiel www.habous.gov.ma/prieres/ : pas d'année, l'en-tête de colonne donne les mois (« أكتوبر / نونبر »)
+  if (!tm) {
+    const head = [...String(html).matchAll(/<td class="wakt">([^<]*)<\/td>/g)].map(m => text(m[1])).find(c => monthAr(c.split('/')[0].trim()));
+    if (head) tm = [head, head.split('/')[0].trim(), '', String(new Date(now).getUTCFullYear())];
+  }
   if (!tm) return [];
   const m1 = monthAr(tm[1]), y = +tm[3];
   if (!m1) return [];
@@ -120,7 +126,7 @@ export function parseHabousMonthly(html, now = Date.now()) {
   if (!found.length) return [];
   // premier jour : mois du titre ; l'année du titre peut être celle du second mois (décembre / janvier) → la plus proche d'aujourd'hui
   let start = null;
-  for (const yy of [y - 1, y]) { const ms = Date.UTC(yy, m1 - 1, found[0].day); if (new Date(ms).getUTCDate() !== found[0].day) continue; if (start === null || Math.abs(ms - now) < Math.abs(start - now)) start = ms; }
+  for (const yy of [y - 1, y, y + 1]) { const ms = Date.UTC(yy, m1 - 1, found[0].day); if (new Date(ms).getUTCDate() !== found[0].day) continue; if (start === null || Math.abs(ms - now) < Math.abs(start - now)) start = ms; }
   if (start === null) return [];
   const rows = [];
   for (let i = 0; i < found.length; i++) {

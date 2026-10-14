@@ -1,10 +1,10 @@
-# Horaires officiels du ministère : copie, localité par localité, les tableaux du mois publiés par le widget de la
-# Fondation Mohammed VI des Ouléma Africains (fm6oa.org) dans data/officiel/<numéro>.json. L'appli les préfère au calcul.
-#   · 3 fois par jour : une seule page lue (Rabat-Salé) ; si rien de nouveau, le travail s'arrête là ;
-#   · quand un nouveau tableau apparaît (début de mois) : les 163 localités sont relues, 1 page toutes les 2,5 s ;
-#   · les 28 localités absentes de fm6oa.org (Sahara, petits centres) : tableau mensuel du site du ministère des Habous ;
+# Horaires officiels du ministère dans data/officiel/<numéro>.json (année glissante). L'appli les préfère au calcul.
+#   · source principale : tableau mensuel du site du ministère (www.habous.gov.ma/prieres/, horaires mis à disposition
+#     des sites web par le ministère), 191 localités ; une page de contrôle par passage, les 191 quand un tableau paraît ;
+#   · complément : widget de la Fondation Mohammed VI des Ouléma Africains (fm6oa.org), jours encore absents seulement ;
 #   · garde-fous : lignes écartées si elles diffèrent de plus de 2 min du calcul ; rien n'est écrit si plus de 15 % des
-#     localités échouent ; robots.txt vérifié avant toute lecture.
+#     localités échouent ;
+#   · bilan : data/conformite.json compare le calcul à tous les jours officiels conservés.
 # Premier essai : Actions → « Officiel » → Run workflow → essai coché, « only » = 1 31 100 → lire le résumé du travail.
 name: Officiel
 on:
@@ -42,20 +42,24 @@ jobs:
           node-version: 20
       - name: Tests
         run: node scripts/test-officiel.mjs
-      - name: Lire les tableaux officiels
+      - name: Site du ministère des Habous (source principale, 191 localités)
+        run: node scripts/update-officiel-habous.mjs
+        env:
+          NODE_EXTRA_CA_CERTS: certs/sectigo-dv-r36.pem   # le serveur n'envoie pas son certificat intermédiaire
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.essai || 'false' }}
+          FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force || 'false' }}
+          ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.only || '' }}
+      - name: Fondation Mohammed VI (fm6oa.org), jours encore absents
         run: node scripts/update-officiel.mjs
         env:
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.essai || 'false' }}
           FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force || 'false' }}
           ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.only || '' }}
-      - name: Compléter les localités absentes de fm6oa.org (site du ministère des Habous)
-        run: node scripts/update-officiel-habous.mjs
-        env:
-          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.essai || 'false' }}
-          FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force || 'false' }}
+      - name: Bilan de conformité du calcul
+        run: node scripts/rapport-conformite.mjs
       - name: Publier si les horaires ont changé
         run: |
-          git add data/officiel
+          git add data/officiel data/conformite.json
           if git diff --cached --quiet; then
             echo "Rien de nouveau"
           else

@@ -127,6 +127,17 @@ eq('téléchargement : même fichier une seconde fois → pas de changement', aw
   eq('Habous : robots.txt du site autorise la page', robotsAllows(fs.readFileSync(new URL('./fixtures/habous-robots.txt', import.meta.url), 'utf8'), '/mawaqit-shahria'), true);
   eq('Habous : robots.txt « Disallow: / » → refus', robotsAllows('User-agent: *\nDisallow: /', '/mawaqit-shahria'), false);
 }
+// site officiel www.habous.gov.ma/prieres/index.php?ville=69 (Khémis Zemamra, Joumada I 1448, copiée le 14 oct. 2026)
+{
+  const fx = fs.readFileSync(new URL('./fixtures/habous-prieres-69.html', import.meta.url), 'utf8');
+  const r = parseHabousMonthly(fx, Date.UTC(2026, 9, 14));
+  eq('Habous officiel : 30 jours, du 13 oct. au 11 nov. 2026 (mois lus dans l\'en-tête, sans année)', [r.length, r[0].date, r.at(-1).date], [30, '2026-10-13', '2026-11-11']);
+  eq('Habous officiel : ville affichée (option « index.php?ville=69 »)', habousSelected(fx), 69);
+  const h = analyse(69, r);
+  eq('Habous officiel : lignes cohérentes avec le calcul (≤ 1 min)', [h.ok, h.stats.max <= 1, h.stats.pct >= 95], [true, true, true]);
+  const dec = fx.replace('>أكتوبر / نونبر<', '>دجنبر / يناير<');
+  eq('Habous officiel : en janvier, l\'en-tête « دجنبر / يناير » est rattaché au décembre précédent', parseHabousMonthly(dec, Date.UTC(2027, 0, 5))[0]?.date, '2026-12-13');
+}
 
 console.log(fails ? `\n${fails} échec(s)` : '\nTous les tests réussis');
 process.exit(fails ? 1 : 0);
