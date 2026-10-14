@@ -2761,6 +2761,7 @@ function bindSettings() {
   on('#sAdhanShort', 'change', e => { S().adhan.short = e.target.checked; save(); });
   on('#nativeSync', 'click', () => syncNative({ ask: true }));
   on('#notifYes', 'click', () => { localStorage.setItem('priere.notifAsked', '1'); $('#notifDialog').close(); syncNative({ ask: true }); });
+  on('#tourAgainBtn', 'click', () => showTour());
   on('#notifLater', 'click', () => { localStorage.setItem('priere.notifAsked', '1'); $('#notifDialog').close(); });
   // tout réglage modifié (geste de l'utilisateur) → le module Android est mis à jour
   on('#view-settings', 'change', () => requestNativeSync());
@@ -2930,7 +2931,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.29.0';
+export const APP_VERSION = '2.29.1';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
@@ -2964,7 +2965,8 @@ function init() {
     renderCredits();
   });
   // premier lancement : langue de l'appareil (arabe si le téléphone est en arabe)
-  if (!localStorage.getItem('priere.settings.v1')) {
+  const firstRun = !localStorage.getItem('priere.settings.v1');
+  if (firstRun) {
     const dev = (navigator.language || 'fr').slice(0, 2);
     S().lang = ['ar', 'fr', 'en'].includes(dev) ? dev : 'fr';
     save();
@@ -2990,8 +2992,9 @@ function init() {
   renderNoLoc();
 
   if (!S().location) {
-    // premier lancement : on demande la position GPS
-    useGps();
+    // premier lancement : aperçu des fonctionnalités, puis on demande la position GPS
+    if (firstRun && !localStorage.getItem('priere.tourSeen')) showTour(() => useGps());
+    else useGps();
   } else {
     loadDays(); renderAll();   // affichage immédiat depuis le cache
     refresh();
@@ -3017,6 +3020,36 @@ function recheckGps(force = false) {
     if (Math.hypot(p.lat - cur.lat, p.lng - cur.lng) > 0.02) useGps({ quiet: true });
     else { cur.accuracy = p.accuracy; save(); }
   }).catch(() => {});
+}
+
+// Aperçu des fonctionnalités : au premier lancement (avant la demande de position) et depuis « À propos ».
+// Une diapositive à la fois ; boutons Suivant / Passer, balayage du doigt (sens inversé en arabe).
+function showTour(after) {
+  const dlg = $('#tourDialog');
+  const slides = t('tourSlides').filter(s => s[3] !== 'twa' || isTwa());
+  let i = 0;
+  const show = () => {
+    const [ico, title, text] = slides[i], box = dlg.querySelector('.tour-slide');
+    box.querySelector('.tour-ico').textContent = ico;
+    box.querySelector('h2').textContent = title;
+    box.querySelector('.tour-text').textContent = text;
+    box.classList.remove('in'); void box.offsetWidth; box.classList.add('in');
+    dlg.querySelector('.tour-dots').innerHTML = slides.map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('');
+    $('#tourNext').textContent = t(i === slides.length - 1 ? 'tourStart' : 'tourNext');
+    $('#tourSkip').hidden = i === slides.length - 1;
+  };
+  const step = d => { const n = i + d; if (n < 0) return; if (n >= slides.length) return dlg.close(); i = n; show(); };
+  let x0 = null;
+  dlg.onpointerdown = e => { x0 = e.clientX; };
+  dlg.onpointerup = e => {
+    if (x0 === null) return; const dx = e.clientX - x0; x0 = null;
+    if (Math.abs(dx) < 40) return;
+    step((dx < 0) !== (getLang() === 'ar') ? 1 : -1);
+  };
+  $('#tourNext').onclick = () => step(1);
+  $('#tourSkip').onclick = () => dlg.close();
+  dlg.onclose = () => { localStorage.setItem('priere.tourSeen', '1'); if (after) { after(); setTimeout(askNotifFirstRun, 2500); } };
+  show(); dlg.showModal();
 }
 
 // Premier lancement de l'appli Android : proposer tout de suite l'autorisation des notifications

@@ -425,6 +425,7 @@
         <p class="note" data-i18n="audioCreditsTitle"></p>
         <ul class="note credits" id="audioCredits"></ul>
         <p class="note"><a href="confidentialite.html" data-i18n="privacyPolicy"></a></p>
+        <button class="btn small" type="button" id="tourAgainBtn" data-i18n="tourAgain">Découvrir l’application</button>
       </fieldset>
       </div>
     </section>
@@ -539,6 +540,19 @@
   </div>
 
   <!-- Mode silencieux -->
+  <dialog id="tourDialog" class="sheet center tour" aria-labelledby="tourTitle">
+    <div class="tour-slide" aria-live="polite">
+      <p class="tour-ico" aria-hidden="true"></p>
+      <h2 id="tourTitle"></h2>
+      <p class="tour-text"></p>
+    </div>
+    <div class="tour-dots" aria-hidden="true"></div>
+    <div class="tour-btns">
+      <button class="btn" type="button" id="tourSkip" data-i18n="tourSkip">Passer</button>
+      <button class="btn btn-primary" type="button" id="tourNext" data-i18n="tourNext" autofocus>Suivant</button>
+    </div>
+  </dialog>
+
   <dialog id="notifDialog" class="sheet" aria-labelledby="notifTitle">
     <div class="sheet-head"><h2 id="notifTitle" data-i18n="notifAskTitle">Recevoir l’Adhan</h2></div>
     <p class="notif-ask-ico" aria-hidden="true">🔔</p>

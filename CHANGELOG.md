@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.29.1] – 2026-10-14
+### Ajouté
+- Aperçu des fonctionnalités au premier lancement (avant la demande de position) : horaires du ministère, Adhan appli fermée, Mode Mosquée (appli Android), croissant, Qibla et calendrier. Une diapositive à la fois, « Suivant » / « Passer », balayage du doigt ; en arabe, français et anglais. Revoir à tout moment : Réglages → À propos → « Découvrir l’application ». La demande d’autorisation des notifications suit l’aperçu.
+
 ## [2.29.0] – 2026-10-14 ⚠ module Android (native=19)
 ### Modifié
 - Maghrib (Maroc) : l'effet de l'altitude sur le coucher était trop fort (k 0,028 → 0,0265, décalage 65 → 75 s). Ajusté sur Joumada I 1448 lu sur le site du ministère (191 localités) et sur 20 tableaux de délégations d'autres saisons (Muharram 1448, Rajab et Ramadan 1447 : Assoul, Zaouia Ahensal, Rissani, Oujda, Aknoul, Guelmim, Agadir, Biougra, Bab Berred, Smara, Tinghir, Boumalne Dadès, Oued Amlil, Laâyoune, Sidi Slimane, Sidi Ifni, Fam El Hisn). Maghrib identique à la minute : 93,4 → 95,1 % (Rabia II), 93,6 → 94,8 % (Joumada I) et 86,7 → 93,8 % (autres saisons) ; plus aucun écart au-delà d'une minute.
