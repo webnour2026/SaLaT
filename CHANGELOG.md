@@ -81,6 +81,12 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.29.2] – 2026-10-15
+### Modifié
+- Calendrier : la date grégorienne de chaque case est en couleur laiton (distincte du jour hégirien), sur une seule ligne.
+- Images partagées (cartes, jour, mois) : le pied indique « … توقع وإعلان رؤية الهلال » puis « مجاني وبدون إعلانات » sur deux lignes ; même ajout dans le texte des messages (FR : prévision et annonce du croissant ; EN : crescent forecast and announcement).
+- Tant que la fiche Google Play est en test fermé (`PLAY_PUBLIC = false` dans js/app.js) : étiquette « قريباً على Google Play / Bientôt sur Google Play » au lieu du badge officiel, et « جرّب صلاتي مجاناً » au lieu de « حمّل صلاتي مجاناً ». Passer `PLAY_PUBLIC` à true le jour de la publication.
+
 ## [2.29.1] – 2026-10-14
 ### Ajouté
 - Aperçu des fonctionnalités au premier lancement (avant la demande de position) : horaires du ministère, Adhan appli fermée, Mode Mosquée (appli Android), croissant, Qibla et calendrier. Une diapositive à la fois, « Suivant » / « Passer », balayage du doigt ; en arabe, français et anglais. Revoir à tout moment : Réglages → À propos → « Découvrir l’application ». La demande d’autorisation des notifications suit l’aperçu.

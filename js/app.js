@@ -863,6 +863,9 @@ function predictionMap() {
 // Lien affiché dans les messages partagés. Mettez ici votre lien court (TinyURL, ou votre domaine).
 const SHARE_URL = 'https://tinyurl.com/salati-app';
 const PLAY_URL = SHARE_URL;
+// Fiche Google Play encore en test fermé : « Bientôt sur Google Play » sur les cartes et « Essayez » dans les messages.
+// Passer à true le jour de la publication en production (badge officiel et « Téléchargez »).
+const PLAY_PUBLIC = false;
 
 // Les polices Google sont découpées en sous-ensembles (latin, arabe) : sans texte d'exemple, document.fonts.load()
 // n'amène que le latin, et la 1re image dessinée peut utiliser une police de secours (tashkeel décalé, graisse différente).
@@ -946,7 +949,7 @@ async function buildMonthImage(mon) {
   g.font = font(700, 38); g.fillText('SaLaTi – صلاتي', X(M + 116), y + 42);
   g.fillStyle = '#5A6B78'; g.font = font(400, 24);
   const badge = await loadBadge(), bh = 104, bw = Math.round(bh * BADGE_RATIO), room = W - 2 * M - 116 - (badge ? bw + 16 : 0);
-  g.fillText(footerLine() || '', X(M + 116), y + 80, room);
+  drawFooterLines(g, X(M + 116), y + 76, room, 24);
   if (badge) g.drawImage(badge, X(W - M - bw, bw), y - 4, bw, bh);
   return cv;
 }
@@ -955,7 +958,23 @@ async function buildMonthImage(mon) {
 const BADGE_RATIO = 646 / 250;
 // « Horaires de prière, Qibla et Adhan… » : la partie de shareFooter après « : », avec majuscule
 const footerLine = () => { const x = t('shareFooter').split(':').slice(1).join(':').trim(); return x.charAt(0).toLocaleUpperCase() + x.slice(1); };
-const loadBadge = () => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = `icons/badges/${['ar', 'fr', 'en'].includes(getLang()) ? getLang() : 'en'}.png`; });
+// sur les images : deux lignes, les fonctions puis « Gratuit, sans publicité »
+const footerLines = () => { const x = footerLine(), i = x.lastIndexOf('. ', x.length - 3); return i > 0 ? [x.slice(0, i + 1), x.slice(i + 2)] : [x]; };
+const drawFooterLines = (g, x, y, room, size) => footerLines().forEach((l, k) => g.fillText(l, x, y + k * Math.round(size * 1.25), room));
+// badge : officiel (fichiers de Google, non modifiés) une fois l'appli publiée ; avant, une étiquette « Bientôt sur Google Play »
+// sans logo Google (les règles de Google interdisent de modifier le badge officiel).
+const loadBadge = () => {
+  if (!PLAY_PUBLIC) {
+    const c = document.createElement('canvas'); c.width = 646; c.height = 250; const g = c.getContext('2d');
+    g.fillStyle = '#000'; g.strokeStyle = '#A6A6A6'; g.lineWidth = 4; g.beginPath(); g.roundRect(14, 14, 618, 222, 34); g.fill(); g.stroke();
+    const [a, b] = t('playSoon'), rtl = getLang() === 'ar'; g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    g.direction = rtl ? 'rtl' : 'ltr';
+    g.font = `500 ${rtl ? 62 : 52}px "IBM Plex Sans Arabic", system-ui, sans-serif`; g.fillText(a, 323, 110, 560);
+    g.direction = 'ltr'; g.font = '600 76px "IBM Plex Sans Arabic", system-ui, sans-serif'; g.fillText(b, 323, 192, 560);
+    return Promise.resolve(c);
+  }
+  return new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = `icons/badges/${['ar', 'fr', 'en'].includes(getLang()) ? getLang() : 'en'}.png`; });
+};
 
 function monthShareText(mon) {
   if (state.tableMode === 'ramadan') {
@@ -1063,7 +1082,7 @@ async function buildDayImage(day, isToday) {
   g.fillStyle = '#0E6B58'; g.font = font(700, 40); g.fillText('SaLaTi – صلاتي', X(M + 118), y + 44);
   g.fillStyle = '#5A6B78'; g.font = font(400, 26);
   const badge = await loadBadge(), bh = 110, bw = Math.round(bh * BADGE_RATIO), room = W - 2 * M - 118 - (badge ? bw + 16 : 0);
-  g.fillText(footerLine(), X(M + 118), y + 84, room);
+  drawFooterLines(g, X(M + 118), y + 80, room, 24);
   if (badge) g.drawImage(badge, X(W - M - bw, bw), y - 6, bw, bh);
   return cv;
 }
@@ -1111,7 +1130,7 @@ thead th{background:#0E6B58;color:#fff}tr.friday{font-weight:700}tr.white{backgr
 }
 
 // Texte joint à une image partagée : l'image dit déjà tout, on ne garde que l'invitation et le lien
-const shortShareText = () => `📲 ${t('shareShort')}\n${PLAY_URL}`;
+const shortShareText = () => `📲 ${t(PLAY_PUBLIC ? 'shareShort' : 'shareShortSoon')}\n${PLAY_URL}`;
 
 // ================= Cartes à partager (Joumou'a, jours blancs, occasions, Imsakiya) =================
 const DAY_MS = 864e5;
@@ -1868,7 +1887,7 @@ const warsh = px => `400 ${px}px WarshQ, Amiri, serif`;             // texte cor
   const badge = await loadBadge(), bh = 112, bw = Math.round(bh * BADGE_RATIO);
   const room = W - 170 - 50 - (badge ? bw + 16 : 0);                        // texte entre l'icône et le badge
   g.fillStyle = '#fff'; g.font = plex(700, 38); g.fillText('SaLaTi – صلاتي', tx, fy + 50, room);
-  g.font = plex(400, 24); g.globalAlpha = .85; g.fillText(footerLine(), tx, fy + 90, room); g.globalAlpha = 1;
+  g.font = plex(400, 24); g.globalAlpha = .85; drawFooterLines(g, tx, fy + 84, room, 24); g.globalAlpha = 1;
   if (badge) g.drawImage(badge, rtl ? 44 : W - 44 - bw, fy - 2, bw, bh);   // côté opposé à l'icône
   return cv;
 }
@@ -2931,7 +2950,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.29.1';
+export const APP_VERSION = '2.29.2';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
@@ -3065,4 +3084,4 @@ try { init(); } finally {
   requestAnimationFrame(() => document.body.classList.remove('booting'));   // retire l'écran de démarrage
 }
 
-export { buildGreetingCard, cardSpecs, greetKey, nativePayload, cardTextOf };   // utilisés aussi par les tests visuels
+export { buildGreetingCard, cardSpecs, greetKey, nativePayload, cardTextOf, buildMonthImage, buildDayImage };   // utilisés aussi par les tests visuels
