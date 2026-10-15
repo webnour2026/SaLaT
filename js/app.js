@@ -861,11 +861,11 @@ function predictionMap() {
   return map;
 }
 // Lien affiché dans les messages partagés. Mettez ici votre lien court (TinyURL, ou votre domaine).
-const SHARE_URL = 'https://tinyurl.com/salati-app';
-const PLAY_URL = SHARE_URL;
-// Fiche Google Play encore en test fermé : « Bientôt sur Google Play » sur les cartes et « Essayez » dans les messages.
-// Passer à true le jour de la publication en production (badge officiel et « Téléchargez »).
+// Fiche Google Play encore en test fermé : « Bientôt sur Google Play » sur les cartes, « Essayez » et le lien de la version web
+// dans les messages. Passer à true le jour de la publication en production (badge officiel, « Téléchargez », lien Play).
 const PLAY_PUBLIC = false;
+const SHARE_URL = PLAY_PUBLIC ? 'https://tinyurl.com/salati-app' : 'https://tinyurl.com/SaLaTi-web';
+const PLAY_URL = SHARE_URL;
 
 // Les polices Google sont découpées en sous-ensembles (latin, arabe) : sans texte d'exemple, document.fonts.load()
 // n'amène que le latin, et la 1re image dessinée peut utiliser une police de secours (tashkeel décalé, graisse différente).
@@ -2950,7 +2950,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.29.2';
+export const APP_VERSION = '2.29.3';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

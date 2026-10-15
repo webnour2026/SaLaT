@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.29.3] – 2026-10-15
+### Modifié
+- Lien des messages partagés pendant le test fermé : https://tinyurl.com/SaLaTi-web (version web) ; https://tinyurl.com/salati-app (Google Play) quand `PLAY_PUBLIC` passera à true.
+
 ## [2.29.2] – 2026-10-15
 ### Modifié
 - Calendrier : la date grégorienne de chaque case est en couleur laiton (distincte du jour hégirien), sur une seule ligne.
