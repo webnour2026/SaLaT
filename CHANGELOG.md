@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.29.4] – 2026-10-15
+### Corrigé
+- Aperçu du premier lancement : la diapositive « L’Adhan, même appli fermée » n’apparaît plus que dans l’appli Android (la version web, sur iPhone notamment, ne peut pas sonner appli fermée).
+
 ## [2.29.3] – 2026-10-15
 ### Modifié
 - Lien des messages partagés pendant le test fermé : https://tinyurl.com/SaLaTi-web (version web) ; https://tinyurl.com/salati-app (Google Play) quand `PLAY_PUBLIC` passera à true.
