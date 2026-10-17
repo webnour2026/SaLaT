@@ -17,7 +17,7 @@ import { sunPosition, timesAtAzimuth } from './sun.js';
 import { ADHANS, playAdhan, stopAdhan, unlockAudio, playBeep, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, removeCustomAdhan, loadCustomAdhans, customAdhans, loadSiteAdhans, DEFAULT_ADHAN, RETIRED } from './adhan.js';
 import { hijriMonth, upcomingWhiteDays, civilNoon, hijriOf, OCCASIONS, isWhiteDay, reminderFor, tableDays } from './calendar.js';
 import { PRESET_CITIES, METHOD_BY_COUNTRY, getGpsPosition, reverseGeocode, searchCity } from './location.js';
-import { syncPush, testPush, pushSupported, pushActive } from './push.js';
+import { syncPush, testPush, pushSupported, pushActive, pushStatus } from './push.js';
 import { clampDur, stepDur, effectiveMode, phaseAt, iqamaMin, PRAYER_SCREEN, PRAYER_SPAN, IQAMA_SCREEN } from './mosque.js';
 
 const $ = sel => document.querySelector(sel);
@@ -53,6 +53,9 @@ function renderPushRow() {
   $('#sHilalPush').checked = S().hilalPush !== false && S().monthReminder !== false;
   $('#sHilalPush').disabled = S().monthReminder === false;
   $('#hilalPushTest').hidden = !pushActive();
+  const st = pushStatus(), on = $('#sHilalPush').checked;
+  $('#hilalPushNote').hidden = !on || !st || st === 'ok' || pushActive();
+  $('#hilalPushNote').textContent = st === 'perm' ? t('hilalPushPerm') : st === 'unsupported' ? t('hilalPushNo') : `${t('hilalPushErr')} (${st})`;
 }
 // Maroc : retour définitif à GMT le 20/09/2026 à 2 h (décret n° 2.26.530).
 // Certains navigateurs ont encore l'ancienne base de fuseaux (GMT+1) : on force UTC.
@@ -2985,7 +2988,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.32.1';
+export const APP_VERSION = '2.32.2';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

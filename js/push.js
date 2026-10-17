@@ -29,28 +29,31 @@ async function messaging(cfg) {
 const post = (cfg, path, body) => fetch(cfg.worker.replace(/\/$/, '') + path, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(body) })
   .then(r => r.json().catch(() => ({}))).catch(() => ({ ok: false }));
 
-let busy = false;
+let busy = false, status = '';
+/** Dernier état de l'inscription (affiché sous l'option) : '' | ok | perm | unsupported | config | <erreur> */
+export const pushStatus = () => status;
 /** Met l'inscription en accord avec les réglages. want : l'utilisateur veut l'annonce ; lang : ar | fr | en. Silencieux. */
 export async function syncPush({ want, lang, force = false }) {
   if (busy) return false;
   busy = true;
   try {
     const st = read();
-    if (!want || !pushSupported() || Notification.permission !== 'granted') {
+    status = !pushSupported() ? 'unsupported' : Notification.permission !== 'granted' ? 'perm' : '';
+    if (!want || status) {
       if (st?.token) { const cfg = await config(); if (cfg) await post(cfg, '/unsubscribe', { token: st.token, lang: st.lang }); write(null); }
       return false;
     }
-    if (!force && st?.token && st.lang === lang && Date.now() - st.at < REFRESH) return true;
-    const cfg = await config(); if (!cfg) return false;
-    const fm = await messaging(cfg); if (!fm) return false;
+    if (!force && st?.token && st.lang === lang && Date.now() - st.at < REFRESH) { status = 'ok'; return true; }
+    const cfg = await config(); if (!cfg) { status = 'config'; return false; }
+    const fm = await messaging(cfg); if (!fm) { status = 'unsupported'; return false; }
     const reg = await navigator.serviceWorker.ready;
     const token = await fm.fb.getToken(fm.m, { vapidKey: cfg.vapidKey, serviceWorkerRegistration: reg });
-    if (!token) return false;
+    if (!token) { status = 'jeton vide'; return false; }
     const r = await post(cfg, '/subscribe', { token, lang, prev: st?.token === token ? st.lang : null });
-    if (!r.ok) return false;
-    write({ token, lang, at: Date.now() });
+    if (!r.ok) { status = 'serveur : ' + (r.error || 'injoignable'); return false; }
+    write({ token, lang, at: Date.now() }); status = 'ok';
     return true;
-  } catch (e) { console.warn('push', e); return false; } finally { busy = false; }
+  } catch (e) { console.warn('push', e); status = String(e && (e.code || e.message) || e).slice(0, 160); return false; } finally { busy = false; }
 }
 
 /** Notification d'essai envoyée par le serveur à cet appareil seulement (vérifie toute la chaîne, appli fermée comprise). */

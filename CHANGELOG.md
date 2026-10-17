@@ -81,6 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.32.2] – 2026-10-17
+### Modifié
+- Annonce du croissant : sous l'option, l'état de l'inscription quand elle n'a pas abouti (notifications non autorisées,
+  navigateur non compatible, erreur) pour aider l'utilisateur et le diagnostic.
+
 ## [2.32.1] – 2026-10-17
 ### Modifié
 - Serveur des notifications en service (salati-push.webnour.workers.dev, projet Firebase salati-389f0) : ajouté à la CSP ;
