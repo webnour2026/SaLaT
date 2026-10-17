@@ -81,6 +81,12 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.31.1] – 2026-10-17
+### Ajouté
+- Pages web « مواقيت الصلاة في <ville> » (mawaqit/, 191 localités + page d’accueil avec recherche) : horaires officiels du jour (prochaine prière, compte à rebours) et tableau du mois dans le HTML, villes proches, lien vers l’appli ; `sitemap.xml`. Régénérées par le travail « Officiel » (scripts/build-mawaqit.mjs). Lien depuis Réglages → À propos.
+### Corrigé
+- Service worker : seule l’adresse de l’appli (et index.html) ouvre l’appli ; les autres pages du site (pages des villes) s’affichent telles quelles.
+
 ## [2.31.0] – 2026-10-17 ⚠ nouvel AAB (version code 33, native=21)
 ### Corrigé
 - L’Adhan s’arrêtait au bout d’une vingtaine de secondes sur Samsung (et d’autres) : il était joué comme un son de notification, que ces téléphones écourtent. Il est maintenant joué en entier par son propre lecteur (service « lecture multimédia », flux des alarmes), au volume réglé dans l’appli ; la musique en cours se met en pause pendant l’Adhan ; pas d’Adhan pendant un appel. Notification « C’est l’heure de… » inchangée, bouton « Arrêter ». Si le lecteur ne peut pas démarrer, retour au son de notification.
