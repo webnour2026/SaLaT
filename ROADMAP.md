@@ -34,7 +34,7 @@ Liste des améliorations retenues, à regrouper dans un même AAB avec d'autres 
 4. **iPhone** : aide « Ajouter à l'écran d'accueil » (Safari) ; avec le point 3, notifications du croissant sur iPhone.
    ✅ 17/10/2026 (2.32.3) : bandeau + étapes ; bouton « السماح بالإشعارات ». Reste : essai sur un vrai iPhone.
 5. ⚠ **Avis Play dans l'appli** (In-App Review API), demandé une fois, après une semaine d'usage et un Adhan bien reçu.
-   ✅ 17/10/2026 : module 22, AAB 2.34.0 (code 34) construit. À publier ; puis `NATIVE_LATEST = 22` dans js/app.js.
+   ✅ 17/10/2026 : module 22, AAB 2.34.0 (code 34) envoyé sur Play (test fermé), NATIVE_LATEST = 22.
 6. **Sécurité** : double authentification sur GitHub et sur le compte Play ; copie hors ligne de la clé de signature ;
    vérifier « Signature d'application par Google Play » ; politique CSP déjà testée, aucun traqueur.
    ✅ 17/10/2026 : historique du dépôt contrôlé (aucun secret ni clé), clés Firebase/Cloudflare seulement dans les secrets
