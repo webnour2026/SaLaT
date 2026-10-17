@@ -1,0 +1,39 @@
+# Pages des villes (référencement Google) : publie le dossier pages/ sur Cloudflare (Worker « miqatsalati », fichiers
+# statiques). Lancé à chaque changement de pages/ (le travail « Officiel » les régénère chaque jour) ou à la main.
+# Secrets utilisés : CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID (les mêmes que « Notifications (serveur) »).
+name: Pages des villes
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['pages/**', 'pages-worker/**', '.github/workflows/pages.yml']
+  workflow_run:
+    workflows: ['Officiel']
+    types: [completed]
+permissions:
+  contents: read
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v5
+        with: { ref: main }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Publier sur Cloudflare
+        working-directory: pages-worker
+        run: |
+          npx --yes wrangler@4.140.0 deploy > deploy.log 2>&1 || { cat deploy.log; echo "::error title=wrangler::$(grep -E '✘|ERROR|rror' deploy.log | head -3 | tr '\n' ' ' | cut -c1-500)"; exit 1; }
+          cat deploy.log
+          url=$(grep -oE 'https://miqatsalati\.[a-z0-9-]+\.workers\.dev' deploy.log | head -1)
+          sleep 5
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$url/casablanca/")
+          echo "::notice title=Pages des villes::$url (casablanca $code)"

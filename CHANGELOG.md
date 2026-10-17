@@ -81,6 +81,13 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.34.2] – 2026-10-17
+### Modifié
+- Pages des villes déplacées de Netlify (crédits gratuits épuisés : chaque modification du dépôt redéployait le site)
+  vers Cloudflare : Worker sans code « miqatsalati » qui sert les fichiers statiques (gratuit, requêtes illimitées),
+  https://miqatsalati.webnour.workers.dev/. Dossier `netlify/` renommé `pages/`, `netlify.toml` supprimé ; publication
+  par le travail « Pages des villes » (après chaque « Officiel » ou changement de pages/). Lien de l'appli mis à jour.
+
 ## [2.34.1] – 2026-10-17
 ### Modifié
 - Délais d'Iqama unifiés : Mode Mosquée, écran de mosquée et bouton « تذكير بالإقامة » utilisent les mêmes délais, ceux

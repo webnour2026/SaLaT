@@ -1,16 +1,18 @@
 // Pages « مواقيت الصلاة في <ville> » : une page statique par localité officielle (191) + une page d'accueil des villes,
 // générées depuis data/officiel/<code>.json (tableaux du ministère des Habous). Destinées aux moteurs de recherche :
 // le tableau du mois est dans le HTML (lisible sans JavaScript) ; page.js ajoute l'horaire du jour et le compte à rebours.
-// Publiées sur Netlify (dossier netlify/, voir netlify.toml) : <PAGES>/<ville>/ ; l'appli reste sur GitHub Pages.
+// Publiées par Cloudflare (Worker « miqatsalati », fichiers statiques du dossier pages/, voir pages-worker/ et le travail
+// « Pages des villes ») : <PAGES>/<ville>/ ; l'appli reste sur GitHub Pages. (Netlify abandonné : crédits épuisés.)
 // Heure légale du Maroc = GMT depuis le 20/09/2026 (décret n° 2.26.530) : les heures sont affichées telles quelles (UTC).
-// Usage : node scripts/build-mawaqit.mjs   (écrit netlify/ : pages, sitemap.xml, robots.txt ; relancé par le travail « Officiel »)
-// PAGES_URL : adresse du site Netlify (par défaut https://miqatsalati.netlify.app/).
+// Usage : node scripts/build-mawaqit.mjs   (écrit pages/ : pages, sitemap.xml, robots.txt ; relancé par le travail « Officiel »)
+// PAGES_URL : adresse du site (par défaut https://miqatsalati.webnour.workers.dev/).
 import fs from 'node:fs';
 import { allLocalities } from '../js/localites.js';
 
 const APP = 'https://webnour2026.github.io/SaLaT/';                                 // l'appli (GitHub Pages)
-const PAGES = (process.env.PAGES_URL || 'https://miqatsalati.netlify.app/').replace(/\/?$/, '/');   // les pages des villes (Netlify)
-const OUT = 'netlify';
+const PAGES = (process.env.PAGES_URL || 'https://miqatsalati.webnour.workers.dev/').replace(/\/?$/, '/');   // les pages des villes (Cloudflify)
+const OUT = 'pages';
+const GSC = process.env.GSC || '';   // balise de vérification Google Search Console (propriété de l'adresse ci-dessus)
 const today = new Date().toISOString().slice(0, 10);
 const appSrc = fs.readFileSync('js/app.js', 'utf8');
 const PLAY_PUBLIC = /const PLAY_PUBLIC = true/.test(appSrc);
@@ -41,7 +43,8 @@ const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inl
 const head = ({ title, desc, url, ld }) => `<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">${url === PAGES ? '\n<meta name="google-site-verification" content="M6GseoKTvawoyhoi_3KRgy22vG1o8NkkiWKAvcrGJLc">' : ''}
+<meta charset="utf-8">${GSC && url === PAGES ? `
+<meta name="google-site-verification" content="${GSC}">` : ''}
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="${CSP}">
 <title>${esc(title)}</title>
@@ -151,4 +154,6 @@ ${cities.map(c => `<url><loc>${PAGES}${c.slug}/</loc><lastmod>${lastmod}</lastmo
 </urlset>
 `);
 fs.writeFileSync(`${OUT}/robots.txt`, `User-agent: *\nAllow: /\nSitemap: ${PAGES}sitemap.xml\n`);
+// en-têtes HTTP (fichiers statiques du Worker Cloudflare)
+fs.writeFileSync(`${OUT}/_headers`, `/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Strict-Transport-Security: max-age=31536000\n  Cache-Control: public, max-age=1800\n`);
 console.log(`${cities.length} pages de villes écrites dans ${OUT}/ pour ${PAGES} (+ index, sitemap.xml, robots.txt)`);

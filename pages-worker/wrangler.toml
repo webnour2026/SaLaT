@@ -1,0 +1,11 @@
+# Pages « مواقيت الصلاة في <ville> » : Worker Cloudflare sans code, qui sert les fichiers statiques du dossier pages/
+# (généré chaque jour par le travail « Officiel »). Offre gratuite : requêtes de fichiers statiques illimitées.
+# Déployé par le travail GitHub « Pages des villes » (.github/workflows/pages.yml) ; adresse : miqatsalati.<sous-domaine>.workers.dev
+name = "miqatsalati"
+compatibility_date = "2025-09-01"
+workers_dev = true
+
+[assets]
+directory = "../pages"
+html_handling = "auto-trailing-slash"
+not_found_handling = "none"
