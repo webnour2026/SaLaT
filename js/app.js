@@ -17,6 +17,7 @@ import { sunPosition, timesAtAzimuth } from './sun.js';
 import { ADHANS, playAdhan, stopAdhan, unlockAudio, playBeep, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, removeCustomAdhan, loadCustomAdhans, customAdhans, loadSiteAdhans, DEFAULT_ADHAN, RETIRED } from './adhan.js';
 import { hijriMonth, upcomingWhiteDays, civilNoon, hijriOf, OCCASIONS, isWhiteDay, reminderFor, tableDays } from './calendar.js';
 import { PRESET_CITIES, METHOD_BY_COUNTRY, getGpsPosition, reverseGeocode, searchCity } from './location.js';
+import { syncPush, testPush, pushSupported, pushActive } from './push.js';
 import { clampDur, stepDur, effectiveMode, phaseAt, iqamaMin, PRAYER_SCREEN, PRAYER_SPAN, IQAMA_SCREEN } from './mosque.js';
 
 const $ = sel => document.querySelector(sel);
@@ -41,7 +42,18 @@ const state = {
   decl: 0,
 };
 const S = () => state.settings;
-const save = () => saveSettings(state.settings);
+const save = () => { saveSettings(state.settings); schedulePush(); };
+// annonce du croissant par notification push (version web : navigateur, iPhone, PC) ; l'appli Android a son module natif
+const wantPush = () => !isTwa() && habousActive() && S().monthReminder !== false && S().hilalPush !== false;
+let pushTimer = 0;
+function schedulePush(force = false) { clearTimeout(pushTimer); pushTimer = setTimeout(() => syncPush({ want: wantPush(), lang: getLang(), force }).then(() => renderPushRow()), 2500); }
+function renderPushRow() {
+  const row = document.getElementById('hilalPushRow'); if (!row) return;
+  row.hidden = isTwa() || !habousActive() || !pushSupported();
+  $('#sHilalPush').checked = S().hilalPush !== false && S().monthReminder !== false;
+  $('#sHilalPush').disabled = S().monthReminder === false;
+  $('#hilalPushTest').hidden = !pushActive();
+}
 // Maroc : retour définitif à GMT le 20/09/2026 à 2 h (décret n° 2.26.530).
 // Certains navigateurs ont encore l'ancienne base de fuseaux (GMT+1) : on force UTC.
 const MOROCCO_GMT_FROM = Date.UTC(2026, 8, 20, 1, 0);
@@ -2645,6 +2657,7 @@ function renderSettings() {
   renderNative();
   $('#sWhiteDays').checked = s.whiteDays;
   $('#sMonthReminder').checked = s.monthReminder !== false;
+  renderPushRow();
   $('#sEidReminder').checked = s.eidReminder !== false;
   $('#sFridayReminder').checked = s.fridayReminder !== false;
   renderSettingsHub();
@@ -2789,6 +2802,8 @@ function bindSettings() {
   on('#sVolume', 'input', e => { S().adhan.volume = Number(e.target.value); save(); });
   on('#sFridayReminder', 'change', async e => { S().fridayReminder = e.target.checked; save(); if (e.target.checked) await ensureNotifPermission(); });
   on('#sEidReminder', 'change', async e => { S().eidReminder = e.target.checked; save(); if (e.target.checked) await ensureNotifPermission(); });
+  on('#sHilalPush', 'change', async e => { S().hilalPush = e.target.checked; save(); if (e.target.checked && await ensureNotifPermission()) schedulePush(true); });
+  on('#hilalPushTest', 'click', async () => { toast(t(await testPush(getLang()) ? 'hilalPushSent' : 'hilalPushFail'), 5000); });
   on('#sMonthReminder', 'change', async e => { S().monthReminder = e.target.checked; save(); if (e.target.checked) await ensureNotifPermission(); });
   on('#sWhiteDays', 'change', async e => { S().whiteDays = e.target.checked; save(); renderWhite(); if (e.target.checked) await ensureNotifPermission(); });
   on('#sVibrate', 'change', e => { S().adhan.vibrate = e.target.checked; save(); if (e.target.checked) vibrate(80); });
@@ -2847,6 +2862,7 @@ function registerSW() {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (hadController && !reloaded) { reloaded = true; location.reload(); }
   });
+  navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.type === 'habous-refresh') checkHabous(true); });
   navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
     // vérifie les mises à jour à chaque retour dans l'appli
     document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
@@ -2969,7 +2985,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.31.2';
+export const APP_VERSION = '2.32.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
@@ -3023,6 +3039,7 @@ function init() {
   bind();
   registerSW();
   countdown.start();
+  schedulePush();
 
   const [view, page] = (location.hash || '#home').slice(1).split('/');
   if (view === 'settings' && page) state.pendingPage = page;
@@ -3042,7 +3059,7 @@ function init() {
   syncClock().then(afterClockSync);
   checkHabous();       // nouveau début de mois annoncé ? (au plus une vérification toutes les 3 h)
   checkOfficiel();
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkHabous(); checkOfficiel(); recheckGps(); } });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkHabous(); checkOfficiel(); recheckGps(); schedulePush(); } });
   setTimeout(askNotifFirstRun, 2500);
 }
 

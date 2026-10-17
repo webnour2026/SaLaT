@@ -5,7 +5,7 @@
   <!-- CSP : GitHub Pages ne permet pas d'en-têtes HTTP, la politique passe par cette balise (placée avant toute ressource).
        Limites d'une balise : frame-ancestors, report-uri et sandbox n'y sont pas pris en charge. 'unsafe-inline' n'est admis que pour les STYLES
        (document d'impression du mois, écrit dans une iframe) ; aucun script inline, aucun eval. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://api.aladhan.com https://nominatim.openstreetmap.org https://api.github.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://api.aladhan.com https://nominatim.openstreetmap.org https://api.github.com https://firebaseinstallations.googleapis.com https://fcmregistrations.googleapis.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>SaLaTi – صلاتي</title>
   <meta name="description" content="SaLaTi – صلاتي : horaires de prière conformes au ministère des Habous, prévision et annonce du croissant, Adhan, Qibla et calendrier hégirien.">
@@ -344,6 +344,10 @@
         <legend data-i18n="sReminders">Rappels</legend>
         <label class="switch"><input type="checkbox" id="sWhiteDays"><span data-i18n="whiteReminder">Rappel des jours blancs</span></label>
         <label class="switch"><input type="checkbox" id="sMonthReminder"><span data-i18n="monthReminder">Rappel du début de mois</span></label>
+        <div id="hilalPushRow" hidden>
+          <label class="switch"><input type="checkbox" id="sHilalPush"><span data-i18n="hilalPush">Annonce du croissant instantanée, appli fermée</span></label>
+          <button class="btn small" type="button" id="hilalPushTest" data-i18n="hilalPushTest" hidden>Tester la notification</button>
+        </div>
         <label class="switch"><input type="checkbox" id="sEidReminder"><span data-i18n="eidReminder">Rappel des Aïds</span></label>
         <label class="switch"><input type="checkbox" id="sFridayReminder"><span data-i18n="fridayReminder">Rappel du vendredi</span></label>
       </fieldset>

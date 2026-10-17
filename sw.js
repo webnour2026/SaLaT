@@ -1,5 +1,5 @@
 // Service worker — changer VERSION à chaque déploiement pour forcer la mise à jour.
-const VERSION = 'salati-v2.31.2';
+const VERSION = 'salati-v2.32.0';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
@@ -25,6 +25,7 @@ const APP_SHELL = [
   'js/officiel.js',
   'js/reminders.js',
   'js/mosque.js',
+  'js/push.js',
   'js/waqf.js',
   'js/localites.js',
   'js/localites-data.js',
@@ -78,8 +79,8 @@ self.addEventListener('fetch', event => {
   // Recherche de ville : réseau uniquement
   if (url.hostname.endsWith('openstreetmap.org')) return;
 
-  // Polices Google : cache puis mise à jour en arrière-plan
-  if (url.hostname.endsWith('googleapis.com') || url.hostname.endsWith('gstatic.com')) {
+  // Polices Google : cache puis mise à jour en arrière-plan (les autres hôtes Google — inscription Firebase — passent au réseau)
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
     event.respondWith(staleWhileRevalidate(req));
     return;
   }
@@ -87,7 +88,7 @@ self.addEventListener('fetch', event => {
   if (url.origin !== self.location.origin) return;
 
   // Calendrier des Habous : réseau d'abord (mis à jour chaque mois), copie en cas de coupure
-  if (url.pathname.endsWith('/data/habous.json') || /\/data\/officiel\/\d+\.json$/.test(url.pathname)) {
+  if (url.pathname.endsWith('/data/habous.json') || url.pathname.endsWith('/data/push-config.json') || /\/data\/officiel\/\d+\.json$/.test(url.pathname)) {
     event.respondWith(fetch(req, { cache: 'no-cache' }).then(res => {
       if (res.ok) { const copy = res.clone(); caches.open(RUNTIME).then(c => c.put(req, copy)); }
       return res;
@@ -140,11 +141,29 @@ function staleWhileRevalidate(req) {
   });
 }
 
-// Clic sur une notification : ramène l'appli au premier plan
+// Notification push (annonce du croissant, serveur worker/ via Firebase Cloud Messaging) : affichée même appli fermée ;
+// les fenêtres ouvertes relisent aussitôt le calendrier des Habous.
+self.addEventListener('push', event => {
+  let j = {};
+  try { j = event.data ? event.data.json() : {}; } catch { j = { data: { body: event.data ? event.data.text() : '' } }; }
+  const d = j.data || j.notification || j;
+  const ar = d.lang === 'ar';
+  event.waitUntil(Promise.all([
+    self.registration.showNotification(d.title || 'صلاتي SaLaTi', {
+      body: d.body || '', tag: d.tag || 'salati', icon: 'icons/icon-192.png', lang: d.lang || '', dir: ar ? 'rtl' : 'auto',
+      data: { url: d.url || './' },
+    }),
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => list.forEach(c => c.postMessage({ type: 'habous-refresh' }))),
+  ]));
+});
+
+// Clic sur une notification : ramène l'appli au premier plan (page indiquée par la notification push, sinon l'accueil)
 self.addEventListener('notificationclick', event => {
   event.notification.close();
+  const target = new URL((event.notification.data && event.notification.data.url) || './', self.registration.scope).href;
   event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
     const win = list.find(c => 'focus' in c);
-    return win ? win.focus() : self.clients.openWindow('./');
+    if (win) { if (target.includes('#') && 'navigate' in win) win.navigate(target).catch(() => {}); return win.focus(); }
+    return self.clients.openWindow(target);
   }));
 });

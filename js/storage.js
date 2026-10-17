@@ -20,7 +20,8 @@ export const DEFAULTS = {
   tzMode: 'auto',               // 'auto' (selon la ville) ou décalage fixe en heures : '0', '1', '-5'…
   whiteDays: true,              // rappel des jours blancs
   monthReminder: true,          // rappel « demain : 1er du mois » avec le doua de la nouvelle lune
-  eidReminder: true,            // rappel de la veille des Aïds (takbir)
+  eidReminder: true,
+  hilalPush: true,              // version web : annonce du croissant par notification push, appli fermée (serveur worker/)            // rappel de la veille des Aïds (takbir)
   officialLocality: true,       // Maroc : horaire de la localité officielle la plus proche (≤ 25 km), comme le tableau de la mosquée
   officialLocalityCode: null,   // Maroc : localité officielle choisie à la main (null = automatique)
   fridayReminder: true,         // vendredi matin : « أكثروا من الصلاة على النبي ﷺ »

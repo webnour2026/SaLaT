@@ -45,6 +45,15 @@ jobs:
             git add data/habous.json
             git commit -m "Habous : nouveau début de mois annoncé"
             git push
+            echo "changed=1" >> "$GITHUB_ENV"
           else
             echo "Rien de nouveau"
           fi
+      - name: Notification instantanée (serveur des notifications)
+        if: env.changed == '1'
+        run: |
+          w=$(jq -r '.worker // empty' data/push-config.json 2>/dev/null || true)
+          [ -n "$w" ] || { echo "Serveur des notifications pas encore configuré"; exit 0; }
+          # GitHub Pages publie le calendrier en ~1 min : le serveur relit data/habous.json (et n'envoie qu'une fois)
+          for s in 45 60 90; do sleep $s; r=$(curl -sS --max-time 30 -X POST "$w/check" || true); echo "$r"; echo "$r" | grep -q 'envoy' && break; done
+          echo "::notice title=Notification::$r"

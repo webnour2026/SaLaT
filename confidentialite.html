@@ -17,7 +17,7 @@
 <body>
 <p><a href="./">← SaLaTi</a></p>
 <h1>SaLaTi – صلاتي</h1>
-<p class="muted">Dernière mise à jour : 11 octobre 2026 · Éditeur : Noureddine BELCAID · Contact : <a href="mailto:webnour@gmail.com">webnour@gmail.com</a></p>
+<p class="muted">Dernière mise à jour : 17 octobre 2026 · Éditeur : Noureddine BELCAID · Contact : <a href="mailto:webnour@gmail.com">webnour@gmail.com</a></p>
 <nav><a href="#fr">Français</a><a href="#ar">العربية</a><a href="#en">English</a></nav>
 
 <!-- ===================== FRANÇAIS ===================== -->
@@ -53,6 +53,7 @@
 <ul>
 <li>La boussole utilise les capteurs d’orientation du téléphone, uniquement sur l’appareil. Le bip et la vibration d’alignement sont produits localement.</li>
 <li>Les notifications et alarmes (Adhan, rappels, jours blancs, début de mois) sont créées sur le téléphone ; aucune donnée n’est envoyée pour cela.</li>
+<li>Version web (navigateur, iPhone, ordinateur) : si vous autorisez les notifications, l’annonce du croissant vous parvient même appli fermée. Le navigateur crée pour cela un identifiant de notification anonyme (Firebase Cloud Messaging, Google), transmis à mon petit serveur (Cloudflare) qui l’inscrit à la liste « annonce du croissant » de votre langue. Il ne contient ni nom, ni position, ni numéro ; mon serveur ne le conserve pas. Décochez « Annonce du croissant instantanée » dans Réglages → Rappels pour vous désinscrire. L’appli Android n’utilise pas ce service.</li>
 <li>Le widget d’écran d’accueil affiche les horaires déjà enregistrés sur le téléphone ; il n’envoie aucune donnée.</li>
 <li>Autorisations Android utilisées : notifications ; alarmes exactes (pour que l’Adhan sonne à l’heure) ; démarrage du téléphone (pour reprogrammer les alarmes après un redémarrage) ; vibration ; accès à Internet (téléchargements ci-dessus) ; accès « Ne pas déranger », seulement si vous l’accordez pour le Mode Mosquée (mettre le téléphone en silence après l’Adhan, puis rétablir sa sonnerie). L’autorisation de position est demandée par l’application ou par Chrome, selon votre téléphone.</li>
 <li>L’application n’utilise ni caméra, ni microphone, ni contacts, ni photos, ni identifiant publicitaire.</li>
@@ -62,7 +63,7 @@
 <p>Les cartes (versets, douas, hadiths) sont dessinées sur votre téléphone. Quand vous partagez, c’est l’application que vous choisissez (WhatsApp, etc.) qui les reçoit. Votre nom n’est ajouté que si vous cochez « Envoyer avec le nom ». Je ne reçois rien.</p>
 
 <h2>Vos choix</h2>
-<p>Refuser la position et choisir une ville ; effacer les horaires enregistrés dans Réglages → Avancé ; vider les données ou désinstaller l’application. Comme je ne conserve aucune donnée, il n’y a rien à supprimer chez moi. Pour les services tiers, voir leurs politiques : <a href="https://aladhan.com/">AlAdhan</a>, <a href="https://osmfoundation.org/wiki/Privacy_Policy">OpenStreetMap</a>, <a href="https://docs.github.com/fr/site-policy/privacy-policies/github-general-privacy-statement">GitHub</a>, <a href="https://developers.google.com/fonts/faq/privacy">Google Fonts</a>.</p>
+<p>Refuser la position et choisir une ville ; effacer les horaires enregistrés dans Réglages → Avancé ; vider les données ou désinstaller l’application. Comme je ne conserve aucune donnée, il n’y a rien à supprimer chez moi. Pour les services tiers, voir leurs politiques : <a href="https://aladhan.com/">AlAdhan</a>, <a href="https://osmfoundation.org/wiki/Privacy_Policy">OpenStreetMap</a>, <a href="https://docs.github.com/fr/site-policy/privacy-policies/github-general-privacy-statement">GitHub</a>, <a href="https://developers.google.com/fonts/faq/privacy">Google Fonts</a>, <a href="https://firebase.google.com/support/privacy">Firebase</a>, <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare</a>.</p>
 
 <h2>Enfants</h2>
 <p>L’application n’est pas destinée aux enfants de moins de 13 ans et ne collecte sciemment aucune donnée personnelle d’enfants.</p>
@@ -104,6 +105,7 @@
 <ul>
 <li>تستعمل البوصلة مستشعرات اتجاه الهاتف، على الجهاز فقط. وصوت المحاذاة والاهتزاز يصدران محليًا.</li>
 <li>تُنشأ الإشعارات والمنبّهات (الأذان والتذكيرات والأيام البيض وبداية الشهر) على الهاتف، ولا تُرسل بيانات من أجلها.</li>
+<li>نسخة الويب (المتصفح والآيفون والحاسوب): إن سمحتَ بالإشعارات يصلك إعلان الهلال حتى والتطبيق مغلق. ولذلك ينشئ المتصفح معرّف إشعارات مجهولًا (Firebase Cloud Messaging من Google) يُرسل إلى خادمي الصغير (Cloudflare) فيسجّله في قائمة «إعلان الهلال» بلغتك. لا يتضمن اسمًا ولا موقعًا ولا رقمًا، ولا يحتفظ به خادمي. ولإلغاء التسجيل أزل علامة «إعلان الهلال فورًا» من الإعدادات ← التذكيرات. ولا يستعمل تطبيق أندرويد هذه الخدمة.</li>
 <li>أداة الشاشة الرئيسية تعرض المواقيت المحفوظة على الهاتف، ولا ترسل أي بيانات.</li>
 <li>أذونات أندرويد المستعملة: الإشعارات؛ المنبّهات الدقيقة (ليرفع الأذان في وقته)؛ تشغيل الهاتف (لإعادة برمجة المنبّهات بعد إعادة التشغيل)؛ الاهتزاز؛ الوصول إلى الإنترنت (للتنزيلات أعلاه)؛ الوصول إلى «عدم الإزعاج»، فقط إن منحته لوضع المسجد (إسكات الهاتف بعد الأذان ثم إعادة رنينه). ويُطلب إذن الموقع من التطبيق أو من Chrome بحسب هاتفك.</li>
 <li>لا يستعمل التطبيق الكاميرا ولا الميكروفون ولا جهات الاتصال ولا الصور ولا معرّف الإعلانات.</li>
@@ -113,7 +115,7 @@
 <p>تُرسم البطاقات (آيات وأدعية وأحاديث) على هاتفك. وعند المشاركة يتلقاها التطبيق الذي تختاره (واتساب وغيره). ولا يُضاف اسمك إلا إذا فعّلتَ «إرسال مع الاسم». ولا أتلقى شيئًا.</p>
 
 <h2>خياراتك</h2>
-<p>يمكنك رفض الموقع واختيار مدينة؛ ومسح المواقيت المحفوظة من الإعدادات ← متقدّم؛ أو مسح البيانات أو حذف التطبيق. وبما أنني لا أحتفظ بأي بيانات فليس عندي ما يُحذف. وللاطلاع على سياسات الخدمات الخارجية: <a href="https://aladhan.com/">AlAdhan</a> و<a href="https://osmfoundation.org/wiki/Privacy_Policy">OpenStreetMap</a> و<a href="https://docs.github.com/ar/site-policy/privacy-policies/github-general-privacy-statement">GitHub</a> و<a href="https://developers.google.com/fonts/faq/privacy">Google Fonts</a>.</p>
+<p>يمكنك رفض الموقع واختيار مدينة؛ ومسح المواقيت المحفوظة من الإعدادات ← متقدّم؛ أو مسح البيانات أو حذف التطبيق. وبما أنني لا أحتفظ بأي بيانات فليس عندي ما يُحذف. وللاطلاع على سياسات الخدمات الخارجية: <a href="https://aladhan.com/">AlAdhan</a> و<a href="https://osmfoundation.org/wiki/Privacy_Policy">OpenStreetMap</a> و<a href="https://docs.github.com/ar/site-policy/privacy-policies/github-general-privacy-statement">GitHub</a> و<a href="https://developers.google.com/fonts/faq/privacy">Google Fonts</a> و<a href="https://firebase.google.com/support/privacy">Firebase</a> و<a href="https://www.cloudflare.com/privacypolicy/">Cloudflare</a>.</p>
 
 <h2>الأطفال</h2>
 <p>التطبيق غير موجّه للأطفال دون 13 سنة، ولا يجمع عمدًا أي بيانات شخصية للأطفال.</p>
@@ -155,6 +157,7 @@
 <ul>
 <li>The compass uses the phone’s orientation sensors, on the device only. The alignment beep and vibration are produced locally.</li>
 <li>Notifications and alarms (Adhan, reminders, white days, month start) are created on the phone; no data is sent for them.</li>
+<li>Web version (browser, iPhone, computer): if you allow notifications, the crescent announcement reaches you even with the app closed. For this the browser creates an anonymous notification identifier (Firebase Cloud Messaging, Google), sent to my small server (Cloudflare), which adds it to the “crescent announcement” list for your language. It contains no name, location or number; my server does not keep it. Untick “Instant crescent announcement” in Settings → Reminders to unsubscribe. The Android app does not use this service.</li>
 <li>The home-screen widget shows the times already stored on the phone; it sends no data.</li>
 <li>Android permissions used: notifications; exact alarms (so the Adhan rings on time); phone start-up (to reschedule alarms after a reboot); vibration; Internet access (the downloads above); “Do Not Disturb” access, only if you grant it for Mosque mode (silencing the phone after the Adhan, then restoring its ringer). Location permission is requested by the app or by Chrome, depending on your phone.</li>
 <li>The app uses no camera, microphone, contacts, photos or advertising ID.</li>
@@ -164,7 +167,7 @@
 <p>Cards (verses, supplications, hadiths) are drawn on your phone. When you share, the app you pick (WhatsApp, etc.) receives them. Your name is added only if you tick “Send with my name”. I receive nothing.</p>
 
 <h2>Your choices</h2>
-<p>Refuse location and pick a city; clear saved times in Settings → Advanced; clear the app’s data or uninstall it. Since I keep no data, there is nothing to delete on my side. For third-party services see their policies: <a href="https://aladhan.com/">AlAdhan</a>, <a href="https://osmfoundation.org/wiki/Privacy_Policy">OpenStreetMap</a>, <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub</a>, <a href="https://developers.google.com/fonts/faq/privacy">Google Fonts</a>.</p>
+<p>Refuse location and pick a city; clear saved times in Settings → Advanced; clear the app’s data or uninstall it. Since I keep no data, there is nothing to delete on my side. For third-party services see their policies: <a href="https://aladhan.com/">AlAdhan</a>, <a href="https://osmfoundation.org/wiki/Privacy_Policy">OpenStreetMap</a>, <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub</a>, <a href="https://developers.google.com/fonts/faq/privacy">Google Fonts</a>, <a href="https://firebase.google.com/support/privacy">Firebase</a>, <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare</a>.</p>
 
 <h2>Children</h2>
 <p>The app is not aimed at children under 13 and does not knowingly collect any personal data from children.</p>

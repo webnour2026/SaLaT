@@ -1,0 +1,19 @@
+# Serveur des notifications instantanées de SaLaTi (Cloudflare Worker, offre gratuite).
+# Déployé par le travail GitHub « Notifications (serveur) » (.github/workflows/push.yml) : ne rien déployer à la main.
+# L'identifiant KV est complété par le travail (espace « salati-push ») ; la clé Firebase est un secret du Worker.
+name = "salati-push"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+workers_dev = true
+
+[triggers]
+# soirs d'annonce : le ministère publie entre ~19 h et ~23 h (heure du Maroc = UTC) ; rattrapage le matin
+crons = ["*/2 16-23 * * *", "*/10 6-10 * * *"]
+
+[[kv_namespaces]]
+binding = "KV"
+id = "__KV_ID__"
+
+[vars]
+HABOUS_URL = "https://webnour2026.github.io/SaLaT/data/habous.json"
+ALLOWED_ORIGINS = "https://webnour2026.github.io"

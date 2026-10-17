@@ -29,6 +29,8 @@ Liste des améliorations retenues, à regrouper dans un même AAB avec d'autres 
 3. **Annonce du croissant instantanée pour tous** : petit serveur gratuit (Cloudflare Worker, relève chaque minute les soirs
    d'annonce) + notifications push (Firebase pour l'appli Android, Web Push pour iPhone/PC). Comptes Cloudflare + Firebase
    à créer ; politique de confidentialité à mettre à jour (jeton de notification, sans donnée personnelle).
+   ✅ 17/10/2026 : code prêt (2.32.0, worker/, travail « Notifications (serveur) ») ; reste à poser les secrets GitHub,
+   déployer, ajouter l'adresse du serveur à la CSP, puis tester avec les testeurs web/iPhone avant le 10/11.
 4. **iPhone** : aide « Ajouter à l'écran d'accueil » (Safari) ; avec le point 3, notifications du croissant sur iPhone.
 5. ⚠ **Avis Play dans l'appli** (In-App Review API), demandé une fois, après une semaine d'usage et un Adhan bien reçu.
 6. **Sécurité** : double authentification sur GitHub et sur le compte Play ; copie hors ligne de la clé de signature ;

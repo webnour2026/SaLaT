@@ -81,6 +81,18 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.32.0] – 2026-10-17
+### Ajouté
+- Annonce du croissant instantanée, appli fermée, pour la version web (navigateur Android, iPhone avec l'appli sur l'écran
+  d'accueil, ordinateur) : notification push dès que le ministère annonce le début du mois (vu / non vu, date du 1er,
+  vœux de Ramadan et de l'Aïd, date de l'Aïd al-Adha). Réglages → Rappels : « إعلان الهلال فورًا » (activé par défaut au
+  Maroc) et bouton « تجربة الإشعار ». L'appli Android garde son module natif (pas de doublon).
+- Serveur `worker/` (Cloudflare Worker, gratuit) : inscrit les appareils (jeton Firebase anonyme) aux sujets
+  `hilal-ar/fr/en`, relit `data/habous.json` toutes les 2 min les soirs d'annonce et envoie une seule fois par mois ;
+  le travail « Habous » le prévient aussitôt l'annonce publiée. Déployé par le travail « Notifications (serveur) ».
+- Bibliothèque Firebase Messaging copiée dans `vendor/` (aucun script tiers chargé) ; CSP ouverte aux seuls hôtes
+  d'inscription Firebase. Politique de confidentialité mise à jour.
+
 ## [2.31.2] – 2026-10-17
 ### Modifié
 - Pages « مواقيت الصلاة في <ville> » déplacées sur Netlify (miqatsalati.netlify.app) : c'est cette adresse que Google indexe et

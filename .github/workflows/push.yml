@@ -1,0 +1,112 @@
+# Notifications instantanées (annonce du croissant) : déploie le serveur worker/ sur Cloudflare et écrit
+# data/push-config.json (configuration PUBLIQUE lue par l'appli web). Lancé à chaque modification de worker/,
+# ou à la main : onglet Actions → « Notifications (serveur) » → Run workflow.
+# À créer une fois dans GitHub → Settings → Secrets and variables → Actions :
+#   Secrets   : CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, FCM_SERVICE_ACCOUNT (fichier JSON du compte de service Firebase)
+#   Variables : FIREBASE_WEB_CONFIG (objet firebaseConfig de l'appli Web), FIREBASE_VAPID_KEY (certificat Web Push, clé publique)
+name: Notifications (serveur)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['worker/**', '.github/workflows/push.yml']
+permissions:
+  contents: write
+concurrency:
+  group: push-deploy
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      FCM_SA: ${{ secrets.FCM_SERVICE_ACCOUNT }}
+      FB_WEB: ${{ vars.FIREBASE_WEB_CONFIG }}
+      FB_VAPID: ${{ vars.FIREBASE_VAPID_KEY }}
+      WRANGLER: wrangler@4.140.0
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Tests des textes
+        run: node scripts/test-push.mjs
+      - name: Comptes configurés
+        id: cfg
+        run: |
+          miss=""
+          [ -n "$CLOUDFLARE_API_TOKEN" ] || miss="$miss CLOUDFLARE_API_TOKEN(secret)"
+          [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || miss="$miss CLOUDFLARE_ACCOUNT_ID(secret)"
+          [ -n "$FCM_SA" ] || miss="$miss FCM_SERVICE_ACCOUNT(secret)"
+          [ -n "$FB_WEB" ] || miss="$miss FIREBASE_WEB_CONFIG(variable)"
+          [ -n "$FB_VAPID" ] || miss="$miss FIREBASE_VAPID_KEY(variable)"
+          if [ -n "$miss" ]; then echo "::warning title=Manque::$miss"; echo "ok=false" >> "$GITHUB_OUTPUT"; else echo "ok=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Vérifier la clé Firebase et la configuration Web
+        if: steps.cfg.outputs.ok == 'true'
+        run: |
+          node -e '
+            let sa; try { sa = JSON.parse(process.env.FCM_SA); } catch { console.log("::error title=FCM_SERVICE_ACCOUNT::pas un JSON valide (coller TOUT le contenu du fichier)"); process.exit(1); }
+            if (sa.type !== "service_account" || !sa.private_key || !sa.client_email) { console.log("::error title=FCM_SERVICE_ACCOUNT::ce n est pas une clé de compte de service"); process.exit(1); }
+            const web = {}; for (const m of process.env.FB_WEB.matchAll(/["\x27]?(\w+)["\x27]?\s*:\s*["\x27]([^"\x27]+)["\x27]/g)) web[m[1]] = m[2];
+            for (const k of ["apiKey", "projectId", "messagingSenderId", "appId"]) if (!web[k]) { console.log(`::error title=FIREBASE_WEB_CONFIG::${k} absent`); process.exit(1); }
+            if (web.projectId !== sa.project_id) { console.log(`::error title=Projets différents::configuration Web ${web.projectId} / clé ${sa.project_id}`); process.exit(1); }
+            console.log(`::notice title=Firebase::projet ${sa.project_id}`);'
+      - name: Sous-domaine workers.dev
+        id: sub
+        if: steps.cfg.outputs.ok == 'true'
+        run: |
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain"
+          sub=$(curl -sS --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api" | jq -r '.result.subdomain // empty')
+          if [ -z "$sub" ]; then
+            for c in webnour webnour2026 salati-app miqatsalati; do
+              r=$(curl -sS --max-time 30 -X PUT -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" --data "{\"subdomain\":\"$c\"}" "$api")
+              if [ "$(echo "$r" | jq -r '.success')" = "true" ]; then sub=$c; break; fi
+              echo "$c : $(echo "$r" | jq -c '.errors')"
+            done
+          fi
+          [ -n "$sub" ] || { echo "::error title=workers.dev::sous-domaine introuvable (vérifier les droits du jeton)"; exit 1; }
+          echo "sub=$sub" >> "$GITHUB_OUTPUT"
+      - name: Espace de stockage KV
+        if: steps.cfg.outputs.ok == 'true'
+        run: |
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/storage/kv/namespaces"
+          id=$(curl -sS --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api?per_page=100" | jq -r '.result[]? | select(.title=="salati-push") | .id' | head -1)
+          if [ -z "$id" ]; then
+            id=$(curl -sS --max-time 30 -X POST -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" --data '{"title":"salati-push"}' "$api" | jq -r '.result.id // empty')
+          fi
+          [ -n "$id" ] || { echo "::error title=KV::création impossible (droit « Workers KV Storage : Edit » ?)"; exit 1; }
+          sed -i "s/__KV_ID__/$id/" worker/wrangler.toml
+      - name: Déployer le serveur
+        if: steps.cfg.outputs.ok == 'true'
+        working-directory: worker
+        run: |
+          npx --yes $WRANGLER deploy
+          printf '%s' "$FCM_SA" | npx --yes $WRANGLER secret put FCM_SERVICE_ACCOUNT
+      - name: Configuration publique de l'appli (data/push-config.json)
+        if: steps.cfg.outputs.ok == 'true'
+        env:
+          WORKER: https://salati-push.${{ steps.sub.outputs.sub }}.workers.dev
+        run: |
+          node -e '
+            const web = {}; for (const m of process.env.FB_WEB.matchAll(/["\x27]?(\w+)["\x27]?\s*:\s*["\x27]([^"\x27]+)["\x27]/g)) web[m[1]] = m[2];
+            const keep = ["apiKey", "authDomain", "projectId", "storageBucket", "messagingSenderId", "appId"];
+            const firebase = Object.fromEntries(keep.filter(k => web[k]).map(k => [k, web[k]]));
+            const out = { note: "Configuration publique des notifications (écrite par le travail « Notifications (serveur) »)", firebase, vapidKey: process.env.FB_VAPID.trim(), worker: process.env.WORKER };
+            require("fs").writeFileSync("data/push-config.json", JSON.stringify(out, null, 1) + "\n");'
+          echo "::notice title=Serveur::$WORKER"
+          if [ -n "$(git status --porcelain data/push-config.json)" ]; then
+            git config user.name "github-actions"; git config user.email "github-actions@users.noreply.github.com"
+            git add data/push-config.json && git commit -m "Notifications : configuration publique" && git push
+          fi
+      - name: Contrôle du serveur
+        if: steps.cfg.outputs.ok == 'true'
+        env:
+          WORKER: https://salati-push.${{ steps.sub.outputs.sub }}.workers.dev
+        run: |
+          sleep 10
+          r=$(curl -sS --max-time 30 "$WORKER/status"); echo "::notice title=Clé Firebase::$r"
+          echo "$r" | grep -q '"ok":true' || { echo "::error title=Clé Firebase::refusée par Google"; exit 1; }
+          r=$(curl -sS --max-time 30 -X POST "$WORKER/check"); echo "::notice title=Relevé du calendrier::$r"
+          echo "$r" | grep -q '"status"' || exit 1
