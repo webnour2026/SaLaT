@@ -48,7 +48,7 @@ En arabe, français et anglais. Pas de compte, pas de publicité, aucun traqueur
 
 ## English
 
-**Title (30 max)** : SaLaTi: Prayer Times & Crescent
+**Title (30 max)** : SaLaTi: Prayer Times, Crescent
 
 **Short description (80 max)** :
 Official Moroccan prayer times, Adhan with the app closed, crescent news. Free
