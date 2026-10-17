@@ -41,7 +41,7 @@ const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inl
 const head = ({ title, desc, url, ld }) => `<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8">${url === PAGES ? '\n<meta name="google-site-verification" content="M6GseoKTvawoyhoi_3KRgy22vG1o8NkkiWKAvcrGJLc">' : ''}
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="${CSP}">
 <title>${esc(title)}</title>
