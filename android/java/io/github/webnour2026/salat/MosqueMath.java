@@ -28,7 +28,13 @@ final class MosqueMath {
     /** Minutes entre l'Adhan et l'Iqama. */
     static int iqamaMin(String key, boolean ramadan) {
         if ("Maghrib".equals(key)) return ramadan ? 0 : 10;
-        return 15;
+        return "Fajr".equals(key) ? 20 : 15;
+    }
+
+    /** Délai réglé par la mosquée (cfg.iq, écran de mosquée ; < 0 = non réglé) ; Maghrib de Ramadan toujours immédiat. Même règle que js/mosque.js. */
+    static int iqamaMin(String key, boolean ramadan, int configured) {
+        if ("Maghrib".equals(key) && ramadan) return 0;
+        return configured < 0 ? iqamaMin(key, ramadan) : Math.min(90, configured);
     }
 
     /** { start, iqama, end } en ms. */

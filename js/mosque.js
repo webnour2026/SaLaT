@@ -16,7 +16,14 @@ export const PRAYER_SPAN = IQAMA_SCREEN + PRAYER_SCREEN;
 
 export const clampDur = d => (!(d > 0) ? DUR_DEFAULT : Math.max(DUR_MIN, Math.min(DUR_MAX, Math.round(d))));
 export const stepDur = (d, dir) => clampDur(clampDur(d) + dir * DUR_STEP);
-export const iqamaMin = (key, ramadan) => (key === 'Maghrib' ? (ramadan ? 0 : 10) : 15);
+// Délai Adhan → Iqama : réglage de la mosquée (écran de mosquée, iq) sinon Fajr 20 min, Maghrib 10 min, autres 15 min
+// (consigne du ministère pour le Fajr) ; Maghrib de Ramadan : dès la fin de l'Adhan (rupture du jeûne).
+export const IQAMA_DEFAULT = { Fajr: 20, Dhuhr: 15, Asr: 15, Maghrib: 10, Isha: 15 };
+export const iqamaMin = (key, ramadan, iq) => {
+  if (key === 'Maghrib' && ramadan) return 0;
+  const v = iq ? Number(iq[key]) : NaN;
+  return Number.isFinite(v) && v >= 0 ? Math.min(90, Math.round(v)) : (IQAMA_DEFAULT[key] ?? 15);
+};
 
 export function windowOf(T, adhanMs, dur, iqMin) {
   const a = Math.max(0, Math.min(adhanMs || 0, MAX_ADHAN));
@@ -35,9 +42,9 @@ export function runsFor(mq, T) {
 }
 
 /** Fin du mode « once » (après la prière visée) — au-delà, le mode est éteint. */
-export function onceEnd(mq, ramadan = false) {
+export function onceEnd(mq, ramadan = false, iq) {
   if (!mq || mq.mode !== 'once' || !mq.once) return 0;
-  return windowOf(mq.once.ts, 0, mq.dur, iqamaMin(mq.once.key, ramadan)).end;
+  return windowOf(mq.once.ts, 0, mq.dur, iqamaMin(mq.once.key, ramadan, iq)).end;
 }
 
 /** Mode effectif à cet instant : un « once » échu redevient 'off'. */
@@ -51,10 +58,10 @@ export function effectiveMode(mq, now) {
  * Phase en cours. prayers : [{ key, ts, ramadan, adhanMs }] (prières passées récentes).
  * → { phase: 'silence' | 'iqama' | 'prayer', key, T, start, iqama, end } ou null.
  */
-export function phaseAt(mq, prayers, now) {
+export function phaseAt(mq, prayers, now, iq) {
   for (const p of [...prayers].sort((a, b) => b.ts - a.ts)) {
     if (!p.ts || p.ts > now || !runsFor(mq, p.ts)) continue;
-    const w = windowOf(p.ts, p.adhanMs, mq.dur, iqamaMin(p.key, p.ramadan));
+    const w = windowOf(p.ts, p.adhanMs, mq.dur, iqamaMin(p.key, p.ramadan, iq));
     if (now >= w.end) return null;                         // la plus récente est terminée : rien d'autre en cours
     let phase = null;
     if (now >= w.iqama && now < w.iqama + IQAMA_SCREEN) phase = 'iqama';

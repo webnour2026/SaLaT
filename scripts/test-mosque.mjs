@@ -23,6 +23,9 @@ eq('iqama : 15 min (Asr)', iqamaMin('Asr', false), 15);
 eq('iqama : 10 min (Maghrib)', iqamaMin('Maghrib', false), 10);
 eq('iqama : Maghrib de Ramadan dès la fin de l\'Adhan', iqamaMin('Maghrib', true), 0);
 eq('iqama : Ramadan ne change pas l\'Isha', iqamaMin('Isha', true), 15);
+eq('iqama : Fajr 20 min par défaut', iqamaMin('Fajr', false), 20);
+eq('iqama : délai réglé par la mosquée', iqamaMin('Asr', false, { Asr: 12 }), 12);
+eq('iqama : Maghrib de Ramadan reste immédiat même réglé', iqamaMin('Maghrib', true, { Maghrib: 10 }), 0);
 // ---- fenêtre ----
 let w = windowOf(T, 180000, 25, 10);
 eq('exemple du cahier des charges : silence à la fin de l\'Adhan (3 min)', (w.start - T) / MIN, 3);
@@ -72,7 +75,7 @@ public class Main {
     System.out.println("B " + w(MosqueMath.window(T, 3600000, 25, 15), T));
     System.out.println("C " + w(MosqueMath.window(T, 0, 10, 15), T));
     System.out.println("D " + MosqueMath.clampDur(-5) + "," + MosqueMath.clampDur(3) + "," + MosqueMath.clampDur(500) + "," + MosqueMath.clampDur(30));
-    System.out.println("E " + MosqueMath.iqamaMin("Maghrib", false) + "," + MosqueMath.iqamaMin("Maghrib", true) + "," + MosqueMath.iqamaMin("Fajr", true));
+    System.out.println("E " + MosqueMath.iqamaMin("Maghrib", false) + "," + MosqueMath.iqamaMin("Maghrib", true) + "," + MosqueMath.iqamaMin("Fajr", true) + "," + MosqueMath.iqamaMin("Asr", false, 12) + "," + MosqueMath.iqamaMin("Maghrib", true, 10) + "," + MosqueMath.iqamaMin("Isha", false, -1));
     System.out.println("F " + MosqueMath.runs("once", T, 0, T) + "," + MosqueMath.runs("once", T, T, T) + "," + MosqueMath.runs("once", T, 0, T + 5400000L) + "," + MosqueMath.runs("perm", 0, 0, T) + "," + MosqueMath.runs("off", T, 0, T));
     System.out.println("G " + MosqueMath.wanted("once", T, T - 60000) + "," + MosqueMath.wanted("once", T, T + 120000) + "," + MosqueMath.wanted("perm", 0, T));
     // état audio : sonnerie → silencieux (avec accès) ou vibreur (sans) ; vibreur sans accès → rien ; déjà silencieux → rien
@@ -89,7 +92,7 @@ eq('Java = JS : fenêtre standard', out.A, js(180000, 25, 0, 10));
 eq('Java = JS : Adhan trop long', out.B, js(3600000, 25, 0, 15));
 eq('Java = JS : durée courte prolongée jusqu\'à la fin de la prière', out.C, js(0, 10, 0, 15));
 eq('Java : bornes de durée', out.D, '25,10,90,30');
-eq('Java : iqama', out.E, '10,0,15');
+eq('Java : iqama', out.E, '10,0,20,12,0,15');
 eq('Java : once une seule fois, prière visée seulement ; perm toujours ; off jamais', out.F, 'true,false,false,true,false');
 eq('Java : alarmes gardées tant que la prière visée n\'est pas passée', out.G, 'true,false,true');
 eq('Java : état audio imposé', out.H, '0,1,0,-1,-1');

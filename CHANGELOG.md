@@ -81,6 +81,13 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.34.1] – 2026-10-17
+### Modifié
+- Délais d'Iqama unifiés : Mode Mosquée, écran de mosquée et bouton « تذكير بالإقامة » utilisent les mêmes délais, ceux
+  réglés dans l'écran de mosquée (⚙). Par défaut Fajr 20 min (consigne du ministère), Maghrib 10 min, autres 15 min ;
+  Maghrib de Ramadan toujours dès la fin de l'Adhan. Note du Mode Mosquée mise à jour. ⚠ Côté module Android
+  (MosqueMode), effectif au prochain AAB (il garde 15 min pour le Fajr d'ici là).
+
 ## [2.34.0] – 2026-10-17 ⚠ nouvel AAB (native=22)
 ### Ajouté
 - ⚠ Avis Google Play dans l'appli (In-App Review API) : la fenêtre « Noter SaLaTi » de Google Play, proposée une seule

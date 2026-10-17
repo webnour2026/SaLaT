@@ -79,7 +79,7 @@ final class MosqueMode {
         try {
             long adhanMs = sound == null ? 0 : durationOf(ctx, sound);
             long[] w = MosqueMath.window(t, adhanMs, m.optInt("d", MosqueMath.DUR_DEFAULT),
-                    MosqueMath.iqamaMin(key, ramadan(ctx, cfg, t)));
+                    MosqueMath.iqamaMin(key, ramadan(ctx, cfg, t), cfg.optJSONObject("iq") == null ? -1 : cfg.optJSONObject("iq").optInt(key, -1)));
             JSONObject st = new JSONObject();
             st.put("T", t); st.put("key", key);
             st.put("start", w[0]); st.put("iqama", w[1]); st.put("end", w[2]);

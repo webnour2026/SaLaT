@@ -4,7 +4,7 @@
 // États : 'iqama' (entre Adhan et Iqama : compte à rebours de l'Iqama), 'prayer' (après l'Iqama : écran sombre pendant
 // la prière), 'next' (compte à rebours du prochain Adhan).
 export const MIN = 60000;
-export const SCREEN_DEFAULTS = Object.freeze({ iq: { Fajr: 20, Dhuhr: 15, Asr: 15, Maghrib: 10, Isha: 15, Jumuah: 30 }, quiet: 10, msg: '' });
+export const SCREEN_DEFAULTS = Object.freeze({ iq: { Fajr: 20, Dhuhr: 15, Asr: 15, Maghrib: 10, Isha: 15, Jumuah: 30 }, quiet: 10, msg: '' });   // mêmes valeurs que IQAMA_DEFAULT (js/mosque.js)
 export const SCREEN_ROWS = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 const clampMin = (v, d, max = 90) => (Number.isFinite(+v) && +v >= 0 ? Math.min(max, Math.round(+v)) : d);
 
