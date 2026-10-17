@@ -1,0 +1,13 @@
+{
+ "note": "Configuration publique des notifications (écrite par le travail « Notifications (serveur) »)",
+ "firebase": {
+  "apiKey": "AIzaSyBNJ891b__qurtV-ozMFVoFd80esr1etJI",
+  "authDomain": "salati-389f0.firebaseapp.com",
+  "projectId": "salati-389f0",
+  "storageBucket": "salati-389f0.firebasestorage.app",
+  "messagingSenderId": "914315695731",
+  "appId": "1:914315695731:web:7a9e65451d123750d77c06"
+ },
+ "vapidKey": "BO_au7mvthWmgC6kH6LFZL-0ZtC9vVeL6v_1DBw1tOJ69-T3GExh8H-DiGCJllN0XtvVGRVIIdKWuEqQr9I4vxU",
+ "worker": "https://salati-push.webnour.workers.dev"
+}
