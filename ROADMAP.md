@@ -53,6 +53,13 @@ Liste des améliorations retenues, à regrouper dans un même AAB avec d'autres 
 8. **AppGallery** (Huawei sans Google).
    ✅ 17/10/2026 : option « fallback = webview » du travail Android. Reste : compte développeur Huawei (vérification d'identité).
 
+9. **API SaLaTi publique** (après la production Play et le test du croissant du 10/11) : fichiers JSON statiques générés
+   chaque jour sur Cloudflare (requêtes illimitées) — `/api/v1/villes.json`, `/api/v1/horaires/<ville>/<AAAA-MM>.json`,
+   `/api/v1/hijri.json`, `/api/v1/hilal.json` (vu / non vu, date du 1er) ; option webhook / notification de l'annonce pour
+   les abonnés. Page de documentation ar / fr. Mentions : horaires selon les tableaux du ministère, service indépendant sans
+   lien avec lui ; demander l'accord du ministère avant un usage commercial ou à grande échelle. Plus tard : clés d'accès,
+   offre payante si la demande vient.
+
 ## Plus tard
 
 - Publication sur **AppGallery** (Huawei sans Google Play).
