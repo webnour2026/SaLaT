@@ -415,7 +415,7 @@ function clockWarnDismissed(off) {
   try { const v = JSON.parse(localStorage.getItem(CW_KEY) || 'null'); return !!v && Date.now() - v.at < 864e5 && Math.abs(v.off - off) < 300000; } catch { return false; }
 }
 function renderCta() {
-  renderUpdate();
+  renderUpdate(); renderAndroidHint();
   const cw = $('#clockWarn');
   if (cw) {                                              // téléphone déréglé (≥ 1 min) : la cause n°1 d'un Adhan décalé
     const off = getOffset(); cw.hidden = Math.abs(off) < 60000 || clockWarnDismissed(off);
@@ -591,6 +591,17 @@ function renderUpdate() {
   // fermé (×) : silence 3 jours, mais seulement pour cette version — une nouvelle version du module le fait réapparaître
   let until = 0; try { const [lvl, u] = String(localStorage.getItem(UPD_KEY) || '').split(':'); if (Number(lvl) === NATIVE_LATEST) until = Number(u) || 0; } catch {}
   box.hidden = !(isTwa() && nativeLevel() > 0 && nativeLevel() < NATIVE_LATEST && Date.now() > until);
+}
+// Version web ouverte sur Android (navigateur ou installée depuis le site) : signaler l'appli Android complète.
+// Fermé (×) : 30 jours de silence ; réapparaît quand PLAY_PUBLIC passe à true (bouton « Installer » vers Google Play).
+const AND_KEY = 'priere.andHint';
+function renderAndroidHint() {
+  const box = $('#andBanner'); if (!box) return;
+  let until = 0; try { const [pub, u] = String(localStorage.getItem(AND_KEY) || '').split(':'); if (pub === String(PLAY_PUBLIC)) until = Number(u) || 0; } catch {}
+  box.hidden = !(/Android/i.test(navigator.userAgent) && !isTwa() && Date.now() > until);
+  if (box.hidden) return;
+  $('#andTxt').textContent = t(PLAY_PUBLIC ? 'andTxtPlay' : 'andTxtSoon');
+  $('#andBtn').hidden = !PLAY_PUBLIC;
 }
 function openPlay() {
   // fiche Google Play dans l'appli Play Store (sinon dans le navigateur)
@@ -2877,6 +2888,8 @@ function bind() {
   on('#adhanStop', 'click', () => { stopAdhan(); hideAdhanAlert(); });
   on('#adhanSilent', 'click', () => { stopAdhan(); hideAdhanAlert(); renderSilent(); $('#silentDialog').showModal(); });
   on('#updBtn', 'click', openPlay);
+  on('#andBtn', 'click', openPlay);
+  on('#andClose', 'click', () => { try { localStorage.setItem(AND_KEY, `${PLAY_PUBLIC}:${Date.now() + 30 * 864e5}`); } catch {} renderAndroidHint(); });
   on('#updClose', 'click', () => { try { localStorage.setItem(UPD_KEY, `${NATIVE_LATEST}:${Date.now() + 3 * 864e5}`); } catch {} renderUpdate(); });   // rappel dans 3 jours
   on('#silentOpen', 'click', () => { renderSilent(); $('#silentDialog').showModal(); });
   // Mode Mosquée
@@ -2950,7 +2963,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.29.4';
+export const APP_VERSION = '2.29.5';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

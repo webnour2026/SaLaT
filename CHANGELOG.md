@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.29.5] – 2026-10-17
+### Ajouté
+- Version web ouverte sur Android (navigateur ou installée depuis le site) : bandeau « L’appli Android complète arrive bientôt sur Google Play : l’Adhan même appli fermée, le Mode Mosquée et le widget. » Fermable (30 jours). Quand `PLAY_PUBLIC` passera à true : texte « Avec l’appli Android… » et bouton « Installer » vers Google Play. Jamais affiché dans l’appli Play ni sur iPhone.
+
 ## [2.29.4] – 2026-10-15
 ### Corrigé
 - Aperçu du premier lancement : la diapositive « L’Adhan, même appli fermée » n’apparaît plus que dans l’appli Android (la version web, sur iPhone notamment, ne peut pas sonner appli fermée).
