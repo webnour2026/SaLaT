@@ -81,6 +81,12 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.34.6] – 2026-10-18
+### Modifié
+- Premier lancement : l'appli s'ouvre en arabe par défaut, même si le téléphone est en français (cas courant au Maroc) ;
+  en anglais seulement si le téléphone est en anglais. Le bouton ع / FR / EN reste disponible ; les utilisateurs déjà
+  installés gardent leur langue.
+
 ## [2.34.5] – 2026-10-18
 ### Modifié
 - Appli Android : le lien « مواقيت الصلاة في كل مدن المغرب » (À propos) est masqué. La page des villes est un autre site :

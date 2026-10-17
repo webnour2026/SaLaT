@@ -3126,7 +3126,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.34.5';
+export const APP_VERSION = '2.34.6';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
@@ -3159,11 +3159,12 @@ function init() {
     availableAdhans().then(av => { state.adhanAvail = { ...av }; renderAdhanPickers(); });
     renderCredits();
   });
-  // premier lancement : langue de l'appareil (arabe si le téléphone est en arabe)
+  // premier lancement : arabe par défaut (même téléphone en français, courant au Maroc) ; anglais seulement si le téléphone
+  // est en anglais. Le bouton de langue (ع / FR / EN) change ensuite à tout moment ; les utilisateurs existants gardent leur choix.
   const firstRun = !localStorage.getItem('priere.settings.v1');
   if (firstRun) {
-    const dev = (navigator.language || 'fr').slice(0, 2);
-    S().lang = ['ar', 'fr', 'en'].includes(dev) ? dev : 'fr';
+    const dev = (navigator.language || 'ar').slice(0, 2);
+    S().lang = dev === 'en' ? 'en' : 'ar';
     save();
   }
   // Adhans retirés de la liste (anciennes versions) → Adhan marocain

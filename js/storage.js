@@ -5,7 +5,7 @@ const CACHE_PREFIX = 'priere.month.';
 export const PRAYERS = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
 export const DEFAULTS = {
-  lang: 'fr',
+  lang: 'ar',
   theme: 'auto',                // light | dark | auto
   location: null,               // { lat, lng, name, country, tz, source: 'gps'|'manual', accuracy, ts }
   method: 21,                   // 21 = Maroc (AlAdhan)
