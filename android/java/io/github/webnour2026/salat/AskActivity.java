@@ -13,7 +13,7 @@ import android.os.Bundle;
  */
 public class AskActivity extends Activity {
     static final String URL = "url", NOTIF = "notif";
-    static final int LEVEL = 21;   // version du module (même nombre que native= dans le workflow Android)
+    static final int LEVEL = 22;   // version du module (même nombre que native= dans le workflow Android)
 
     @Override
     protected void onCreate(Bundle state) {

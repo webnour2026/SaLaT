@@ -81,6 +81,13 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.34.0] – 2026-10-17 ⚠ nouvel AAB (native=22)
+### Ajouté
+- ⚠ Avis Google Play dans l'appli (In-App Review API) : la fenêtre « Noter SaLaTi » de Google Play, proposée une seule
+  fois, sans question préalable, quand l'appli est installée depuis 7 jours et que l'Adhan a sonné au moins 10 fois,
+  dont un dans les 6 dernières heures (`ReviewActivity`, compteur `firedN`). Bibliothèque `com.google.android.play:review`.
+  `NATIVE_LATEST` reste à 21 jusqu'à la publication de l'AAB (sinon le bandeau « mise à jour » apparaîtrait trop tôt).
+
 ## [2.33.0] – 2026-10-17
 ### Ajouté
 - **Écran de mosquée** (TV, tablette, PC) : bouton « 📺 شاشة المسجد » dans le Mode Mosquée, ou adresse directe

@@ -39,7 +39,7 @@ on:
 env:
   PACKAGE_ID: io.github.webnour2026.salat
   HOST: webnour2026.github.io
-  START_URL: /SaLaT/?source=twa&native=21   # version du module : 3 = Mode Mosquée, 4 = rappels du croissant autonomes, 5 = Adhans de Doha, 6 = Adhan court de 40 s, 7 = Anas Tazi par défaut + Sirajul Islam, 8 = widget d'écran d'accueil, 9 = widget redessiné, 10 = nom de la prière du widget en Reem Kufi, 11 = 10 méthodes de calcul ajoutées, 12 = avis de changement de fuseau, 13 = calendrier relu chaque minute les soirs d'annonce, 14 = Chaabane parmi les mois surveillés, 15 = « non vu » pour tous les mois, avec le jour du 1er, 16 = hors Maroc, question « le mois a-t-il commencé aujourd'hui ? » avec boutons, 17 = prévision de visibilité du croissant appli fermée, 18 = Asr du ministère (Soleil apparent), 19 = Maghrib en altitude, 20 = Adhan en réveil sur les marques à batterie agressive + écran « ne jamais manquer l'Adhan », 21 = Adhan joué en entier par son propre lecteur (flux alarme) + rappels en réveil + raccourcis d'icône. À augmenter (et NATIVE_LATEST dans js/app.js) à chaque changement du module Android
+  START_URL: /SaLaT/?source=twa&native=22   # version du module : 3 = Mode Mosquée, 4 = rappels du croissant autonomes, 5 = Adhans de Doha, 6 = Adhan court de 40 s, 7 = Anas Tazi par défaut + Sirajul Islam, 8 = widget d'écran d'accueil, 9 = widget redessiné, 10 = nom de la prière du widget en Reem Kufi, 11 = 10 méthodes de calcul ajoutées, 12 = avis de changement de fuseau, 13 = calendrier relu chaque minute les soirs d'annonce, 14 = Chaabane parmi les mois surveillés, 15 = « non vu » pour tous les mois, avec le jour du 1er, 16 = hors Maroc, question « le mois a-t-il commencé aujourd'hui ? » avec boutons, 17 = prévision de visibilité du croissant appli fermée, 18 = Asr du ministère (Soleil apparent), 19 = Maghrib en altitude, 20 = Adhan en réveil sur les marques à batterie agressive + écran « ne jamais manquer l'Adhan », 21 = Adhan joué en entier par son propre lecteur (flux alarme) + rappels en réveil + raccourcis d'icône, 22 = avis Google Play dans l'appli (In-App Review). À augmenter (et NATIVE_LATEST dans js/app.js) à chaque changement du module Android
   APP_NAME: SaLaTi
   SITE: https://webnour2026.github.io/SaLaT
 
@@ -139,6 +139,15 @@ jobs:
           cp ../repo/android/java/io/github/webnour2026/salat/*.java $MOD/java/io/github/webnour2026/salat/
           cp ../repo/android/res/drawable/*.xml $MOD/res/drawable/
           python3 ../repo/android/patch_manifest.py app
+          # bibliothèque Google Play « avis dans l'appli » (ReviewActivity)
+          python3 - <<'PY'
+          import re
+          p = 'app/build.gradle'; s = open(p).read()
+          if 'com.google.android.play:review' not in s:
+              s = re.sub(r'(dependencies\s*\{)', r"\1\n    implementation 'com.google.android.play:review:2.0.1'", s, count=1)
+              open(p, 'w').write(s)
+          print([l.strip() for l in s.splitlines() if 'implementation' in l])
+          PY
           # Adhans intégrés à l'APK : version complète + version courte (40 s), mono 96 kbit/s
           for f in ../repo/audio/adhan/*.mp3; do
             [ -e "$f" ] || continue

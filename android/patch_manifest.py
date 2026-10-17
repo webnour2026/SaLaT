@@ -43,6 +43,11 @@ comps = '''
                 <data android:scheme="salati" android:host="sync"/>
             </intent-filter>
         </activity>
+        <!-- Avis Google Play dans l'appli (In-App Review API), proposé une fois par SyncActivity -->
+        <activity android:name="io.github.webnour2026.salat.ReviewActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
         <!-- « Pour ne jamais manquer l'Adhan » : réglage batterie / démarrage automatique selon la marque -->
         <activity android:name="io.github.webnour2026.salat.BatteryActivity"
             android:exported="true"

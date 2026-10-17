@@ -103,6 +103,9 @@ public class SyncActivity extends Activity {
                 p.edit().putBoolean("batShown", true).putBoolean("batPending", false).putLong("batMissedAt", late ? now : p.getLong("batMissedAt", 0)).apply();
                 startActivity(new Intent(this, BatteryActivity.class).putExtra(BatteryActivity.MISSED, late));
             } else if (first) p.edit().putBoolean("batPending", true).apply();   // d'abord l'autorisation « Alarmes et rappels »
+            // avis Google Play (une seule fois) : synchronisation ordinaire, rien d'autre affiché, une semaine d'usage et l'Adhan reçu
+            else if (!ask && !test && !mosque && !late && ReviewActivity.due(this))
+                startActivity(new Intent(this, ReviewActivity.class));
         } catch (Exception ignored) {}
         finish();
         overridePendingTransition(0, 0);
