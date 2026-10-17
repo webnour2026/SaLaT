@@ -81,6 +81,14 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.31.0] – 2026-10-17 ⚠ nouvel AAB (version code 33, native=21)
+### Corrigé
+- L’Adhan s’arrêtait au bout d’une vingtaine de secondes sur Samsung (et d’autres) : il était joué comme un son de notification, que ces téléphones écourtent. Il est maintenant joué en entier par son propre lecteur (service « lecture multimédia », flux des alarmes), au volume réglé dans l’appli ; la musique en cours se met en pause pendant l’Adhan ; pas d’Adhan pendant un appel. Notification « C’est l’heure de… » inchangée, bouton « Arrêter ». Si le lecteur ne peut pas démarrer, retour au son de notification.
+### Ajouté
+- Option « L’Adhan même en mode vibreur ou silencieux » (désactivée par défaut : en vibreur, notification et vibration seulement, comme avant).
+- Xiaomi, Oppo, Realme, OnePlus, Vivo, Huawei, Honor : les rappels à heure fixe des 12 h à venir (soir du 29 pour l’observation du croissant, vendredi, Aïd…) sont programmés comme un réveil ; rappels reprogrammés après chaque prière.
+- Raccourcis de l’icône (appui long) : المواقيت, القبلة, التقويم.
+
 ## [2.30.0] – 2026-10-17 ⚠ nouvel AAB (version code 32, native=20)
 ### Ajouté
 - Téléphones Xiaomi/Redmi/Poco, Oppo, Realme, OnePlus, Vivo/iQOO, Huawei et Honor (économiseur de batterie qui arrête les applis fermées) : l’Adhan et la fin du Mode Mosquée sont programmés comme un réveil (`setAlarmClock`), que ces systèmes n’annulent pas. Les autres téléphones (Samsung, Pixel…) gardent l’alarme habituelle.

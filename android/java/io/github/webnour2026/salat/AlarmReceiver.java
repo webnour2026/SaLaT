@@ -36,6 +36,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         } catch (Exception ignored) {
         } finally {
             AlarmScheduler.scheduleNext(ctx);
+            try { Reminders.schedule(ctx); } catch (Exception ignored) { }   // rappels reprogrammés à chaque prière (réveil à moins de 12 h sur Xiaomi, Oppo…)
             Ongoing.update(ctx);
         }
         checkClock(app, 2 * 3600000L);        // après chaque alarme : écart remesuré s'il date de plus de 2 h
@@ -102,6 +103,11 @@ public class AlarmReceiver extends BroadcastReceiver {
         if (sound == null && !cfg.optBoolean("na", false) && !silent) return null;
         if (!adhan && !cfg.optBoolean("na", false)) return null;
 
+        // Android 8+ : l'Adhan est joué en entier par son propre lecteur (flux alarme) ; à défaut, son de notification
+        if (sound != null && AdhanService.start(ctx, sound, AlarmScheduler.text(cfg, "itsTime", "C’est l’heure de") + " " + name,
+                AlarmScheduler.text(cfg, "city", ""), AlarmScheduler.text(cfg, "stop", "Arrêter"), vib && !silent, cfg.optBoolean("al", false), (float) cfg.optDouble("vol", 0.8))) {
+            return sound;
+        }
         String label = sound != null ? AlarmScheduler.text(cfg, "chAdhan", "Adhan") : AlarmScheduler.text(cfg, "chSilent", "Heure de la prière");
         String ch = AlarmScheduler.channel(ctx, sound, vib && !silent, label);
         String title = AlarmScheduler.text(cfg, "itsTime", "C’est l’heure de") + " " + name;

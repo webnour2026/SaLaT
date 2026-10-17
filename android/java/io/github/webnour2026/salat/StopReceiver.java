@@ -10,6 +10,7 @@ public class StopReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context ctx, Intent intent) {
         NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+        AdhanService.stop(ctx);                  // Adhan joué par le lecteur (module ≥ 21)
         nm.cancel(AlarmScheduler.NOTIF_ADHAN);
         MosqueMode.adhanStopped(ctx.getApplicationContext());   // Mode Mosquée : silence dès l'arrêt de l'Adhan
     }

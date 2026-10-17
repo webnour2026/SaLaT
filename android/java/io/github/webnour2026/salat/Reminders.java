@@ -73,8 +73,15 @@ final class Reminders {
         if (next == Long.MAX_VALUE) return;
         long trigger = Clock.toDevice(ctx, next);   // alarme sur l'horloge du téléphone, corrigée de l'écart mesuré
         boolean exact = Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms();
+        long now = Clock.now(ctx);
         try {
-            if (exact) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pending(ctx));
+            // Xiaomi, Oppo, Vivo, Huawei… : rappel à heure fixe dans les 12 h (soir du 29, vendredi, Aïd…) programmé comme un réveil,
+            // que ces systèmes n'annulent pas ; la relecture du calendrier chaque minute reste une alarme ordinaire.
+            if (exact && Oem.strict() && next - now > 2 * POLL_MS && next - now < 12 * 3600000L) {
+                Intent open = ctx.getPackageManager().getLaunchIntentForPackage(ctx.getPackageName());
+                PendingIntent show = open == null ? null : PendingIntent.getActivity(ctx, 9079, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                am.setAlarmClock(new AlarmManager.AlarmClockInfo(trigger, show), pending(ctx));
+            } else if (exact) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pending(ctx));
             else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pending(ctx));   // sans autorisation : à quelques minutes près
         } catch (SecurityException e) {
             am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pending(ctx));

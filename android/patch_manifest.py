@@ -19,7 +19,8 @@ s = m.read_text(encoding='utf-8')
 if 'SyncActivity' in s:
     print('déjà modifié'); sys.exit(0)
 wanted = ['SCHEDULE_EXACT_ALARM', 'RECEIVE_BOOT_COMPLETED', 'VIBRATE', 'POST_NOTIFICATIONS', 'INTERNET',   # INTERNET : lire le calendrier des Habous le soir de l'annonce
-          'ACCESS_NOTIFICATION_POLICY']   # Mode Mosquée : couper puis rétablir la sonnerie (accès « Ne pas déranger » accordé par l'utilisateur)
+          'ACCESS_NOTIFICATION_POLICY',   # Mode Mosquée : couper puis rétablir la sonnerie (accès « Ne pas déranger » accordé par l'utilisateur)
+          'FOREGROUND_SERVICE', 'FOREGROUND_SERVICE_MEDIA_PLAYBACK']   # module ≥ 21 : l'Adhan joué en entier par son propre lecteur   # Mode Mosquée : couper puis rétablir la sonnerie (accès « Ne pas déranger » accordé par l'utilisateur)
 perms = '\n' + ''.join(f'    <uses-permission android:name="android.permission.{p}"/>\n'
                        for p in wanted if f'android.permission.{p}"' not in s)
 s = re.sub(r'(<manifest[^>]*>)', lambda x: x.group(1) + perms, s, count=1)
@@ -62,6 +63,9 @@ comps = '''
             android:noHistory="true"
             android:taskAffinity=""
             android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
+        <service android:name="io.github.webnour2026.salat.AdhanService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback"/>
         <receiver android:name="io.github.webnour2026.salat.AlarmReceiver" android:exported="false"/>
         <receiver android:name="io.github.webnour2026.salat.StopReceiver" android:exported="false"/>
         <receiver android:name="io.github.webnour2026.salat.ReminderReceiver" android:exported="false"/>
