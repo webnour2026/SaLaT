@@ -1,0 +1,23 @@
+// Écran de mosquée : heures d'Iqama, Joumou'a, états et compte à rebours (js/screen.js).
+import { screenRows, screenState, screenConfig, countdownText, MIN } from '../js/screen.js';
+let fails = 0;
+const eq = (name, got, want) => { const ok = JSON.stringify(got) === JSON.stringify(want); if (!ok) fails++; console.log(`${ok ? 'ok  ' : 'ÉCHEC'} ${name}${ok ? '' : `\n     obtenu  : ${JSON.stringify(got)}\n     attendu : ${JSON.stringify(want)}`}`); };
+const H = (h, m = 0) => Date.UTC(2026, 9, 16, h, m);
+const times = { Fajr: H(6, 2), Sunrise: H(7, 27), Dhuhr: H(13, 5), Asr: H(16, 25), Maghrib: H(18, 59), Isha: H(20, 14) };
+const tomorrow = { times: Object.fromEntries(Object.entries(times).map(([k, v]) => [k, v + 864e5])), friday: false };
+const day = { times, friday: true };
+const rows = screenRows(times, true, {});
+eq('6 lignes, lever du soleil sans Iqama', rows.map(r => [r.key, r.iqama === null]), [['Fajr', false], ['Sunrise', true], ['Dhuhr', false], ['Asr', false], ['Maghrib', false], ['Isha', false]]);
+eq('vendredi : Joumou\'a (délai 30 min par défaut)', [rows[2].jumuah, (rows[2].iqama - times.Dhuhr) / MIN], [true, 30]);
+eq('Maghrib : 10 min par défaut', (rows[4].iqama - times.Maghrib) / MIN, 10);
+eq('délai réglé par la mosquée', (screenRows(times, false, { iq: { Fajr: 25 } })[0].iqama - times.Fajr) / MIN, 25);
+eq('valeur invalide → défaut', screenConfig({ iq: { Asr: 'x' }, quiet: -3 }).iq.Asr, 15);
+eq('avant Dhuhr : prochain Adhan', [screenState(day, tomorrow, H(12, 0), {}).mode, screenState(day, tomorrow, H(12, 0), {}).row.key], ['next', 'Dhuhr']);
+eq('entre Adhan et Iqama : compte à rebours de l\'Iqama', screenState(day, tomorrow, H(13, 20), {}).mode, 'iqama');
+eq('après l\'Iqama : prière (écran sombre 10 min)', screenState(day, tomorrow, H(13, 40), {}).mode, 'prayer');
+eq('écran sombre désactivé (0 min)', screenState(day, tomorrow, H(13, 40), { quiet: 0 }).mode, 'next');
+eq('après Isha : Fajr de demain', screenState(day, tomorrow, H(21, 0), {}).row.adhan, tomorrow.times.Fajr);
+eq('le lever du soleil n\'est jamais « prochain Adhan »', screenState(day, tomorrow, H(7, 0), {}).row.key, 'Dhuhr');
+eq('compte à rebours', [countdownText(65000), countdownText(3723000), countdownText(-5)], ['01:05', '1:02:03', '00:00']);
+console.log(fails ? `\n${fails} échec(s)` : '\ntout passe');
+process.exit(fails ? 1 : 0);

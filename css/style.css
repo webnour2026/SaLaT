@@ -826,3 +826,62 @@ body.mq-open { overflow: hidden; }
 .ios-steps { margin: 4px 0 10px; padding-inline-start: 1.4em; line-height: 1.6; }
 .ios-steps li { margin: 6px 0; }
 .ios-share { width: 1.25em; height: 1.25em; vertical-align: -0.25em; fill: none; stroke: #007aff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ============ Écran de mosquée (TV / tablette) ============ */
+.ms-open { margin-top: 8px; }
+.mscreen { position: fixed; inset: 0; z-index: 1000; display: grid; grid-template-rows: auto auto 1fr auto; gap: 2.2vmin;
+  padding: 3vmin 3.5vmin; background: radial-gradient(120% 90% at 50% 0%, #0E6B57 0%, #073D32 55%, #04261F 100%); color: #F4F1E6;
+  font-family: var(--font-body); overflow: hidden; cursor: default; }
+.mscreen[hidden] { display: none; }
+.mscreen.idle { cursor: none; }
+.ms-top { display: flex; align-items: center; justify-content: space-between; gap: 3vmin; }
+.ms-place { display: flex; flex-direction: column; gap: .6vmin; min-width: 0; }
+.ms-place b { font: 700 clamp(1.4rem, 4.2vmin, 4rem)/1.1 var(--font-display); color: #EFCB72; }
+.ms-place span { font-size: clamp(.95rem, 2.6vmin, 2.4rem); color: #BFD8CF; }
+.ms-clock { font: 600 clamp(3rem, 13vmin, 13rem)/1 var(--font-body); font-variant-numeric: tabular-nums; letter-spacing: .02em; white-space: nowrap; }
+.ms-status { display: flex; align-items: baseline; justify-content: center; flex-wrap: wrap; gap: .4em 1em; padding: 1.6vmin 2vmin;
+  border-radius: 2vmin; background: rgba(255,255,255,.07); font-size: clamp(1.2rem, 4.2vmin, 4.2rem); text-align: center; }
+.ms-status b { font-variant-numeric: tabular-nums; color: #EFCB72; font-size: 1.25em; }
+.ms-status.iq { background: #EFCB72; color: #06231C; }
+.ms-status.iq b { color: #06231C; }
+.ms-status.soon b { animation: msPulse 1s ease-in-out infinite; }
+@keyframes msPulse { 50% { opacity: .45; } }
+.ms-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, 1fr); gap: 1.6vmin; min-height: 0; }
+.ms-grid li { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1vmin; padding: 1.6vmin .6vmin;
+  border-radius: 2.4vmin; background: rgba(255,255,255,.06); border: 1px solid rgba(239,203,114,.18); min-width: 0; text-align: center; }
+.ms-grid .n { font: 700 clamp(1.1rem, 5.4vmin, 5.4rem)/1.15 var(--font-display); }
+.ms-grid .a { font: 600 clamp(1.6rem, 8.4vmin, 9rem)/1 var(--font-body); font-variant-numeric: tabular-nums; }
+.ms-grid .i { font-size: clamp(.85rem, 3.4vmin, 3.4rem); color: #BFD8CF; font-variant-numeric: tabular-nums; }
+.ms-grid .i b { color: #EFCB72; font-weight: 600; }
+.ms-grid li.sun { opacity: .72; }
+.ms-grid li.sun .a { font-size: clamp(1.3rem, 5.6vmin, 6rem); }
+.ms-grid li.cur { background: #F4F1E6; color: #06231C; border-color: #EFCB72; box-shadow: 0 0 0 .5vmin rgba(239,203,114,.45); }
+.ms-grid li.cur .i { color: #0B5B4B; } .ms-grid li.cur .i b { color: #7A5A12; }
+.ms-foot { display: flex; align-items: center; justify-content: space-between; gap: 3vmin; min-height: 5vmin; }
+.ms-ticker { margin: 0; font-size: clamp(1rem, 3.2vmin, 3.2rem); line-height: 1.3; transition: opacity .5s; }
+.ms-ticker.out { opacity: 0; }
+.ms-src { font-size: clamp(.7rem, 1.7vmin, 1.6rem); color: #8DB4A8; white-space: nowrap; }
+.ms-quiet { position: absolute; inset: 0; background: #010A08; color: #6E8F86; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2vmin; text-align: center; }
+.ms-quiet[hidden] { display: none; }
+.ms-quiet p { margin: 0; font: 700 clamp(1.6rem, 7vmin, 7rem)/1.2 var(--font-display); color: #9DB8AF; }
+.ms-quiet small { font-size: clamp(1rem, 3.4vmin, 3.4rem); }
+.ms-quiet b { font: 500 clamp(1.4rem, 6vmin, 6rem)/1 var(--font-body); font-variant-numeric: tabular-nums; color: #4F6D65; margin-top: 2vmin; }
+.ms-tools { position: absolute; top: 1.2vmin; inset-inline-end: 1.2vmin; display: flex; gap: 8px; transition: opacity .4s; z-index: 2; }
+.mscreen.idle .ms-tools { opacity: 0; pointer-events: none; }
+.ms-tools button { width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(255,255,255,.14); color: #F4F1E6; display: grid; place-items: center; cursor: pointer; }
+.ms-tools svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.ms-top { padding-inline-end: 160px; }
+/* portrait (tablette debout, téléphone) : 2 colonnes */
+@media (max-aspect-ratio: 1/1) {
+  .mscreen { grid-template-rows: auto auto 1fr auto; }
+  .ms-top { flex-direction: column-reverse; align-items: center; text-align: center; padding-inline-end: 0; padding-top: 44px; }
+  .ms-place { align-items: center; }
+  .ms-grid { grid-template-columns: repeat(2, 1fr); }
+  .ms-foot { flex-direction: column; text-align: center; }
+}
+.ms-cfg { width: min(460px, calc(100% - 32px)); }
+.ms-iq { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 12px; margin: 8px 0 12px; }
+.ms-iq label, .ms-field { display: flex; flex-direction: column; gap: 4px; font-size: .92rem; }
+.ms-field { margin: 0 0 12px; }
+.ms-iq input, .ms-field input, .ms-field textarea { font: inherit; padding: 8px 10px; border-radius: var(--r-sm); border: 1px solid var(--rule); background: var(--paper); color: var(--ink); }
+.ms-cfg-btns { display: grid; grid-template-columns: 1fr 1.6fr; gap: 8px; }

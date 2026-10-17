@@ -32,10 +32,12 @@ Liste des améliorations retenues, à regrouper dans un même AAB avec d'autres 
    ✅ 17/10/2026 : code prêt (2.32.0, worker/, travail « Notifications (serveur) ») ; reste à poser les secrets GitHub,
    déployer, ajouter l'adresse du serveur à la CSP, puis tester avec les testeurs web/iPhone avant le 10/11.
 4. **iPhone** : aide « Ajouter à l'écran d'accueil » (Safari) ; avec le point 3, notifications du croissant sur iPhone.
+   ✅ 17/10/2026 (2.32.3) : bandeau + étapes ; bouton « السماح بالإشعارات ». Reste : essai sur un vrai iPhone.
 5. ⚠ **Avis Play dans l'appli** (In-App Review API), demandé une fois, après une semaine d'usage et un Adhan bien reçu.
 6. **Sécurité** : double authentification sur GitHub et sur le compte Play ; copie hors ligne de la clé de signature ;
    vérifier « Signature d'application par Google Play » ; politique CSP déjà testée, aucun traqueur.
 7. **Exclusivité : écran de mosquée** (TV / tablette) : horaires du jour, compte à rebours de l'Iqama, Joumou'a, annonce du mois.
+   ✅ 17/10/2026 (2.33.0) : …/SaLaT/#ecran ; à faire essayer par une mosquée (délais d'Iqama réels, lisibilité à distance).
 8. **AppGallery** (Huawei sans Google).
 
 ## Plus tard

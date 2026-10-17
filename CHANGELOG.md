@@ -81,6 +81,16 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.33.0] – 2026-10-17
+### Ajouté
+- **Écran de mosquée** (TV, tablette, PC) : bouton « 📺 شاشة المسجد » dans le Mode Mosquée, ou adresse directe
+  `…/SaLaT/#ecran`. Grande horloge, ville, dates grégorienne et hégirienne ; Adhan et Iqama de chaque prière (délais
+  réglables par la mosquée, Joumou'a à part le vendredi) ; compte à rebours du prochain Adhan puis de l'Iqama (bandeau doré,
+  clignote la dernière minute) ; écran sombre « الصلاة قائمة » pendant la prière (durée réglable, 0 = non) ; bandeau
+  tournant : annonce de la mosquée (texte libre), prochaines occasions et début de mois (« selon l'observation du
+  croissant » tant que le ministère n'a pas annoncé), jours blancs, rappel du vendredi. Écran maintenu allumé, plein écran,
+  boutons masqués après 4 s. Paysage : 6 colonnes ; portrait : 2 colonnes. Règles testées (scripts/test-screen.mjs).
+
 ## [2.32.3] – 2026-10-17
 ### Ajouté
 - iPhone / iPad (Safari, hors appli installée) : bandeau « ثبّت صلاتي على الآيفون » et bouton « كيف؟ » qui montre les

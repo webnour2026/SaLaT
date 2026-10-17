@@ -5,7 +5,7 @@ import { ensureMonths, ensureMonth, getDay, findNext, findElapsed, dateKeyInTz, 
 import { Countdown, formatHMS } from './countdown.js';
 import { qiblaBearing, distanceToKaaba, cardinalIndex } from './qibla.js';
 import { Compass } from './compass.js';
-import { formatHijri, useHabous, habousActive, habousInfo } from './hijri.js';
+import { formatHijri, useHabous, habousActive, habousInfo, isConfirmedStart } from './hijri.js';
 import { initHabous, refreshHabous } from './habous.js';
 import { refreshOfficiel } from './officiel.js';
 import { planNativeReminders, reminderText, wallTime, FRIDAY_AT, autoMonthTexts, PRED_KEYS, predictionFor } from './reminders.js';
@@ -15,9 +15,10 @@ import { nearestLocality, moroccoReference, localityName, allLocalities, localit
 import { declination as wmmDeclination } from './wmm.js';
 import { sunPosition, timesAtAzimuth } from './sun.js';
 import { ADHANS, playAdhan, stopAdhan, unlockAudio, playBeep, vibrate, notify, requestNotifPermission, notifPermission, availableAdhans, importCustomAdhan, removeCustomAdhan, loadCustomAdhans, customAdhans, loadSiteAdhans, DEFAULT_ADHAN, RETIRED } from './adhan.js';
-import { hijriMonth, upcomingWhiteDays, civilNoon, hijriOf, OCCASIONS, isWhiteDay, reminderFor, tableDays } from './calendar.js';
+import { hijriMonth, upcomingWhiteDays, civilNoon, hijriOf, occasionOf, OCCASIONS, isWhiteDay, reminderFor, tableDays } from './calendar.js';
 import { PRESET_CITIES, METHOD_BY_COUNTRY, getGpsPosition, reverseGeocode, searchCity } from './location.js';
 import { syncPush, testPush, pushSupported, pushActive, pushStatus } from './push.js';
+import { screenRows, screenState, screenConfig, countdownText } from './screen.js';
 import { clampDur, stepDur, effectiveMode, phaseAt, iqamaMin, PRAYER_SCREEN, PRAYER_SPAN, IQAMA_SCREEN } from './mosque.js';
 
 const $ = sel => document.querySelector(sel);
@@ -720,6 +721,103 @@ function mqPayload() {
   };
 }
 
+
+// ================= Écran de mosquée (TV / tablette) =================
+// Horloge, Adhan et Iqama de chaque prière, compte à rebours, écran sombre pendant la prière, bandeau d'annonces.
+// Ouverture : bouton dans le Mode Mosquée, ou adresse …/#ecran (TV). L'écran reste allumé (Wake Lock) tant qu'il est affiché.
+const ms = { timer: 0, idle: 0, lock: null, tick: 0, lines: [], li: 0, key: '' };
+const msCfg = () => screenConfig(S().screen);
+const dayInfo = key => { try { const d = key === state.dayKey ? state.today : getDay(S(), key); return d ? { times: d.times, friday: isFridayKey(key) } : null; } catch { return null; } };
+function openScreen() {
+  if (!S().location) { toast(t('chooseCity')); return; }
+  $('#mosqueDialog').open && $('#mosqueDialog').close();
+  $('#mScreen').hidden = false; document.body.classList.add('ms-on');
+  if (location.hash !== '#ecran') history.replaceState(null, '', '#ecran');
+  ms.key = ''; ms.li = 0; renderScreen(); clearInterval(ms.timer); ms.timer = setInterval(renderScreen, 1000);
+  wakeScreen(); msActivity();
+}
+function closeScreen() {
+  $('#mScreen').hidden = true; document.body.classList.remove('ms-on'); clearInterval(ms.timer);
+  try { ms.lock?.release(); } catch {} ms.lock = null;
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  if (location.hash === '#ecran') history.replaceState(null, '', location.pathname);
+}
+async function wakeScreen() { try { if ('wakeLock' in navigator && !$('#mScreen').hidden) ms.lock = await navigator.wakeLock.request('screen'); } catch { /* refusé : l'écran suit la veille du système */ } }
+function msActivity() { $('#mScreen').classList.remove('idle'); clearTimeout(ms.idle); ms.idle = setTimeout(() => $('#mScreen').classList.add('idle'), 4000); }
+function screenLines(c) {
+  const out = [], today = civilNoon(now(), tz()), off = S().hijriOffset;
+  if (c.msg) out.push(c.msg);
+  const fmt = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+  let n = 0;
+  for (let i = 0; i <= 30 && n < 2; i++) {
+    const noon = today + i * 864e5, h = hijriOf(noon, off), o = occasionOf(h);
+    if (!o) continue;
+    // date pas encore annoncée par le ministère : « selon l'observation du croissant »
+    const sure = !habousActive() || isConfirmedStart(noon - (h.d - 1) * 864e5);
+    const name = t(o.key, { m: t('hijriMonths')[o.m - 1] }) + (sure ? '' : ` (${t('bySighting')})`);
+    out.push(t('screenWhenIn', { d: `${name} — ${fmt.format(noon)}`, r: i === 0 ? t('today') : i === 1 ? t('tomorrow') : t('inDays', { n: i }) }));
+    n++;
+  }
+  const white = upcomingWhiteDays(today, off, 10);
+  if (white.length) out.push(t('whiteSoon', { list: white.map(x => fmt.format(x.noon)).join(' · ') }));
+  if (isFridayKey(state.dayKey || dateKeyInTz(now(), tz()))) out.push(t('fridayNotifBody').split('\n')[0]);
+  return out.length ? out : [t('screenSource')];
+}
+function renderScreen() {
+  if ($('#mScreen').hidden) return;
+  const tNow = now(), key = dateKeyInTz(tNow, tz());
+  if (state.dayKey !== key) loadDays();
+  const c = msCfg(), day = dayInfo(key), next = dayInfo(addDays(key, 1));
+  const st = screenState(day, next, tNow, c);
+  $('#msClock').textContent = fmtClock(tNow);
+  // grille et dates : redessinées seulement quand quelque chose change (jour, langue, réglages, prière en cours)
+  const sig = [key, getLang(), JSON.stringify(c), st.row?.key, st.mode].join('|');
+  if (sig !== ms.key) {
+    ms.key = sig;
+    const { greg, hijri } = fmtDates(tNow);
+    $('#msCity').textContent = $('#placeName').textContent; $('#msGreg').textContent = greg; $('#msHijri').textContent = hijri;
+    const curKey = st.row && st.mode !== 'next' ? st.row.key : null, nextKey = st.mode === 'next' && st.row && st.row.adhan < tNow + 864e5 && dateKeyInTz(st.row.adhan, tz()) === key ? st.row.key : null;
+    $('#msGrid').replaceChildren(...screenRows(day?.times, day?.friday, c).map(r => {
+      const li = document.createElement('li');
+      li.className = (r.key === 'Sunrise' ? 'sun ' : '') + (r.key === (curKey || nextKey) ? 'cur' : '');
+      const n = document.createElement('span'); n.className = 'n'; n.textContent = r.jumuah ? t('Jumuah') : t(r.key);
+      const a = document.createElement('span'); a.className = 'a'; a.textContent = fmtTime(r.adhan);
+      li.append(n, a);
+      if (r.iqama) { const i = document.createElement('span'); i.className = 'i'; i.append(`${t('screenIqLbl')} `); const b = document.createElement('b'); b.textContent = fmtTime(r.iqama); i.append(b); li.append(i); }
+      return li;
+    }));
+    ms.lines = screenLines(c); ms.li = 0; $('#msTicker').textContent = ms.lines[0];
+  }
+  const name = st.row ? (st.row.jumuah ? t('Jumuah') : t(st.row.key)) : '';
+  const left = st.target - tNow;
+  $('#msStatus').classList.toggle('iq', st.mode === 'iqama');
+  $('#msStatus').classList.toggle('soon', (st.mode === 'iqama' && left < 60000) || (st.mode === 'next' && left < 60000));
+  $('#msStatusLbl').textContent = st.mode === 'iqama' ? t('screenIqama', { p: name }) : st.mode === 'next' ? t('screenNext', { p: name }) : '';
+  $('#msStatusVal').textContent = st.mode === 'none' ? '' : countdownText(left);
+  const quiet = st.mode === 'prayer';
+  $('#msQuiet').hidden = !quiet;
+  if (quiet) { $('#msQuietTxt').textContent = t('screenPrayer'); $('#msQuietSub').textContent = t('screenPrayerSub'); $('#msQuietClock').textContent = fmtTime(tNow); }
+  // bandeau : une annonce toutes les 9 s
+  if (ms.lines.length > 1 && ++ms.tick % 9 === 0) {
+    const tk = $('#msTicker'); tk.classList.add('out');
+    setTimeout(() => { ms.li = (ms.li + 1) % ms.lines.length; tk.textContent = ms.lines[ms.li]; tk.classList.remove('out'); }, 500);
+  }
+}
+function openScreenCfg() {
+  const c = msCfg(), box = $('#msIq');
+  box.replaceChildren(...['Fajr', 'Dhuhr', 'Jumuah', 'Asr', 'Maghrib', 'Isha'].map(k => {
+    const l = document.createElement('label'); const s = document.createElement('span'); s.textContent = t(k);
+    const i = document.createElement('input'); i.type = 'number'; i.min = '0'; i.max = '90'; i.inputMode = 'numeric'; i.dataset.k = k; i.value = c.iq[k];
+    l.append(s, i); return l;
+  }));
+  $('#msQuietIn').value = c.quiet; $('#msMsgIn').value = c.msg;
+  $('#msDialog').showModal();
+}
+function saveScreenCfg() {
+  const iq = {}; document.querySelectorAll('#msIq input').forEach(i => { iq[i.dataset.k] = Number(i.value); });
+  S().screen = screenConfig({ iq, quiet: Number($('#msQuietIn').value), msg: $('#msMsgIn').value.trim() });
+  save(); $('#msDialog').close(); ms.key = ''; renderScreen();
+}
 
 // ================= Jours blancs =================
 function hijriLabel(h) { return `${h.d} ${t('hijriMonths')[h.m - 1]}`; }
@@ -2928,6 +3026,15 @@ function bind() {
   on('#silentOpen', 'click', () => { renderSilent(); $('#silentDialog').showModal(); });
   // Mode Mosquée
   ['#mosqueBtn', '#mqBadge', '#hubMosque'].forEach(sel => on(sel, 'click', openMosque));
+  on('#msOpen', 'click', openScreen);
+  on('#msClose', 'click', closeScreen);
+  on('#msCfg', 'click', openScreenCfg);
+  on('#msCfgSave', 'click', saveScreenCfg);
+  on('#msCfgCancel', 'click', () => $('#msDialog').close());
+  on('#msFull', 'click', () => { const el = document.documentElement; if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else el.requestFullscreen?.().catch(() => {}); });
+  ['pointermove', 'pointerdown', 'keydown'].forEach(ev => on('#mScreen', ev, msActivity));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('#mScreen').hidden) wakeScreen(); });
+  window.addEventListener('hashchange', () => { if (location.hash === '#ecran') openScreen(); else if (!$('#mScreen').hidden) closeScreen(); });
   document.querySelectorAll('input[name="mqMode"]').forEach(r => r.addEventListener('change', () => { state.mqDraft.mode = r.value; renderMosqueDialog(); }));
   on('#mqMinus', 'click', () => { state.mqDraft.dur = stepDur(state.mqDraft.dur, -1); renderMosqueDialog(); });
   on('#mqPlus', 'click', () => { state.mqDraft.dur = stepDur(state.mqDraft.dur, 1); renderMosqueDialog(); });
@@ -2997,7 +3104,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.32.3';
+export const APP_VERSION = '2.33.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
@@ -3055,6 +3162,7 @@ function init() {
 
   const [view, page] = (location.hash || '#home').slice(1).split('/');
   if (view === 'settings' && page) state.pendingPage = page;
+  if (view === 'ecran') setTimeout(openScreen, 300);   // écran de mosquée ouvert directement (TV)
   go(['home', 'qibla', 'calendar', 'cards', 'settings'].includes(view) ? view : 'home');
   renderNoLoc();
 
