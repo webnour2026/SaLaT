@@ -37,3 +37,5 @@ jobs:
           sleep 5
           code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$url/casablanca/")
           echo "::notice title=Pages des villes::$url (casablanca $code)"
+          h=$(curl -sI --max-time 20 "$url/sitemap.xml" | tr -d '\r' | grep -iE '^(HTTP|content-type|location)' | tr '\n' ' ')
+          echo "::notice title=Sitemap::$h"
