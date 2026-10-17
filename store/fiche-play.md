@@ -7,7 +7,7 @@ Captures : `store/captures/` — 7 images 1080×1920 par langue (`ar-…`, `fr-�
 **Titre (30 max)** : صلاتي: مواقيت الصلاة والهلال
 
 **Description courte (80 max)** :
-مواقيت مطابقة لجداول الأوقاف، الأذان والهاتف مغلق، وإعلان الهلال فورًا. مجاني
+مواقيت مطابقة لجداول الأوقاف، الأذان والهاتف مغلق، القبلة وإعلان الهلال فورًا
 
 **Description complète** :
 صلاتي تطبيق مغربي مستقل، مجاني وبدون إعلانات، مواقيته مطابقة بالدقيقة للجداول الرسمية لوزارة الأوقاف والشؤون الإسلامية.
@@ -33,7 +33,7 @@ Captures : `store/captures/` — 7 images 1080×1920 par langue (`ar-…`, `fr-�
 **Titre (30 max)** : SaLaTi : Horaires prière Maroc
 
 **Description courte** :
-Horaires conformes au Maroc, Adhan appli fermée, annonce du croissant. Gratuit
+Horaires de prière au Maroc, Adhan appli fermée, Qibla et annonce du croissant
 
 **Description complète** :
 SaLaTi est une appli marocaine indépendante, gratuite et sans publicité, conforme à la minute aux tableaux officiels du ministère des Habous et des Affaires islamiques.
@@ -59,7 +59,7 @@ SaLaTi est une application indépendante, sans aucun lien avec le ministère des
 **Title (30 max)** : SaLaTi: Prayer Times Morocco
 
 **Short description (80 max)** :
-Moroccan prayer times, Adhan with the app closed, crescent news. Free & no ads
+Moroccan prayer times, Adhan with the app closed, Qibla and crescent news
 
 **Full description** :
 SaLaTi is an independent, free and ad-free Moroccan app whose prayer times match the official tables of the Ministry of Habous and Islamic Affairs to the minute.
