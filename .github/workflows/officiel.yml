@@ -62,7 +62,7 @@ jobs:
         run: node scripts/build-mawaqit.mjs
       - name: Publier si les horaires ont changé
         run: |
-          git add data/officiel data/conformite.json data/calibration.json mawaqit sitemap.xml
+          git add data/officiel data/conformite.json data/calibration.json netlify
           if git diff --cached --quiet; then
             echo "Rien de nouveau"
           else

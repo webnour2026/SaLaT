@@ -1,13 +1,16 @@
 // Pages « مواقيت الصلاة في <ville> » : une page statique par localité officielle (191) + une page d'accueil des villes,
 // générées depuis data/officiel/<code>.json (tableaux du ministère des Habous). Destinées aux moteurs de recherche :
-// le tableau du mois est dans le HTML (lisible sans JavaScript) ; mawaqit/page.js ajoute l'horaire du jour et le compte à rebours.
+// le tableau du mois est dans le HTML (lisible sans JavaScript) ; page.js ajoute l'horaire du jour et le compte à rebours.
+// Publiées sur Netlify (dossier netlify/, voir netlify.toml) : <PAGES>/<ville>/ ; l'appli reste sur GitHub Pages.
 // Heure légale du Maroc = GMT depuis le 20/09/2026 (décret n° 2.26.530) : les heures sont affichées telles quelles (UTC).
-// Usage : node scripts/build-mawaqit.mjs   (écrit mawaqit/ et sitemap.xml ; relancé par le travail « Officiel »)
+// Usage : node scripts/build-mawaqit.mjs   (écrit netlify/ : pages, sitemap.xml, robots.txt ; relancé par le travail « Officiel »)
+// PAGES_URL : adresse du site Netlify (par défaut https://salati.netlify.app/).
 import fs from 'node:fs';
 import { allLocalities } from '../js/localites.js';
 
-const SITE = 'https://webnour2026.github.io/SaLaT/';
-const OUT = 'mawaqit';
+const APP = 'https://webnour2026.github.io/SaLaT/';                                 // l'appli (GitHub Pages)
+const PAGES = (process.env.PAGES_URL || 'https://salati.netlify.app/').replace(/\/?$/, '/');   // les pages des villes (Netlify)
+const OUT = 'netlify';
 const today = new Date().toISOString().slice(0, 10);
 const appSrc = fs.readFileSync('js/app.js', 'utf8');
 const PLAY_PUBLIC = /const PLAY_PUBLIC = true/.test(appSrc);
@@ -47,42 +50,43 @@ const head = ({ title, desc, url, ld }) => `<!doctype html>
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:url" content="${url}">
-<meta property="og:image" content="${SITE}icons/icon-512.png">
+<meta property="og:image" content="${PAGES}icons/icon-512.png">
 <meta name="theme-color" content="#0B5B4B">
-<link rel="icon" href="../${url.endsWith('/mawaqit/') ? '' : '../'}icons/icon-192.png">
+<link rel="icon" href="${url === PAGES ? '' : '../'}icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="${url.endsWith('/mawaqit/') ? '' : '../'}mawaqit.css">
+<link rel="stylesheet" href="${url === PAGES ? '' : '../'}mawaqit.css">
 ${ld ? `<script type="application/ld+json">${JSON.stringify(ld)}</script>` : ''}
 </head>`;
 
 const cta = (prefix) => PLAY_PUBLIC
   ? `<a class="cta" href="${PLAY_URL}">حمّل تطبيق صلاتي مجاناً من Google Play</a>`
-  : `<a class="cta" href="${prefix}../">جرّب تطبيق صلاتي مجاناً</a><p class="soon">تطبيق أندرويد قريباً على Google&nbsp;Play</p>`;
+  : `<a class="cta" href="${APP}">جرّب تطبيق صلاتي مجاناً</a><p class="soon">تطبيق أندرويد قريباً على Google&nbsp;Play</p>`;
 
 const footer = (prefix) => `<footer>
 <p>المواقيت مطابقة للجداول الرسمية لوزارة الأوقاف والشؤون الإسلامية، تُقارَن وتُحدَّث كل شهر.</p>
 <p lang="fr" dir="ltr">Horaires conformes aux tableaux officiels du ministère des Habous et des Affaires islamiques, vérifiés chaque mois. SaLaTi est une application indépendante, sans lien avec le ministère.</p>
-<p><a href="${prefix}">كل المدن</a> · <a href="${prefix}../">تطبيق صلاتي</a> · <a href="${prefix}../confidentialite.html">الخصوصية</a></p>
+<p><a href="${prefix}">كل المدن</a> · <a href="${APP}">تطبيق صلاتي</a> · <a href="${APP}confidentialite.html">الخصوصية</a></p>
 </footer>`;
 
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
 for (const f of fs.readdirSync('scripts/mawaqit-assets')) fs.copyFileSync(`scripts/mawaqit-assets/${f}`, `${OUT}/${f}`);   // page.js, mawaqit.css
+fs.mkdirSync(`${OUT}/icons`); for (const f of ['icon-192.png', 'icon-512.png']) fs.copyFileSync(`icons/${f}`, `${OUT}/icons/${f}`);
 
 for (const c of cities) {
-  const url = `${SITE}${OUT}/${c.slug}/`;
+  const url = `${PAGES}${c.slug}/`;
   const t0 = c.days[0][1].split(' ');
   const title = `مواقيت الصلاة في ${c.ar} اليوم | Horaires de prière ${c.fr} – SaLaTi`;
   const desc = `أوقات الصلاة في ${c.ar} حسب وزارة الأوقاف: الفجر ${hm(t0[0])}، الظهر ${hm(t0[2])}، العصر ${hm(t0[3])}، المغرب ${hm(t0[4])}، العشاء ${hm(t0[5])}. Horaires de prière à ${c.fr} conformes au ministère des Habous.`;
   const near = cities.filter(o => o !== c).map(o => [km(c, o), o]).sort((a, b) => a[0] - b[0]).slice(0, 8).map(([, o]) => o);
   const rows = c.days.map(([d, line]) => `<tr data-d="${d}"><th scope="row">${esc(rowAr(new Date(d + 'T12:00:00Z')))}</th>${line.split(' ').map(x => `<td>${hm(x)}</td>`).join('')}</tr>`).join('\n');
   const ld = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'مواقيت الصلاة في المغرب', item: `${SITE}${OUT}/` },
+    { '@type': 'ListItem', position: 1, name: 'مواقيت الصلاة في المغرب', item: PAGES },
     { '@type': 'ListItem', position: 2, name: `مواقيت الصلاة في ${c.ar}`, item: url }] };
   const html = `${head({ title, desc, url, ld })}
 <body>
-<header><a class="brand" href="../../"><img src="../../icons/icon-192.png" alt="" width="36" height="36">صلاتي SaLaTi</a></header>
+<header><a class="brand" href="../"><img src="../icons/icon-192.png" alt="" width="36" height="36">صلاتي SaLaTi</a></header>
 <main>
 <nav class="crumbs"><a href="../">مواقيت الصلاة في المغرب</a> › ${esc(c.ar)}</nav>
 <h1>مواقيت الصلاة في ${esc(c.ar)}</h1>
@@ -121,9 +125,9 @@ ${footer('../')}
 const byAr = [...cities].sort((a, b) => a.ar.localeCompare(b.ar, 'ar'));
 const indexHtml = `${head({ title: 'مواقيت الصلاة في المغرب حسب وزارة الأوقاف – 191 مدينة | Horaires de prière Maroc – SaLaTi',
   desc: 'مواقيت الصلاة اليوم في جميع مدن المغرب (191 مدينة ومركزاً) مطابقة لجداول وزارة الأوقاف والشؤون الإسلامية. Horaires de prière au Maroc, conformes au ministère des Habous.',
-  url: `${SITE}${OUT}/` })}
+  url: PAGES })}
 <body>
-<header><a class="brand" href="../"><img src="../icons/icon-192.png" alt="" width="36" height="36">صلاتي SaLaTi</a></header>
+<header><a class="brand" href="./"><img src="icons/icon-192.png" alt="" width="36" height="36">صلاتي SaLaTi</a></header>
 <main>
 <h1>مواقيت الصلاة في المغرب</h1>
 <p class="sub" lang="fr" dir="ltr">Horaires de prière au Maroc – 191 villes et centres, ministère des Habous</p>
@@ -140,11 +144,11 @@ fs.writeFileSync(`${OUT}/index.html`, indexHtml);
 
 // sitemap
 const lastmod = today;
-fs.writeFileSync('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>
+fs.writeFileSync(`${OUT}/sitemap.xml`, `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<url><loc>${SITE}</loc><lastmod>${lastmod}</lastmod></url>
-<url><loc>${SITE}${OUT}/</loc><lastmod>${lastmod}</lastmod></url>
-${cities.map(c => `<url><loc>${SITE}${OUT}/${c.slug}/</loc><lastmod>${lastmod}</lastmod></url>`).join('\n')}
+<url><loc>${PAGES}</loc><lastmod>${lastmod}</lastmod></url>
+${cities.map(c => `<url><loc>${PAGES}${c.slug}/</loc><lastmod>${lastmod}</lastmod></url>`).join('\n')}
 </urlset>
 `);
-console.log(`${cities.length} pages de villes écrites dans ${OUT}/ (+ index, sitemap.xml)`);
+fs.writeFileSync(`${OUT}/robots.txt`, `User-agent: *\nAllow: /\nSitemap: ${PAGES}sitemap.xml\n`);
+console.log(`${cities.length} pages de villes écrites dans ${OUT}/ pour ${PAGES} (+ index, sitemap.xml, robots.txt)`);

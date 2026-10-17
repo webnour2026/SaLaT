@@ -1,0 +1,13 @@
+# Pages « مواقيت الصلاة في <ville> » (référencement Google) : publiées depuis le dossier netlify/, généré chaque jour par
+# le travail GitHub « Officiel » (scripts/build-mawaqit.mjs). Pas de construction chez Netlify : il publie le dossier tel quel.
+[build]
+  publish = "netlify"
+  command = ""
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=31536000"
+    Cache-Control = "public, max-age=1800"
