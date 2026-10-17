@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: Tests des textes
         run: node scripts/test-push.mjs
       - name: Comptes configurés
@@ -82,8 +82,10 @@ jobs:
         if: steps.cfg.outputs.ok == 'true'
         working-directory: worker
         run: |
-          npx --yes $WRANGLER deploy
-          printf '%s' "$FCM_SA" | npx --yes $WRANGLER secret put FCM_SERVICE_ACCOUNT
+          err() { echo "::error title=$1::$(grep -E '✘|ERROR|Error|error' "$2" | grep -v '^\s*$' | head -4 | tr '\n' ' ' | cut -c1-600)"; exit 1; }
+          npx --yes $WRANGLER deploy > deploy.log 2>&1 || { cat deploy.log; err "wrangler deploy" deploy.log; }
+          cat deploy.log
+          printf '%s' "$FCM_SA" | npx --yes $WRANGLER secret put FCM_SERVICE_ACCOUNT > secret.log 2>&1 || { cat secret.log; err "wrangler secret" secret.log; }
       - name: Configuration publique de l'appli (data/push-config.json)
         if: steps.cfg.outputs.ok == 'true'
         env:
