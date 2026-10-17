@@ -1,6 +1,6 @@
 # Fiche Google Play — SaLaTi (octobre 2026)
 
-Captures : `store/captures/` — 7 images 1080×1920 par langue (`ar-…`, `fr-…`), dans l'ordre de la fiche.
+Captures : `store/captures/` — 7 images 1080×1920 par langue (`ar-…`, `fr-…`, `en-…`), dans l'ordre de la fiche.
 
 ## العربية (langue par défaut)
 
@@ -45,3 +45,25 @@ SaLaTi est une appli marocaine gratuite et sans publicité, fidèle à la minute
 🏠 Widget d'écran d'accueil et notification permanente de la prochaine prière.
 
 En arabe, français et anglais. Pas de compte, pas de publicité, aucun traqueur : vos données restent sur votre téléphone.
+
+## English
+
+**Title (30 max)** : SaLaTi: Prayer Times & Crescent
+
+**Short description (80 max)** :
+Official Moroccan prayer times, Adhan with the app closed, crescent news. Free
+
+**Full description** :
+SaLaTi is a free, ad-free Moroccan app that follows the official prayer times of the Ministry of Habous and Islamic Affairs to the minute.
+
+🕌 Official times for 191 cities and towns in Morocco, with a live countdown to the next prayer, Imsak and midnight.
+🌙 Crescent: visibility forecast on the evening of the 29th of each month, then the sighting result (seen / not seen) as soon as the Ministry announces it, with the date of the 1st of the month.
+🔔 Adhan even with the phone locked: full Adhan (Moroccan and Eastern voices), reminder before the prayer and an "Iqama reminder" button.
+🤫 Mosque Mode: the phone goes silent after the Adhan and the ringer comes back on its own; quick tile in the settings panel.
+📺 Mosque screen: Adhan, Iqama, countdown and mosque announcements on a TV or a tablet.
+🧭 Qibla: accurate compass corrected for magnetic declination.
+📅 Official Hijri calendar of Morocco: occasions, white days, Ramadan and Eids.
+🖼️ Cards to share: verses, duas, hadiths and greetings ready for WhatsApp.
+🏠 Home-screen widget and a persistent notification of the next prayer.
+
+In Arabic, French and English. No account, no ads, no trackers: your data stays on your phone.
