@@ -59,6 +59,10 @@ Liste des améliorations retenues, à regrouper dans un même AAB avec d'autres 
    les abonnés. Page de documentation ar / fr. Mentions : horaires selon les tableaux du ministère, service indépendant sans
    lien avec lui ; demander l'accord du ministère avant un usage commercial ou à grande échelle. Plus tard : clés d'accès,
    offre payante si la demande vient.
+   Avec l'API : dépôt PRIVÉ gratuit « SaLaT-cuisine » (récupération des tableaux du ministère, conformité, calibrage,
+   tableaux de test, serveur des notifications) ; ses travaux GitHub (2 000 min/mois gratuites, largement suffisant)
+   publient chaque jour seulement les résultats dans le dépôt public (jeton à droits limités en secret). Restent publics :
+   l'appli, GitHub Pages, la surveillance du croissant, la construction Android (minutes illimitées en public).
 
 ## Plus tard
 
