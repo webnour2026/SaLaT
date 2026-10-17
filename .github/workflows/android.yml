@@ -29,6 +29,12 @@ on:
         default: "none"
         type: choice
         options: [none, internal, alpha, beta, production]
+      fallback:
+        description: "Sans Chrome (AppGallery, Huawei sans Google) : webview ; Google Play : customtabs"
+        required: false
+        default: "customtabs"
+        type: choice
+        options: [customtabs, webview]
       release_status:
         description: "État de la version sur Google Play (draft = brouillon à valider dans Play Console)"
         required: true
@@ -107,13 +113,13 @@ jobs:
             "appVersion": "${{ inputs.version_name }}",
             "appVersionCode": ${{ inputs.version_code }},
             "shortcuts": [
-              { "name": "مواقيت الصلاة — Horaires", "shortName": "المواقيت", "url": "$SITE/?source=twa&native=21#home", "chosenIconUrl": "$SITE/icons/icon-192.png?v=190" },
-              { "name": "القبلة — Qibla", "shortName": "القبلة", "url": "$SITE/?source=twa&native=21#qibla", "chosenIconUrl": "$SITE/icons/icon-192.png?v=190" },
-              { "name": "التقويم الهجري — Calendrier", "shortName": "التقويم", "url": "$SITE/?source=twa&native=21#calendar", "chosenIconUrl": "$SITE/icons/icon-192.png?v=190" }
+              { "name": "مواقيت الصلاة — Horaires", "shortName": "المواقيت", "url": "$SITE/?source=twa&native=22#home", "chosenIconUrl": "$SITE/icons/icon-192.png?v=190" },
+              { "name": "القبلة — Qibla", "shortName": "القبلة", "url": "$SITE/?source=twa&native=22#qibla", "chosenIconUrl": "$SITE/icons/icon-192.png?v=190" },
+              { "name": "التقويم الهجري — Calendrier", "shortName": "التقويم", "url": "$SITE/?source=twa&native=22#calendar", "chosenIconUrl": "$SITE/icons/icon-192.png?v=190" }
             ],
             "generatorApp": "bubblewrap-cli",
             "webManifestUrl": "$SITE/manifest.json",
-            "fallbackType": "customtabs",
+            "fallbackType": "${{ inputs.fallback || 'customtabs' }}",
             "features": {},
             "alphaDependencies": { "enabled": false },
             "enableSiteSettingsShortcut": true,
