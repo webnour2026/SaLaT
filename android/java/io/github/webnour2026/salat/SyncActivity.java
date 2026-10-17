@@ -4,11 +4,14 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.provider.Settings;
 import android.widget.Toast;
 
@@ -20,12 +23,13 @@ import org.json.JSONObject;
  * Activité invisible : elle se ferme aussitôt et on revient dans SaLaTi.
  */
 public class SyncActivity extends Activity {
-    private boolean ask, quiet, test, mosque;
+    private boolean ask, quiet, test, mosque, missed;
     private JSONObject cfg;
 
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
+        missed = missedAdhan(this);          // avant de reprogrammer : l'Adhan attendu a-t-il sonné ?
         try {
             Uri data = getIntent() != null ? getIntent().getData() : null;
             String d = data != null ? data.getQueryParameter("d") : null;
@@ -87,7 +91,28 @@ public class SyncActivity extends Activity {
                 } catch (Exception ignored) {}
             }
         }
+        // « Pour ne jamais manquer l'Adhan » : après l'activation sur les marques concernées (une fois, quand l'heure exacte
+        // est autorisée), ou si un Adhan n'a pas sonné (au plus tous les 3 jours, toutes marques)
+        try {
+            SharedPreferences p = getSharedPreferences(AlarmScheduler.PREFS, MODE_PRIVATE);
+            boolean exactOk = Build.VERSION.SDK_INT < 31 || ((AlarmManager) getSystemService(ALARM_SERVICE)).canScheduleExactAlarms();
+            long now = System.currentTimeMillis();
+            boolean first = Oem.strict() && ((ask && !p.getBoolean("batShown", false)) || p.getBoolean("batPending", false));
+            boolean late = missed && now - p.getLong("batMissedAt", 0) > 3 * 86400000L;
+            if ((first || late) && exactOk && !mosque) {
+                p.edit().putBoolean("batShown", true).putBoolean("batPending", false).putLong("batMissedAt", late ? now : p.getLong("batMissedAt", 0)).apply();
+                startActivity(new Intent(this, BatteryActivity.class).putExtra(BatteryActivity.MISSED, late));
+            } else if (first) p.edit().putBoolean("batPending", true).apply();   // d'abord l'autorisation « Alarmes et rappels »
+        } catch (Exception ignored) {}
         finish();
         overridePendingTransition(0, 0);
+    }
+
+    /** L'Adhan programmé est passé depuis plus de 3 min sans avoir été déclenché, alors que le téléphone était allumé. */
+    static boolean missedAdhan(Context ctx) {
+        SharedPreferences p = ctx.getSharedPreferences(AlarmScheduler.PREFS, MODE_PRIVATE);
+        long exp = p.getLong("expAt", 0), fired = p.getLong("firedAt", 0), now = Clock.now(ctx);
+        long boot = System.currentTimeMillis() - SystemClock.elapsedRealtime();
+        return exp > 0 && now > exp + 3 * 60000L && now - exp < 2 * 86400000L && fired < exp - 60000L && boot < exp - 60000L;
     }
 }

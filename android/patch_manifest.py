@@ -23,6 +23,11 @@ wanted = ['SCHEDULE_EXACT_ALARM', 'RECEIVE_BOOT_COMPLETED', 'VIBRATE', 'POST_NOT
 perms = '\n' + ''.join(f'    <uses-permission android:name="android.permission.{p}"/>\n'
                        for p in wanted if f'android.permission.{p}"' not in s)
 s = re.sub(r'(<manifest[^>]*>)', lambda x: x.group(1) + perms, s, count=1)
+# écrans « démarrage automatique » des marques (Android 11+ : visibilité des paquets)
+queries = '    <queries>\n' + ''.join(f'        <package android:name="{q}"/>\n' for q in [
+    'com.miui.securitycenter', 'com.miui.powerkeeper', 'com.coloros.safecenter', 'com.oppo.safe', 'com.oneplus.security',
+    'com.vivo.permissionmanager', 'com.iqoo.secure', 'com.huawei.systemmanager', 'com.hihonor.systemmanager']) + '    </queries>\n'
+if '<queries>' not in s: s = re.sub(r'(<manifest[^>]*>)', lambda x: x.group(1) + '\n' + queries, s, count=1)
 comps = '''
         <!-- Adhan en arrière-plan (SaLaTi) -->
         <activity android:name="io.github.webnour2026.salat.SyncActivity"
@@ -35,6 +40,19 @@ comps = '''
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="salati" android:host="sync"/>
+            </intent-filter>
+        </activity>
+        <!-- « Pour ne jamais manquer l'Adhan » : réglage batterie / démarrage automatique selon la marque -->
+        <activity android:name="io.github.webnour2026.salat.BatteryActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="salati" android:host="battery"/>
             </intent-filter>
         </activity>
         <!-- Bouton « le mois a-t-il commencé aujourd'hui ? » (hors Maroc) -->

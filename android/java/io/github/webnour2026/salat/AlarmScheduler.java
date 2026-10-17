@@ -184,8 +184,15 @@ final class AlarmScheduler {
         pi = alarmIntent(ctx, bestKey, bestType, bestTime);
         long trigger = Clock.toDevice(ctx, bestTime);   // l'alarme suit l'horloge du téléphone : on la décale de l'écart mesuré
         boolean exact = Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms();
+        // heure attendue de l'Adhan : sert à détecter un Adhan qui n'a pas sonné (téléphone qui arrête les applis fermées)
+        if ("at".equals(bestType)) ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putLong("expAt", bestTime).apply();
         try {
-            if (exact) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pi);
+            if (exact && "at".equals(bestType) && Oem.strict()) {
+                // Xiaomi, Oppo, Realme, Vivo, Huawei… : un réveil (setAlarmClock) n'est jamais annulé par l'économiseur de batterie
+                Intent open = ctx.getPackageManager().getLaunchIntentForPackage(ctx.getPackageName());
+                PendingIntent show = open == null ? null : PendingIntent.getActivity(ctx, 9077, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                am.setAlarmClock(new AlarmManager.AlarmClockInfo(trigger, show), pi);
+            } else if (exact) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pi);
             else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pi);   // sans autorisation : à quelques minutes près
         } catch (SecurityException e) {
             am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, pi);

@@ -81,6 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.30.0] – 2026-10-17 ⚠ nouvel AAB (version code 32, native=20)
+### Ajouté
+- Téléphones Xiaomi/Redmi/Poco, Oppo, Realme, OnePlus, Vivo/iQOO, Huawei et Honor (économiseur de batterie qui arrête les applis fermées) : l’Adhan et la fin du Mode Mosquée sont programmés comme un réveil (`setAlarmClock`), que ces systèmes n’annulent pas. Les autres téléphones (Samsung, Pixel…) gardent l’alarme habituelle.
+- Écran « Pour ne jamais manquer l’Adhan » (module Android) : le réglage à faire selon la marque, avec un bouton qui ouvre l’écran « démarrage automatique » de la marque et un bouton « Batterie ». Ouvert : depuis Réglages → Adhan téléphone fermé ; une fois après l’activation sur les marques concernées ; et, sur tous les téléphones, quand un Adhan n’a pas sonné alors que le téléphone était allumé (au plus tous les 3 jours).
+
 ## [2.29.5] – 2026-10-17
 ### Ajouté
 - Version web ouverte sur Android (navigateur ou installée depuis le site) : bandeau « L’appli Android complète arrive bientôt sur Google Play : l’Adhan même appli fermée, le Mode Mosquée et le widget. » Fermable (30 jours). Quand `PLAY_PUBLIC` passera à true : texte « Avec l’appli Android… » et bouton « Installer » vers Google Play. Jamais affiché dans l’appli Play ni sur iPhone.

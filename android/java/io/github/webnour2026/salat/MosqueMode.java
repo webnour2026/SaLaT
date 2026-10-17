@@ -127,7 +127,11 @@ final class MosqueMode {
         long trigger = Clock.toDevice(ctx, when);
         boolean exact = Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms();
         try {
-            if (exact) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, p);
+            if (exact && Oem.strict()) {          // rétablir la sonnerie à coup sûr, même si le système a arrêté l'appli
+                android.content.Intent open = ctx.getPackageManager().getLaunchIntentForPackage(ctx.getPackageName());
+                PendingIntent show = open == null ? null : PendingIntent.getActivity(ctx, 9078, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                am.setAlarmClock(new AlarmManager.AlarmClockInfo(trigger, show), p);
+            } else if (exact) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, p);
             else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, p);
         } catch (SecurityException e) {
             am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger, p);

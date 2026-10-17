@@ -20,6 +20,8 @@ public class AlarmReceiver extends BroadcastReceiver {
             checkClock(app, 0);
             return;
         }
+        if ("at".equals(type0))                // l'Adhan a bien été déclenché (voir SyncActivity.missedAdhan)
+            ctx.getSharedPreferences(AlarmScheduler.PREFS, Context.MODE_PRIVATE).edit().putLong("firedAt", Clock.now(ctx)).apply();
         try {
             JSONObject cfg = AlarmScheduler.config(ctx);
             String key = intent.getStringExtra(AlarmScheduler.EXTRA_KEY);

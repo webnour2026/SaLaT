@@ -580,7 +580,7 @@ function mqMode(tNow = now()) {
 }
 const nativeMqCapable = () => isTwa() && localStorage.getItem('priere.nativeMq') === '1';
 // Version du module Android installé (paramètre « native » de l'adresse de démarrage de l'appli Play Store)
-const NATIVE_LATEST = 19;                                    // 4 = module 2.14 : rappels du croissant autonomes ; 5 = 2.15 : Adhans de Doha intégrés ; 8 = 2.18 : widget d'écran d'accueil ; 9 = 2.19 : widget redessiné ; 10 = 2.19.1 : nom de la prière en Reem Kufi ; 11 = 2.20 : 10 méthodes de calcul ajoutées ; 12 = 2.23 : avis de changement de fuseau ; 13 = 2.23.1 : calendrier relu chaque minute les soirs d'annonce ; 14 = 2.24 : Chaabane parmi les mois surveillés ; 15 = 2.25 : « non vu » pour tous les mois, avec le jour du 1er ; 16 = 2.26 : hors Maroc, « le mois a-t-il commencé aujourd'hui ? » avec boutons ; 17 = 2.27 : prévision de visibilité du croissant, appli fermée ; 18 = 2.28 : Asr du ministère (Soleil apparent) ; 19 = 2.29 : Maghrib en altitude
+const NATIVE_LATEST = 20;                                    // 4 = module 2.14 : rappels du croissant autonomes ; 5 = 2.15 : Adhans de Doha intégrés ; 8 = 2.18 : widget d'écran d'accueil ; 9 = 2.19 : widget redessiné ; 10 = 2.19.1 : nom de la prière en Reem Kufi ; 11 = 2.20 : 10 méthodes de calcul ajoutées ; 12 = 2.23 : avis de changement de fuseau ; 13 = 2.23.1 : calendrier relu chaque minute les soirs d'annonce ; 14 = 2.24 : Chaabane parmi les mois surveillés ; 15 = 2.25 : « non vu » pour tous les mois, avec le jour du 1er ; 16 = 2.26 : hors Maroc, « le mois a-t-il commencé aujourd'hui ? » avec boutons ; 17 = 2.27 : prévision de visibilité du croissant, appli fermée ; 18 = 2.28 : Asr du ministère (Soleil apparent) ; 19 = 2.29 : Maghrib en altitude ; 20 = 2.30 : Adhan en réveil sur Xiaomi/Oppo/Vivo/Huawei… et écran « ne jamais manquer l'Adhan »
 const STORE_URL = 'https://play.google.com/store/apps/details?id=io.github.webnour2026.salat';
 const nativeLevel = () => Number(localStorage.getItem('priere.nativeLvl') || 0);
 const UPD_KEY = 'priere.updDismiss';
@@ -2282,6 +2282,7 @@ async function nativePayload() {
     hj: Array.from({ length: 31 }, (_, i) => fmtDates(Date.parse(`${addDays(today, i)}T12:00:00Z`)).hijri),
     ad: Object.fromEntries(PRAYERS.map(k => [k, a.enabled ? nativeSound(adhanFor(k)) : 'none'])),
     names: { ...Object.fromEntries(PRAYERS.map(k => [k, t(k)])), Jumuah: t('Jumuah') },   // Jumuah : nom du Dhuhr le vendredi
+    lang: getLang(),   // module ≥ 20 : langue de l'écran « Pour ne jamais manquer l'Adhan »
     txt: { itsTime: t('itsTime'), before: t('beforeMsg'), stop: t('stop'), ok: t('nativeOk'), city: loc.name || '',
            chAdhan: t('chAdhan'), chBefore: t('chBefore'), chSilent: t('chSilent'), chOngoing: t('chOngoing'), chReminder: t('chReminder'),
            chMosque: t('chMosque'), mqOn: t('mqBadgeOn'), mqUntil: t('mqUntil'), mqStopNow: t('mqStopNow'), mqIqama: t('mqIqama'), mqIqamaBody: t('mqIqamaBody'),
@@ -2334,6 +2335,7 @@ function renderNative() {
     : t('nativeOff');
   $('#nativeStatus').className = 'native-status ' + (at ? 'ok' : '');
   $('#nativeSync').textContent = at ? t('nativeBtnUpdate') : t('nativeBtnOn');
+  $('#batteryBtn').hidden = !(nativeActive() && nativeLevel() >= 20);
 }
 
 // ================= Qibla =================
@@ -2889,6 +2891,7 @@ function bind() {
   on('#adhanSilent', 'click', () => { stopAdhan(); hideAdhanAlert(); renderSilent(); $('#silentDialog').showModal(); });
   on('#updBtn', 'click', openPlay);
   on('#andBtn', 'click', openPlay);
+  on('#batteryBtn', 'click', () => { location.href = `intent://battery?l=${getLang()}#Intent;scheme=salati;package=${TWA_PKG};end`; });
   on('#andClose', 'click', () => { try { localStorage.setItem(AND_KEY, `${PLAY_PUBLIC}:${Date.now() + 30 * 864e5}`); } catch {} renderAndroidHint(); });
   on('#updClose', 'click', () => { try { localStorage.setItem(UPD_KEY, `${NATIVE_LATEST}:${Date.now() + 3 * 864e5}`); } catch {} renderUpdate(); });   // rappel dans 3 jours
   on('#silentOpen', 'click', () => { renderSilent(); $('#silentDialog').showModal(); });
@@ -2963,7 +2966,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.29.5';
+export const APP_VERSION = '2.30.0';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
