@@ -24,8 +24,8 @@ Liste des améliorations retenues, à regrouper dans un même AAB avec d'autres 
 1. **Production sur Google Play** : 12 testeurs actifs pendant 14 jours, puis demande d'accès à la production. Tout le reste en dépend.
 2. **Pages « مواقيت الصلاة في <ville> »** (191 pages statiques générées depuis data/officiel, FR/AR) : ce que les gens
    cherchent chaque jour sur Google ; chaque page renvoie vers l'appli. Web seulement.
-   ✅ 17/10/2026 : en ligne sur https://miqatsalati.netlify.app/ (dossier `netlify/`, régénéré chaque jour), propriété
-   validée dans Search Console. Suivre l'indexation (rapport « Pages ») dans 1–2 semaines.
+   ✅ 17/10/2026 : en ligne sur https://miqatsalati.webnour.workers.dev/ (Cloudflare, dossier `pages/`, régénéré chaque
+   jour ; Netlify abandonné, crédits épuisés). Reste : nouvelle propriété Search Console + sitemap ; suivre l'indexation.
 3. **Annonce du croissant instantanée pour tous** : petit serveur gratuit (Cloudflare Worker, relève chaque minute les soirs
    d'annonce) + notifications push (Firebase pour l'appli Android, Web Push pour iPhone/PC). Comptes Cloudflare + Firebase
    à créer ; politique de confidentialité à mettre à jour (jeton de notification, sans donnée personnelle).
