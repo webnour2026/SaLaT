@@ -34,11 +34,16 @@ Liste des améliorations retenues, à regrouper dans un même AAB avec d'autres 
 4. **iPhone** : aide « Ajouter à l'écran d'accueil » (Safari) ; avec le point 3, notifications du croissant sur iPhone.
    ✅ 17/10/2026 (2.32.3) : bandeau + étapes ; bouton « السماح بالإشعارات ». Reste : essai sur un vrai iPhone.
 5. ⚠ **Avis Play dans l'appli** (In-App Review API), demandé une fois, après une semaine d'usage et un Adhan bien reçu.
+   ✅ 17/10/2026 : module 22, AAB 2.34.0 (code 34) construit. À publier ; puis `NATIVE_LATEST = 22` dans js/app.js.
 6. **Sécurité** : double authentification sur GitHub et sur le compte Play ; copie hors ligne de la clé de signature ;
    vérifier « Signature d'application par Google Play » ; politique CSP déjà testée, aucun traqueur.
+   ✅ 17/10/2026 : historique du dépôt contrôlé (aucun secret ni clé), clés Firebase/Cloudflare seulement dans les secrets
+   GitHub. Reste (utilisateur) : 2FA GitHub / Google / Cloudflare / Netlify, restreindre la clé Web Firebase au site,
+   alertes Dependabot + secret scanning, copie hors ligne du keystore.
 7. **Exclusivité : écran de mosquée** (TV / tablette) : horaires du jour, compte à rebours de l'Iqama, Joumou'a, annonce du mois.
    ✅ 17/10/2026 (2.33.0) : …/SaLaT/#ecran ; à faire essayer par une mosquée (délais d'Iqama réels, lisibilité à distance).
 8. **AppGallery** (Huawei sans Google).
+   ✅ 17/10/2026 : option « fallback = webview » du travail Android. Reste : compte développeur Huawei (vérification d'identité).
 
 ## Plus tard
 
