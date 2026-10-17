@@ -11,6 +11,14 @@ Liste des améliorations retenues, à regrouper dans un même AAB avec d'autres 
 - ⚠ **Rappel de l'Iqama dans la notification de l'Adhan** : bouton « Rappel à l'Iqama » qui fait vibrer à l'heure de
   l'Iqama de cette prière (délais déjà connus du Mode Mosquée, `MosqueMath.iqamaMin`).
 
+## Prochain AAB (à inclure)
+
+- ⚠ **Pages des villes ouvertes dans l'appli sans barre d'adresse** : déclarer miqatsalati.webnour.workers.dev comme site de
+  confiance (`additionalTrustedOrigins` dans le twa-manifest de android.yml) + `pages/.well-known/assetlinks.json` (empreinte
+  SHA-256 de la clé de signature Play) ; puis réafficher le lien « مواقيت الصلاة في كل مدن المغرب » dans l'appli (#allCitiesLink,
+  masqué en 2.34.5) et y cacher le bouton « جرّب تطبيق صلاتي » quand la page est ouverte depuis l'appli.
+- ⚠ Mode Mosquée natif : délai d'Iqama du Fajr à 20 min et délais réglés par la mosquée (déjà dans le code, MosqueMath / cfg.iq).
+
 ## À vérifier
 
 - 10 novembre 2026 (29 Joumada al-Oula 1448) : avis d'observation du croissant puis annonce reçus appli fermée,
