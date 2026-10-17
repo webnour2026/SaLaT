@@ -81,6 +81,12 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.34.5] – 2026-10-18
+### Modifié
+- Appli Android : le lien « مواقيت الصلاة في كل مدن المغرب » (À propos) est masqué. La page des villes est un autre site :
+  elle s'ouvrait dans un onglet avec barre d'adresse et bouton « جرّب تطبيق صلاتي », sans intérêt dans l'appli. Le lien reste
+  dans la version web.
+
 ## [2.34.4] – 2026-10-17
 ### Ajouté
 - Mention « صلاتي تطبيق مستقل لا علاقة له بوزارة الأوقاف… » (ar, fr, en) en bas de « À propos », dans le pied des pages

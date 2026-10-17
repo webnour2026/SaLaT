@@ -2467,6 +2467,7 @@ function nativeNeedsSync() {
 function renderNative() {
   const g = $('#nativeGroup'); if (!g) return;
   g.hidden = !isTwa();
+  const ac = document.getElementById('allCitiesLink'); if (ac) ac.hidden = isTwa();   // appli Android : la page web des villes s'ouvrirait avec une barre d'adresse
   const lim = $('#limitsBox'); if (lim) lim.hidden = nativeActive();
   if (!isTwa()) return;
   const at = +localStorage.getItem('priere.nativeAt') || 0;
@@ -3125,7 +3126,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.34.4';
+export const APP_VERSION = '2.34.5';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
