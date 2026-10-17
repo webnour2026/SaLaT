@@ -67,7 +67,7 @@ const cta = (prefix) => PLAY_PUBLIC
   : `<a class="cta" href="${APP}">جرّب تطبيق صلاتي مجاناً</a><p class="soon">تطبيق أندرويد قريباً على Google&nbsp;Play</p>`;
 
 const footer = (prefix) => `<footer>
-<p>المواقيت مطابقة للجداول الرسمية لوزارة الأوقاف والشؤون الإسلامية، تُقارَن وتُحدَّث كل شهر.</p>
+<p>المواقيت مطابقة للجداول الرسمية لوزارة الأوقاف والشؤون الإسلامية، تُقارَن وتُحدَّث كل شهر. صلاتي تطبيق مستقل لا علاقة له بوزارة الأوقاف والشؤون الإسلامية، ويعتمد جداولها الرسمية المنشورة.</p>
 <p lang="fr" dir="ltr">Horaires conformes aux tableaux officiels du ministère des Habous et des Affaires islamiques, vérifiés chaque mois. SaLaTi est une application indépendante, sans lien avec le ministère.</p>
 <p><a href="${prefix}">كل المدن</a> · <a href="${APP}">تطبيق صلاتي</a> · <a href="${APP}confidentialite.html">الخصوصية</a></p>
 </footer>`;

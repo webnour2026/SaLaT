@@ -81,6 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.34.4] – 2026-10-17
+### Ajouté
+- Mention « صلاتي تطبيق مستقل لا علاقة له بوزارة الأوقاف… » (ar, fr, en) en bas de « À propos », dans le pied des pages
+  des villes et dans la fiche Play ; ligne de l'écran de mosquée reformulée (« selon les tableaux du ministère »).
+
 ## [2.34.3] – 2026-10-17
 ### Corrigé
 - Version web : l'Adhan pouvait retentir avec du retard (ex. 10 min) en revenant dans l'onglet, le navigateur ayant mis

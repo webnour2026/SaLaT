@@ -885,3 +885,5 @@ body.mq-open { overflow: hidden; }
 .ms-field { margin: 0 0 12px; }
 .ms-iq input, .ms-field input, .ms-field textarea { font: inherit; padding: 8px 10px; border-radius: var(--r-sm); border: 1px solid var(--rule); background: var(--paper); color: var(--ink); }
 .ms-cfg-btns { display: grid; grid-template-columns: 1fr 1.6fr; gap: 8px; }
+
+.disclaimer { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--rule); font-size: .82rem; }

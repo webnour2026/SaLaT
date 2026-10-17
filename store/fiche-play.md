@@ -24,6 +24,8 @@ Captures : `store/captures/` — 7 images 1080×1920 par langue (`ar-…`, `fr-�
 
 بالعربية والفرنسية والإنجليزية. لا حساب، ولا إعلانات، ولا تتبّع: بياناتك تبقى على هاتفك.
 
+صلاتي تطبيق مستقل لا علاقة له بوزارة الأوقاف والشؤون الإسلامية، ويعتمد جداولها الرسمية المنشورة.
+
 ## Français
 
 **Titre (30 max)** : SaLaTi : prière et croissant
@@ -46,6 +48,8 @@ SaLaTi est une appli marocaine gratuite et sans publicité, fidèle à la minute
 
 En arabe, français et anglais. Pas de compte, pas de publicité, aucun traqueur : vos données restent sur votre téléphone.
 
+SaLaTi est une application indépendante, sans aucun lien avec le ministère des Habous et des Affaires islamiques ; elle suit ses tableaux officiels publiés.
+
 ## English
 
 **Title (30 max)** : SaLaTi: Prayer Times, Crescent
@@ -67,3 +71,5 @@ SaLaTi is a free, ad-free Moroccan app that follows the official prayer times of
 🏠 Home-screen widget and a persistent notification of the next prayer.
 
 In Arabic, French and English. No account, no ads, no trackers: your data stays on your phone.
+
+SaLaTi is an independent app with no affiliation to the Ministry of Habous and Islamic Affairs; it follows its published official timetables.
