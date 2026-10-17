@@ -7,12 +7,12 @@ Captures : `store/captures/` — 7 images 1080×1920 par langue (`ar-…`, `fr-�
 **Titre (30 max)** : صلاتي: مواقيت الصلاة والهلال
 
 **Description courte (80 max)** :
-مواقيت وزارة الأوقاف بالدقيقة، الأذان والهاتف مغلق، وإعلان الهلال فورًا. مجاني
+مواقيت مطابقة لجداول الأوقاف، الأذان والهاتف مغلق، وإعلان الهلال فورًا. مجاني
 
 **Description complète** :
-صلاتي تطبيق مغربي مجاني وبدون إعلانات، يعتمد مواقيت وزارة الأوقاف والشؤون الإسلامية بالدقيقة.
+صلاتي تطبيق مغربي مستقل، مجاني وبدون إعلانات، مواقيته مطابقة بالدقيقة للجداول الرسمية لوزارة الأوقاف والشؤون الإسلامية.
 
-🕌 مواقيت رسمية لـ 191 مدينة ومركزًا في المغرب، مع العدّ التنازلي للصلاة القادمة، والإمساك ومنتصف الليل.
+🕌 مواقيت 191 مدينة ومركزًا في المغرب، مع العدّ التنازلي للصلاة القادمة، والإمساك ومنتصف الليل.
 🌙 الهلال: توقّع رؤية الهلال مساء 29 من كل شهر، ثم نتيجة المراقبة (ثبت / لم يثبت) فور صدور بلاغ الوزارة، مع تاريخ فاتح الشهر.
 🔔 الأذان حتى والهاتف مغلق: أذان كامل بأصوات مغربية ومشرقية، تذكير قبل الصلاة، وزر «تذكير بالإقامة».
 🤫 وضع المسجد: يُسكت الهاتف بعد الأذان ثم يعيد رنينه تلقائيًا، مع زر سريع في لوحة الإعدادات.
@@ -31,12 +31,12 @@ Captures : `store/captures/` — 7 images 1080×1920 par langue (`ar-…`, `fr-�
 **Titre (30 max)** : SaLaTi : prière et croissant
 
 **Description courte** :
-Horaires officiels du Maroc, Adhan appli fermée, annonce du croissant. Gratuit
+Horaires conformes au Maroc, Adhan appli fermée, annonce du croissant. Gratuit
 
 **Description complète** :
-SaLaTi est une appli marocaine gratuite et sans publicité, fidèle à la minute aux horaires du ministère des Habous et des Affaires islamiques.
+SaLaTi est une appli marocaine indépendante, gratuite et sans publicité, conforme à la minute aux tableaux officiels du ministère des Habous et des Affaires islamiques.
 
-🕌 Horaires officiels de 191 villes et localités du Maroc, avec le compte à rebours jusqu'à la prochaine prière, l'Imsak et le milieu de la nuit.
+🕌 Horaires de 191 villes et localités du Maroc, avec le compte à rebours jusqu'à la prochaine prière, l'Imsak et le milieu de la nuit.
 🌙 Croissant : prévision de visibilité le soir du 29 de chaque mois, puis le résultat de l'observation (vu / non vu) dès le communiqué du ministère, avec la date du 1er du mois.
 🔔 L'Adhan même téléphone fermé : Adhan complet (voix marocaines et orientales), rappel avant la prière et bouton « Rappel de l'Iqama ».
 🤫 Mode Mosquée : le téléphone se tait après l'Adhan puis la sonnerie revient toute seule ; tuile rapide dans le volet des réglages.
@@ -55,12 +55,12 @@ SaLaTi est une application indépendante, sans aucun lien avec le ministère des
 **Title (30 max)** : SaLaTi: Prayer Times, Crescent
 
 **Short description (80 max)** :
-Official Moroccan prayer times, Adhan with the app closed, crescent news. Free
+Moroccan prayer times, Adhan with the app closed, crescent news. Free & no ads
 
 **Full description** :
-SaLaTi is a free, ad-free Moroccan app that follows the official prayer times of the Ministry of Habous and Islamic Affairs to the minute.
+SaLaTi is an independent, free and ad-free Moroccan app whose prayer times match the official tables of the Ministry of Habous and Islamic Affairs to the minute.
 
-🕌 Official times for 191 cities and towns in Morocco, with a live countdown to the next prayer, Imsak and midnight.
+🕌 Prayer times for 191 cities and towns in Morocco, with a live countdown to the next prayer, Imsak and midnight.
 🌙 Crescent: visibility forecast on the evening of the 29th of each month, then the sighting result (seen / not seen) as soon as the Ministry announces it, with the date of the 1st of the month.
 🔔 Adhan even with the phone locked: full Adhan (Moroccan and Eastern voices), reminder before the prayer and an "Iqama reminder" button.
 🤫 Mosque Mode: the phone goes silent after the Adhan and the ringer comes back on its own; quick tile in the settings panel.
