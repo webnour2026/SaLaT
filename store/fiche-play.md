@@ -22,13 +22,15 @@ Captures : `store/captures/` — 7 images 1080×1920 par langue (`ar-…`, `fr-�
 🖼️ بطاقات للمشاركة: آيات وأدعية وأحاديث وتهاني جاهزة لواتساب.
 🏠 أداة على الشاشة الرئيسية، وإشعار دائم بالصلاة القادمة.
 
+مواقيت الصلاة، أوقات الصلاة، الأذان، القبلة، التقويم الهجري، إمساكية رمضان، المغرب.
+
 بالعربية والفرنسية والإنجليزية. لا حساب، ولا إعلانات، ولا تتبّع: بياناتك تبقى على هاتفك.
 
 صلاتي تطبيق مستقل لا علاقة له بوزارة الأوقاف والشؤون الإسلامية، ويعتمد جداولها الرسمية المنشورة.
 
 ## Français
 
-**Titre (30 max)** : SaLaTi : prière et croissant
+**Titre (30 max)** : SaLaTi : Horaires prière Maroc
 
 **Description courte** :
 Horaires conformes au Maroc, Adhan appli fermée, annonce du croissant. Gratuit
@@ -46,13 +48,15 @@ SaLaTi est une appli marocaine indépendante, gratuite et sans publicité, confo
 🖼️ Cartes à partager : versets, douas, hadiths et vœux prêts pour WhatsApp.
 🏠 Widget d'écran d'accueil et notification permanente de la prochaine prière.
 
+Pour chercher : heures de prière, horaires de prière au Maroc, Adhan (Athan), Salat, Qibla, calendrier hégirien, Ramadan, Imsakia.
+
 En arabe, français et anglais. Pas de compte, pas de publicité, aucun traqueur : vos données restent sur votre téléphone.
 
 SaLaTi est une application indépendante, sans aucun lien avec le ministère des Habous et des Affaires islamiques ; elle suit ses tableaux officiels publiés.
 
 ## English
 
-**Title (30 max)** : SaLaTi: Prayer Times, Crescent
+**Title (30 max)** : SaLaTi: Prayer Times Morocco
 
 **Short description (80 max)** :
 Moroccan prayer times, Adhan with the app closed, crescent news. Free & no ads
@@ -69,6 +73,8 @@ SaLaTi is an independent, free and ad-free Moroccan app whose prayer times match
 📅 Official Hijri calendar of Morocco: occasions, white days, Ramadan and Eids.
 🖼️ Cards to share: verses, duas, hadiths and greetings ready for WhatsApp.
 🏠 Home-screen widget and a persistent notification of the next prayer.
+
+Also known as: prayer times, Salah / Salat times, Adhan (Athan), Qibla finder, Hijri calendar, Ramadan Imsakia, Morocco.
 
 In Arabic, French and English. No account, no ads, no trackers: your data stays on your phone.
 
