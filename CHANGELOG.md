@@ -83,7 +83,7 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 
 ## [2.31.2] – 2026-10-17
 ### Modifié
-- Pages « مواقيت الصلاة في <ville> » déplacées sur Netlify (salati.netlify.app) : c'est cette adresse que Google indexe et
+- Pages « مواقيت الصلاة في <ville> » déplacées sur Netlify (miqatsalati.netlify.app) : c'est cette adresse que Google indexe et
   affiche. Générées dans `netlify/` (pages, sitemap.xml, robots.txt, icônes) par le travail « Officiel » ; `netlify.toml`
   publie ce dossier tel quel. L'appli reste sur GitHub Pages ; les liens des pages pointent vers elle. Anciennes copies
   `mawaqit/` et `sitemap.xml` retirées de GitHub Pages (pas de contenu en double).

@@ -4,12 +4,12 @@
 // Publiées sur Netlify (dossier netlify/, voir netlify.toml) : <PAGES>/<ville>/ ; l'appli reste sur GitHub Pages.
 // Heure légale du Maroc = GMT depuis le 20/09/2026 (décret n° 2.26.530) : les heures sont affichées telles quelles (UTC).
 // Usage : node scripts/build-mawaqit.mjs   (écrit netlify/ : pages, sitemap.xml, robots.txt ; relancé par le travail « Officiel »)
-// PAGES_URL : adresse du site Netlify (par défaut https://salati.netlify.app/).
+// PAGES_URL : adresse du site Netlify (par défaut https://miqatsalati.netlify.app/).
 import fs from 'node:fs';
 import { allLocalities } from '../js/localites.js';
 
 const APP = 'https://webnour2026.github.io/SaLaT/';                                 // l'appli (GitHub Pages)
-const PAGES = (process.env.PAGES_URL || 'https://salati.netlify.app/').replace(/\/?$/, '/');   // les pages des villes (Netlify)
+const PAGES = (process.env.PAGES_URL || 'https://miqatsalati.netlify.app/').replace(/\/?$/, '/');   // les pages des villes (Netlify)
 const OUT = 'netlify';
 const today = new Date().toISOString().slice(0, 10);
 const appSrc = fs.readFileSync('js/app.js', 'utf8');

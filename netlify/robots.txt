@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://salati.netlify.app/sitemap.xml
+Sitemap: https://miqatsalati.netlify.app/sitemap.xml
