@@ -820,3 +820,9 @@ body.fit .cal-events::-webkit-scrollbar { display: none; }
 .mq-scr-chip { margin: 12px 0 0; padding: 10px 16px; border-radius: 99px; background: rgb(255 255 255 / .1); font-size: .9rem; }
 body.mq-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .mq-ring .arc { transition: none; } }
+
+/* Aide d'installation iPhone */
+.ios-help { width: min(420px, calc(100% - 32px)); }
+.ios-steps { margin: 4px 0 10px; padding-inline-start: 1.4em; line-height: 1.6; }
+.ios-steps li { margin: 6px 0; }
+.ios-share { width: 1.25em; height: 1.25em; vertical-align: -0.25em; fill: none; stroke: #007aff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }

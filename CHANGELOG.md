@@ -81,6 +81,14 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.32.3] – 2026-10-17
+### Ajouté
+- iPhone / iPad (Safari, hors appli installée) : bandeau « ثبّت صلاتي على الآيفون » et bouton « كيف؟ » qui montre les
+  4 étapes (Partager → Sur l'écran d'accueil → ouvrir depuis l'icône → activer l'annonce du croissant), avec l'icône
+  Partager d'iOS. Fermé, il revient après 30 jours.
+- Annonce du croissant : bouton « السماح بالإشعارات » quand l'autorisation n'a pas encore été demandée (sur iPhone, la
+  demande doit venir d'un geste) ; sur iPhone hors écran d'accueil, la note explique qu'il faut d'abord l'installer.
+
 ## [2.32.2] – 2026-10-17
 ### Modifié
 - Annonce du croissant : sous l'option, l'état de l'inscription quand elle n'a pas abouti (notifications non autorisées,

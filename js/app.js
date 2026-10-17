@@ -49,13 +49,14 @@ let pushTimer = 0;
 function schedulePush(force = false) { clearTimeout(pushTimer); pushTimer = setTimeout(() => syncPush({ want: wantPush(), lang: getLang(), force }).then(() => renderPushRow()), 2500); }
 function renderPushRow() {
   const row = document.getElementById('hilalPushRow'); if (!row) return;
-  row.hidden = isTwa() || !habousActive() || !pushSupported();
+  row.hidden = isTwa() || !habousActive() || (!pushSupported() && !isIos());
   $('#sHilalPush').checked = S().hilalPush !== false && S().monthReminder !== false;
   $('#sHilalPush').disabled = S().monthReminder === false;
   $('#hilalPushTest').hidden = !pushActive();
   const st = pushStatus(), on = $('#sHilalPush').checked;
   $('#hilalPushNote').hidden = !on || !st || st === 'ok' || pushActive();
-  $('#hilalPushNote').textContent = st === 'perm' ? t('hilalPushPerm') : st === 'unsupported' ? t('hilalPushNo') : `${t('hilalPushErr')} (${st})`;
+  $('#hilalPushOn').hidden = !(on && st === 'perm' && typeof Notification !== 'undefined' && Notification.permission === 'default');
+  $('#hilalPushNote').textContent = st === 'unsupported' && isIos() && !isStandalone() ? t('iosPushNote') : st === 'perm' ? t('hilalPushPerm') : st === 'unsupported' ? t('hilalPushNo') : `${t('hilalPushErr')} (${st})`;
 }
 // Maroc : retour définitif à GMT le 20/09/2026 à 2 h (décret n° 2.26.530).
 // Certains navigateurs ont encore l'ancienne base de fuseaux (GMT+1) : on force UTC.
@@ -610,13 +611,18 @@ function renderUpdate() {
 // Version web ouverte sur Android (navigateur ou installée depuis le site) : signaler l'appli Android complète.
 // Fermé (×) : 30 jours de silence ; réapparaît quand PLAY_PUBLIC passe à true (bouton « Installer » vers Google Play).
 const AND_KEY = 'priere.andHint';
+// iPhone / iPad (iPadOS se présente comme un Mac tactile) ; « standalone » = ouverte depuis l'icône de l'écran d'accueil
+const isIos = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+const isStandalone = () => navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
 function renderAndroidHint() {
   const box = $('#andBanner'); if (!box) return;
   let until = 0; try { const [pub, u] = String(localStorage.getItem(AND_KEY) || '').split(':'); if (pub === String(PLAY_PUBLIC)) until = Number(u) || 0; } catch {}
-  box.hidden = !(/Android/i.test(navigator.userAgent) && !isTwa() && Date.now() > until);
+  const ios = isIos() && !isStandalone();
+  box.hidden = !((/Android/i.test(navigator.userAgent) && !isTwa()) || ios) || Date.now() <= until;
   if (box.hidden) return;
-  $('#andTxt').textContent = t(PLAY_PUBLIC ? 'andTxtPlay' : 'andTxtSoon');
-  $('#andBtn').hidden = !PLAY_PUBLIC;
+  $('#andTxt').textContent = t(ios ? 'iosTxt' : PLAY_PUBLIC ? 'andTxtPlay' : 'andTxtSoon');
+  $('#andBtn').hidden = ios || !PLAY_PUBLIC;
+  $('#iosBtn').hidden = !ios;
 }
 function openPlay() {
   // fiche Google Play dans l'appli Play Store (sinon dans le navigateur)
@@ -2806,6 +2812,7 @@ function bindSettings() {
   on('#sFridayReminder', 'change', async e => { S().fridayReminder = e.target.checked; save(); if (e.target.checked) await ensureNotifPermission(); });
   on('#sEidReminder', 'change', async e => { S().eidReminder = e.target.checked; save(); if (e.target.checked) await ensureNotifPermission(); });
   on('#sHilalPush', 'change', async e => { S().hilalPush = e.target.checked; save(); if (e.target.checked && await ensureNotifPermission()) schedulePush(true); });
+  on('#hilalPushOn', 'click', async () => { if (await ensureNotifPermission()) schedulePush(true); else renderPushRow(); });
   on('#hilalPushTest', 'click', async () => { toast(t(await testPush(getLang()) ? 'hilalPushSent' : 'hilalPushFail'), 5000); });
   on('#sMonthReminder', 'change', async e => { S().monthReminder = e.target.checked; save(); if (e.target.checked) await ensureNotifPermission(); });
   on('#sWhiteDays', 'change', async e => { S().whiteDays = e.target.checked; save(); renderWhite(); if (e.target.checked) await ensureNotifPermission(); });
@@ -2914,6 +2921,8 @@ function bind() {
   on('#updBtn', 'click', openPlay);
   on('#andBtn', 'click', openPlay);
   on('#batteryBtn', 'click', () => { location.href = `intent://battery?l=${getLang()}#Intent;scheme=salati;package=${TWA_PKG};end`; });
+  on('#iosBtn', 'click', () => $('#iosDialog').showModal());
+  on('#iosOk', 'click', () => $('#iosDialog').close());
   on('#andClose', 'click', () => { try { localStorage.setItem(AND_KEY, `${PLAY_PUBLIC}:${Date.now() + 30 * 864e5}`); } catch {} renderAndroidHint(); });
   on('#updClose', 'click', () => { try { localStorage.setItem(UPD_KEY, `${NATIVE_LATEST}:${Date.now() + 3 * 864e5}`); } catch {} renderUpdate(); });   // rappel dans 3 jours
   on('#silentOpen', 'click', () => { renderSilent(); $('#silentDialog').showModal(); });
@@ -2988,7 +2997,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.32.2';
+export const APP_VERSION = '2.32.3';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

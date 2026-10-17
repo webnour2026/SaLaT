@@ -67,6 +67,7 @@
       <div class="cta-adhan upd-banner" id="andBanner" role="note" hidden>
         <span id="andTxt"></span>
         <button class="btn btn-primary small" id="andBtn" type="button" data-i18n="andBtn" hidden>Installer</button>
+        <button class="btn btn-primary small" id="iosBtn" type="button" data-i18n="iosBtn" hidden>Comment ?</button>
         <button class="cw-close" id="andClose" type="button" data-i18n-aria="close" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </div>
       <div class="cta-adhan upd-banner" id="updBanner" role="status" hidden>
@@ -347,6 +348,7 @@
         <div id="hilalPushRow" hidden>
           <label class="switch"><input type="checkbox" id="sHilalPush"><span data-i18n="hilalPush">Annonce du croissant instantanée, appli fermée</span></label>
           <p class="note" id="hilalPushNote" hidden></p>
+          <button class="btn btn-primary small" type="button" id="hilalPushOn" data-i18n="hilalPushOn" hidden>Autoriser les notifications</button>
           <button class="btn small" type="button" id="hilalPushTest" data-i18n="hilalPushTest" hidden>Tester la notification</button>
         </div>
         <label class="switch"><input type="checkbox" id="sEidReminder"><span data-i18n="eidReminder">Rappel des Aïds</span></label>
@@ -553,6 +555,17 @@
   </div>
 
   <!-- Mode silencieux -->
+  <dialog id="iosDialog" class="sheet center ios-help" aria-labelledby="iosTitle">
+    <h2 id="iosTitle" data-i18n="iosTitle">Installer SaLaTi sur l’iPhone</h2>
+    <ol class="ios-steps">
+      <li><span data-i18n="iosStep1">Dans Safari, touchez le bouton Partager</span> <svg class="ios-share" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg></li>
+      <li data-i18n="iosStep2">Faites défiler et choisissez « Sur l’écran d’accueil »</li>
+      <li data-i18n="iosStep3">Touchez « Ajouter », puis ouvrez SaLaTi depuis sa nouvelle icône</li>
+      <li data-i18n="iosStep4">Dans Réglages → Rappels, activez l’annonce du croissant et autorisez les notifications</li>
+    </ol>
+    <p class="note" data-i18n="iosNote">Il faut iOS 16.4 ou plus récent pour les notifications.</p>
+    <button class="btn btn-primary" type="button" id="iosOk" data-i18n="close">Fermer</button>
+  </dialog>
   <dialog id="tourDialog" class="sheet center tour" aria-labelledby="tourTitle">
     <div class="tour-slide" aria-live="polite">
       <p class="tour-ico" aria-hidden="true"></p>
