@@ -5,6 +5,7 @@
 // Configuration publique (projet Firebase, clé VAPID, adresse du serveur) : data/push-config.json, écrit par le travail
 // GitHub « Notifications (serveur) ». Bibliothèque Firebase : vendor/firebase-messaging.js (copie locale, aucun script tiers).
 const KEY = 'priere.push.v1';
+const WORKER = 'https://salati-push.webnour.workers.dev';   // serveur des notifications (le seul autorisé, aussi dans la CSP)
 const REFRESH = 7 * 864e5;          // réinscription hebdomadaire (jeton renouvelé, sujet confirmé)
 
 const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch { return null; } };
@@ -15,7 +16,7 @@ export const pushActive = () => !!read()?.token;
 
 let cfgP = null, fbP = null;
 const config = () => (cfgP ??= fetch('data/push-config.json', { cache: 'no-cache' }).then(r => (r.ok ? r.json() : null)).catch(() => null)
-  .then(c => (c && c.firebase?.apiKey && c.firebase?.projectId && c.vapidKey && /^https:\/\//.test(c.worker || '') ? c : (cfgP = null))));
+  .then(c => (c && c.firebase?.apiKey && c.firebase?.projectId && c.vapidKey && c.worker === WORKER ? c : (cfgP = null))));
 
 async function messaging(cfg) {
   fbP ??= import('../vendor/firebase-messaging.js');

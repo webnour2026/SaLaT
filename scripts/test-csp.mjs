@@ -34,7 +34,7 @@ eq('aucun eval(), new Function() ni setTimeout/setInterval(chaîne) dans le code
 // hôtes cités : xmlns (jamais chargés) et lien de partage (jamais chargé) mis à part
 const IGNORED = new Set(['www.w3.org', 'tinyurl.com', 'play.google.com', 'miqatsalati.netlify.app', 'www.apache.org']);   // liens ouverts (navigation), jamais chargés par la page : hors CSP
 const hosts = [...new Set(code.flatMap(([, s]) => [...s.matchAll(/https?:\/\/([a-z0-9.-]+)/gi)].map(m => m[1].toLowerCase())))].filter(h => !IGNORED.has(h)).sort();
-eq('hôtes externes cités dans le code (à connaître, et à ouvrir dans la CSP)', hosts, ['api.aladhan.com', 'api.github.com', 'fcmregistrations.googleapis.com', 'firebaseinstallations.googleapis.com', 'fonts.googleapis.com', 'fonts.gstatic.com', 'nominatim.openstreetmap.org']);
+eq('hôtes externes cités dans le code (à connaître, et à ouvrir dans la CSP)', hosts, ['api.aladhan.com', 'api.github.com', 'fcmregistrations.googleapis.com', 'firebaseinstallations.googleapis.com', 'fonts.googleapis.com', 'fonts.gstatic.com', 'nominatim.openstreetmap.org', 'salati-push.webnour.workers.dev']);
 eq('chacun de ces hôtes est autorisé par la CSP', hosts.filter(h => !csp.includes(`https://${h}`)), []);
 const allowedHosts = [...csp.matchAll(/https:\/\/([a-z0-9.-]+)/gi)].map(m => m[1].toLowerCase());
 eq('la CSP n\'ouvre aucun hôte que le code n\'utilise pas', allowedHosts.filter(h => !hosts.includes(h)), []);

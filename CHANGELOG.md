@@ -81,6 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.32.1] – 2026-10-17
+### Modifié
+- Serveur des notifications en service (salati-push.webnour.workers.dev, projet Firebase salati-389f0) : ajouté à la CSP ;
+  l'appli n'accepte que cette adresse de serveur.
+
 ## [2.32.0] – 2026-10-17
 ### Ajouté
 - Annonce du croissant instantanée, appli fermée, pour la version web (navigateur Android, iPhone avec l'appli sur l'écran
