@@ -2339,7 +2339,11 @@ async function fireEvent(ev) {
     return;
   }
   const msg = `${t('itsTime')} ${name}`;
-  if (a.notifyAt || silent) webNotify(msg, fmtTime(ev.ts), { tag: `at-${ev.p}`, vibrateOn: !silent && a.vibrate });
+  // onglet en arrière-plan ou écran éteint : le navigateur met le son en attente et le jouerait au retour dans l'appli,
+  // parfois longtemps après l'heure. On se contente alors de la notification (son du téléphone), sans Adhan différé.
+  const away = document.visibilityState !== 'visible';
+  if (a.notifyAt || silent || away) webNotify(msg, fmtTime(ev.ts), { tag: `at-${ev.p}`, vibrateOn: !silent && a.vibrate });
+  if (away) return;
   if (silent) { toast(msg, 6000); return; }   // mode silencieux : ni son ni vibration
   if (a.vibrate) vibrate();
   if (a.enabled && adhanFor(ev.p) !== 'none') {
@@ -3121,7 +3125,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.34.2';
+export const APP_VERSION = '2.34.3';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
