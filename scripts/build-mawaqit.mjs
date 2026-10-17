@@ -12,7 +12,7 @@ import { allLocalities } from '../js/localites.js';
 const APP = 'https://webnour2026.github.io/SaLaT/';                                 // l'appli (GitHub Pages)
 const PAGES = (process.env.PAGES_URL || 'https://miqatsalati.webnour.workers.dev/').replace(/\/?$/, '/');   // les pages des villes (Cloudflify)
 const OUT = 'pages';
-const GSC = process.env.GSC || '';   // balise de vérification Google Search Console (propriété de l'adresse ci-dessus)
+const GSC = process.env.GSC || '2ZkUeDidNZ7t0f_JckY860Y9J6PafcF1P_WNvtksSAY';   // balise de vérification Google Search Console (propriété de l'adresse ci-dessus)
 const today = new Date().toISOString().slice(0, 10);
 const appSrc = fs.readFileSync('js/app.js', 'utf8');
 const PLAY_PUBLIC = /const PLAY_PUBLIC = true/.test(appSrc);
