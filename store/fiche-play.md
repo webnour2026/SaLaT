@@ -26,7 +26,7 @@ Captures : `store/captures/` — 7 images 1080×1920 par langue (`ar-…`, `fr-�
 
 ## Français
 
-**Titre** : SaLaTi : horaires de prière et croissant
+**Titre (30 max)** : SaLaTi : prière et croissant
 
 **Description courte** :
 Horaires officiels du Maroc, Adhan appli fermée, annonce du croissant. Gratuit
