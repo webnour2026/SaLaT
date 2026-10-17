@@ -106,6 +106,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         if (!adhan && !cfg.optBoolean("na", false)) return null;
 
         // Android 8+ : l'Adhan est joué en entier par son propre lecteur (flux alarme) ; à défaut, son de notification
+        AdhanService.iqKey = "at".equals(type) ? key : null; AdhanService.iqWhen = when;
         if (sound != null && AdhanService.start(ctx, sound, AlarmScheduler.text(cfg, "itsTime", "C’est l’heure de") + " " + name,
                 AlarmScheduler.text(cfg, "city", ""), AlarmScheduler.text(cfg, "stop", "Arrêter"), vib && !silent, cfg.optBoolean("al", false), (float) cfg.optDouble("vol", 0.8))) {
             return sound;
@@ -125,6 +126,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         if (sound != null) {
             b.addAction(new Notification.Action.Builder(null, AlarmScheduler.text(cfg, "stop", "Arrêter"), stopPi).build());
         }
+        if ("at".equals(type) && !"Sunrise".equals(key)) b.addAction(IqamaReceiver.action(ctx, cfg, key, when));   // module ≥ 22
         if (Build.VERSION.SDK_INT < 26) {
             // avant Android 8 : son et vibration portés par la notification elle-même
             if (sound != null) b.setSound(AlarmScheduler.soundUri(ctx, sound));

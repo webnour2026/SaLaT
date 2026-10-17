@@ -228,6 +228,19 @@ function applyHijriAnswer(url = location.href) {
   }
   try { ['hjo', 'hjk'].forEach(p => u.searchParams.delete(p)); if (url === location.href) history.replaceState(null, '', u.pathname + u.search + u.hash); } catch {}
 }
+// Tuile « Mode Mosquée » (module ≥ 22) touchée appli fermée : l'appli s'ouvre avec ?mqn=perm|off&mqat=<ms> ; on adopte
+// ce choix s'il est plus récent que le dernier fait dans l'appli, puis on nettoie l'adresse.
+function applyTileChoice(url = location.href) {
+  let u; try { u = new URL(url, location.href); } catch { return; }
+  const m = u.searchParams.get('mqn'), at = Number(u.searchParams.get('mqat') || 0);
+  if ((m === 'perm' || m === 'off') && at > (MQ().at || 0)) {
+    const mq = MQ(), wasPerm = mqMode() === 'perm';
+    mq.at = at; mq.mode = m;
+    if (m === 'off') mq.once = null; else { mq.last = 'perm'; if (!wasPerm) mq.since = at; }
+    save(); renderMosque(); renderSettingsHub();
+  }
+  try { ['mqn', 'mqat'].forEach(p => u.searchParams.delete(p)); if (url === location.href) history.replaceState(null, '', u.pathname + u.search + u.hash); } catch {}
+}
 function checkHabous(force = false, every) {
   refreshHabous({ force, every }).then(changed => { if (changed) { rerenderHijri(); if (!$('#view-settings').hidden) renderSettings(); requestNativeSync(); } });
 }
@@ -697,6 +710,7 @@ function renderMosqueDialog() {
 }
 function applyMosque(mode) {
   const mq = MQ(), d = state.mqDraft || { mode, dur: mq.dur }, wasPerm = mqMode() === 'perm';
+  mq.at = Date.now();                                    // module ≥ 22 : plus récent que la tuile → le choix de l'appli l'emporte
   if (mode === 'off') { mq.mode = 'off'; mq.once = null; }
   else {
     mq.mode = mode; mq.dur = clampDur(d.dur); mq.last = mode;
@@ -715,7 +729,7 @@ function applyMosque(mode) {
 function mqPayload() {
   const mq = MQ(), mode = mqMode(), today = state.dayKey || dateKeyInTz(now(), tz());
   return {
-    m: mode, d: clampDur(mq.dur),
+    m: mode, d: clampDur(mq.dur), at: mq.at || 0,
     t: mode === 'once' && mq.once ? Math.round(mq.once.ts / 60000) * 60000 : 0,
     rm: Array.from({ length: 31 }, (_, i) => (isRamadanTs(Date.parse(`${addDays(today, i)}T12:00:00Z`)) ? 1 : 0)),
   };
@@ -2406,7 +2420,10 @@ async function nativePayload() {
            chAdhan: t('chAdhan'), chBefore: t('chBefore'), chSilent: t('chSilent'), chOngoing: t('chOngoing'), chReminder: t('chReminder'),
            chMosque: t('chMosque'), mqOn: t('mqBadgeOn'), mqUntil: t('mqUntil'), mqStopNow: t('mqStopNow'), mqIqama: t('mqIqama'), mqIqamaBody: t('mqIqamaBody'),
            mqEnd: t('mqEnd'), mqEndBody: t('mqEndBody'), mqEndKept: t('mqEndKept'), mqDnd: t('mqDnd'), tzTitle: t('tzTitle'), tzBody: t('tzBody'),
-           wNext: t('nextPrayer'), wIn: t('in'), wSince: t('since') },   // widget d'écran d'accueil
+           wNext: t('nextPrayer'), wIn: t('in'), wSince: t('since'),   // widget d'écran d'accueil
+           iqBtn: t('iqBtn'), iqSet: t('iqSet'), iqTitle: t('iqTitle'), iqBody: t('iqBody'),   // module ≥ 22 : rappel de l'Iqama
+           mqTile: t('mqTitle'), mqTileOn: t('mqTileOn'), mqTileOff: t('mqTileOff') },        // module ≥ 22 : tuile des réglages rapides
+    iq: msCfg().iq,   // délais d'Iqama (écran de mosquée) pour le bouton « Rappel de l'Iqama »
     times,
   };
 }
@@ -3123,7 +3140,7 @@ function init() {
   // L'appli Android rouvre la page déjà ouverte (« focus-existing ») : l'adresse de lancement — donc la version du module
   // après une mise à jour — arrive par launchQueue, pas par location.
   if ('launchQueue' in window) {
-    try { window.launchQueue.setConsumer(p => { if (p && p.targetURL) { detectTwa(p.targetURL); renderUpdate(); renderNative(); applyHijriAnswer(p.targetURL); } }); } catch {}
+    try { window.launchQueue.setConsumer(p => { if (p && p.targetURL) { detectTwa(p.targetURL); renderUpdate(); renderNative(); applyHijriAnswer(p.targetURL); applyTileChoice(p.targetURL); } }); } catch {}
   }
   document.addEventListener('click', () => { if (nativeNeedsSync()) syncNative({ quiet: true, ask: !localStorage.getItem('priere.nativeAt') }); }, { capture: true });
   Promise.all([loadCustomAdhans(), loadSiteAdhans()]).then(([{ migratedTo }]) => {
@@ -3176,6 +3193,7 @@ function init() {
     recheckGps(true);
   }
   applyHijriAnswer();  // ouverture depuis la notification « le mois a-t-il commencé aujourd'hui ? »
+  applyTileChoice();   // tuile « Mode Mosquée » touchée appli fermée
   syncClock().then(afterClockSync);
   checkHabous();       // nouveau début de mois annoncé ? (au plus une vérification toutes les 3 h)
   checkOfficiel();

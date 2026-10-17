@@ -87,6 +87,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
   fois, sans question préalable, quand l'appli est installée depuis 7 jours et que l'Adhan a sonné au moins 10 fois,
   dont un dans les 6 dernières heures (`ReviewActivity`, compteur `firedN`). Bibliothèque `com.google.android.play:review`.
   `NATIVE_LATEST` reste à 21 jusqu'à la publication de l'AAB (sinon le bandeau « mise à jour » apparaîtrait trop tôt).
+- ⚠ Bouton « تذكير بالإقامة » dans la notification de l'Adhan : notification avec vibration à l'heure de l'Iqama de cette
+  prière (délais de l'écran de mosquée, Joumou'a à part le vendredi ; sinon 15 min, Maghrib 10 min) (`IqamaReceiver`).
+- ⚠ Tuile « وضع المسجد » des réglages rapides : active / désactive le Mode Mosquée (toutes les prières) d'un geste, sans
+  ouvrir l'appli (`MosqueTile`). L'appli adopte ce choix à l'ouverture (`?mqn=&mqat=` ajoutés par LauncherActivity) ;
+  une synchronisation plus ancienne que la tuile ne l'écrase pas (`mq.at`).
 
 ## [2.33.0] – 2026-10-17
 ### Ajouté

@@ -3,7 +3,7 @@
 Liste des améliorations retenues, à regrouper dans un même AAB avec d'autres options ou exclusivités SaLaTi.
 ⚠ = module Android (nouvel AAB, niveau `native` à augmenter).
 
-## Retenu (prochain AAB)
+## Retenu (prochain AAB) — ✅ faits dans l'AAB 2.34.0 (module 22)
 
 - ⚠ **Tuile « Mode Mosquée » dans les réglages rapides** (volet tiré du haut de l'écran) : activer / désactiver le silence
   d'un geste, sans ouvrir l'appli — utile en entrant à la mosquée hors des heures de prière (Joumou'a, Tarawih, cours).

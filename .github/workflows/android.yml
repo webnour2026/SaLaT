@@ -153,6 +153,13 @@ jobs:
               s = re.sub(r'(dependencies\s*\{)', r"\1\n    implementation 'com.google.android.play:review:2.0.1'", s, count=1)
               open(p, 'w').write(s)
           print([l.strip() for l in s.splitlines() if 'implementation' in l])
+          # ouverture de l'appli : dernier choix fait avec la tuile « Mode Mosquée » transmis à la page (?mqn=…&mqat=…)
+          la = 'app/src/main/java/io/github/webnour2026/salat/LauncherActivity.java'
+          t = open(la).read()
+          if 'MosqueTile.decorate' not in t:
+              assert t.count('return uri;') == 1, 'LauncherActivity : return uri introuvable'
+              t = t.replace('return uri;', 'return io.github.webnour2026.salat.MosqueTile.decorate(this, uri);')
+              open(la, 'w').write(t)
           PY
           # Adhans intégrés à l'APK : version complète + version courte (40 s), mono 96 kbit/s
           for f in ../repo/audio/adhan/*.mp3; do

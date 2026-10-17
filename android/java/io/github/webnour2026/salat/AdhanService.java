@@ -30,6 +30,7 @@ public class AdhanService extends Service {
     private AudioFocusRequest focus;
 
     /** Lance l'Adhan ; false si le service n'a pas pu démarrer (on retombe alors sur le son de notification). */
+    static String iqKey; static long iqWhen;   // prière en cours : bouton « Rappel de l'Iqama »
     static boolean start(Context ctx, String sound, String title, String text, String stopLabel, boolean vib, boolean always, float vol) {
         if (Build.VERSION.SDK_INT < 26 || AlarmScheduler.rawId(ctx, sound) == 0) return false;
         Intent i = new Intent(ctx, AdhanService.class).putExtra(EXTRA_SOUND, sound).putExtra(EXTRA_TITLE, title)
@@ -74,6 +75,7 @@ public class AdhanService extends Service {
                 .setCategory(Notification.CATEGORY_ALARM)
                 .setDeleteIntent(stopPi)
                 .addAction(new Notification.Action.Builder(null, in.getStringExtra(EXTRA_STOP), stopPi).build());
+        if (iqKey != null && !"Sunrise".equals(iqKey)) b.addAction(IqamaReceiver.action(this, AlarmScheduler.config(this), iqKey, iqWhen));
         Notification n = b.build();
         try {
             if (Build.VERSION.SDK_INT >= 29) startForeground(AlarmScheduler.NOTIF_ADHAN, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);

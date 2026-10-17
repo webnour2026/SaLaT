@@ -39,11 +39,13 @@ public class SyncActivity extends Activity {
             mosque = data != null && "1".equals(data.getQueryParameter("mq"));   // activation du Mode Mosquée : accès « Ne pas déranger »
             if (d != null && d.length() < 60000) {
                 cfg = new JSONObject(d);
+                MosqueTile.keepTile(this, cfg);      // module ≥ 22 : choix fait avec la tuile après celui de l'appli
                 AlarmScheduler.save(this, cfg);
                 AutoMonth.learnConfig(this, cfg);   // dernier début de mois officiel connu de la page
                 AlarmScheduler.scheduleNext(this);
                 Reminders.schedule(this);
                 MosqueMode.onConfig(this);       // Mode Mosquée désactivé / durée changée pendant un cycle
+                MosqueTile.update(this);
             }
         } catch (Exception e) {
             cfg = null;

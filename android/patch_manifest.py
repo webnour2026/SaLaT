@@ -73,6 +73,17 @@ comps = '''
             android:foregroundServiceType="mediaPlayback"/>
         <receiver android:name="io.github.webnour2026.salat.AlarmReceiver" android:exported="false"/>
         <receiver android:name="io.github.webnour2026.salat.StopReceiver" android:exported="false"/>
+        <!-- Bouton « Rappel de l'Iqama » de la notification de l'Adhan -->
+        <receiver android:name="io.github.webnour2026.salat.IqamaReceiver" android:exported="false"/>
+        <!-- Tuile « Mode Mosquée » des réglages rapides -->
+        <service android:name="io.github.webnour2026.salat.MosqueTile"
+            android:exported="true"
+            android:label="Mode Mosquée"
+            android:icon="@drawable/ic_salati_notif"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE"/></intent-filter>
+            <meta-data android:name="android.service.quicksettings.TOGGLEABLE_TILE" android:value="true"/>
+        </service>
         <receiver android:name="io.github.webnour2026.salat.ReminderReceiver" android:exported="false"/>
         <receiver android:name="io.github.webnour2026.salat.MosqueReceiver" android:exported="false"/>
         <!-- Widget d'écran d'accueil : prochaine prière + compte à rebours -->
