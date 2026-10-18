@@ -81,6 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.34.7] – 2026-10-18
+### Modifié
+- Guide de découverte : nouvelle page « 📺 شاشة المسجد » ; Mode Mosquée complété (tuile rapide, bouton « تذكير بالإقامة ») ;
+  croissant « même appli fermée » ; 1re page « مطابقة للجداول الرسمية » (pas d'affiliation suggérée avec le ministère).
+
 ## [2.34.6] – 2026-10-18
 ### Modifié
 - Premier lancement : l'appli s'ouvre en arabe par défaut, même si le téléphone est en français (cas courant au Maroc) ;
