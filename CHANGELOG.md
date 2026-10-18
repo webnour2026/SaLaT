@@ -81,6 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.34.8] – 2026-10-18
+### Ajouté
+- Calendrier, bandeau « مراقبة الهلال » : petite ligne sous la prévision, l'annonce officielle (vu / non vu) tombe le soir même
+  de l'observation et s'affiche dans SaLaTi dès sa parution (Maroc).
+
 ## [2.34.7] – 2026-10-18
 ### Modifié
 - Guide de découverte : nouvelle page « 📺 شاشة المسجد » ; Mode Mosquée complété (tuile rapide, bouton « تذكير بالإقامة ») ;

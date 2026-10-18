@@ -930,6 +930,7 @@ function renderCalendar() {
       const [gw, ...hint] = t('predShort')[g].split(' (');               // « bonne » + « (29 jours probables) »
       cp.querySelector('.cp-g').textContent = gw;
       cp.querySelector('.cp-h').textContent = hint.length ? ' (' + hint.join(' (') : '';
+      cp.querySelector('.cp-n').textContent = habousActive() ? t('predNote') : '';   // Maroc : rappel que l'annonce officielle tombe le soir même
       cp.hidden = false;
     }
   }
@@ -3126,7 +3127,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.34.7';
+export const APP_VERSION = '2.34.8';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

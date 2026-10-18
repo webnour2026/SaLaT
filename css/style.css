@@ -378,6 +378,8 @@ main { max-width: 560px; margin: 0 auto; padding: 0 16px; }
 .cal-pred .cp-g { font-weight: 700; color: var(--brass); }
 .cal-pred.pred-clear .cp-g, .cal-pred.pred-possible .cp-g { color: var(--zellige); }
 .cal-pred.pred-impossible .cp-g { color: var(--muted); }
+.cal-pred .cp-n { display: block; margin-top: 3px; font-size: .78rem; color: var(--muted); }
+.cal-pred .cp-n:empty { display: none; }
 .cal-legend .lg { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
 .lg.occ { background: var(--zellige); border-radius: 99px; width: 8px; height: 8px; }
 .cal-events { list-style: none; padding: 0; margin: 0 0 12px; }
