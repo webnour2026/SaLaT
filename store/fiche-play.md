@@ -26,6 +26,8 @@ Captures : `store/captures/` — 7 images 1080×1920 par langue (`ar-…`, `fr-�
 
 بالعربية والفرنسية والإنجليزية. لا حساب، ولا إعلانات، ولا تتبّع: بياناتك تبقى على هاتفك.
 
+🤲 صدقة جارية: مجاني بالكامل، بلا إعلانات ولا اشتراك، لوجه الله تعالى. لا تنسونا من صالح دعائكم.
+
 صلاتي تطبيق مستقل لا علاقة له بوزارة الأوقاف والشؤون الإسلامية، ويعتمد جداولها الرسمية المنشورة.
 
 ## Français
@@ -52,6 +54,8 @@ Pour chercher : heures de prière, horaires de prière au Maroc, Adhan (Athan), 
 
 En arabe, français et anglais. Pas de compte, pas de publicité, aucun traqueur : vos données restent sur votre téléphone.
 
+🤲 Sadaqa jariya : entièrement gratuite, sans publicité ni abonnement, faite pour la seule face d’Allah. N’oubliez pas l’auteur dans vos invocations.
+
 SaLaTi est une application indépendante, sans aucun lien avec le ministère des Habous et des Affaires islamiques ; elle suit ses tableaux officiels publiés.
 
 ## English
@@ -77,5 +81,7 @@ SaLaTi is an independent, free and ad-free Moroccan app whose prayer times match
 Also known as: prayer times, Salah / Salat times, Adhan (Athan), Qibla finder, Hijri calendar, Ramadan Imsakia, Morocco.
 
 In Arabic, French and English. No account, no ads, no trackers: your data stays on your phone.
+
+🤲 Sadaqa jariya (ongoing charity): completely free, no ads, no subscription, made solely for the sake of Allah. Please remember us in your prayers.
 
 SaLaTi is an independent app with no affiliation to the Ministry of Habous and Islamic Affairs; it follows its published official timetables.
