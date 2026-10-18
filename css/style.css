@@ -380,6 +380,7 @@ main { max-width: 560px; margin: 0 auto; padding: 0 16px; }
 .cal-pred.pred-impossible .cp-g { color: var(--muted); }
 .cal-pred .cp-n { display: block; margin-top: 3px; font-size: .78rem; color: var(--muted); }
 .cal-pred .cp-n:empty { display: none; }
+body.fit .cal-pred .cp-n { white-space: normal; font-size: .74rem; line-height: 1.3; }   /* la ligne d'annonce passe à la ligne au lieu d'être coupée */
 .cal-legend .lg { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
 .lg.occ { background: var(--zellige); border-radius: 99px; width: 8px; height: 8px; }
 .cal-events { list-style: none; padding: 0; margin: 0 0 12px; }

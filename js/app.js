@@ -936,10 +936,10 @@ function renderCalendar() {
   }
   requestAnimationFrame(() => { setFit(); $('#calEvents').scrollTop = 0; });                          // la hauteur change d'un mois à l'autre (5 ou 6 lignes) : on re-vérifie que tout tient
 }
-/** Bloc « prochaine occasion » du calendrier : la plus proche à partir d'aujourd'hui (jours blancs et occasions, pas le vendredi) */
+/** Bloc « prochaine occasion » du calendrier : la plus proche à partir d'aujourd'hui (occasions seulement : ni vendredi ni jours blancs, déjà visibles dans la grille) */
 function renderNextOcc() {
   const box = $('#nextOcc'); if (!box) return;
-  const sp = cardSpecs().find(x => !x.evergreen && x.key !== 'jumuah' && x.key !== 'imsakiya');
+  const sp = cardSpecs().find(x => !x.evergreen && x.key !== 'jumuah' && x.key !== 'imsakiya' && x.key !== 'white');
   box.hidden = !sp; if (!sp) return;
   const df = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
   $('#noName').textContent = cardTitleOf(sp);
@@ -3127,7 +3127,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.34.8';
+export const APP_VERSION = '2.34.9';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

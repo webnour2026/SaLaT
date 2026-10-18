@@ -81,6 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.34.9] – 2026-10-18
+### Corrigé
+- Calendrier : la ligne sur l'annonce officielle n'est plus coupée (retour à la ligne).
+- Bloc « الحدث القادم » : les jours blancs n'y figurent plus (déjà surlignés dans la grille) ; seules les autres occasions.
+
 ## [2.34.8] – 2026-10-18
 ### Ajouté
 - Calendrier, bandeau « مراقبة الهلال » : petite ligne sous la prévision, l'annonce officielle (vu / non vu) tombe le soir même
