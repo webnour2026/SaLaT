@@ -81,6 +81,12 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.34.13] – 2026-10-22
+### Corrigé
+- Chrome ne propose plus « Traduire cette page ? » (translate="no", meta notranslate) : l'appli gère ses langues.
+- Bandeau « SaLaTi bientôt sur Android » masqué si l'appli Android est déjà installée (getInstalledRelatedApps,
+  related_applications du manifeste).
+
 ## [2.34.12] – 2026-10-22
 ### Retiré
 - Accueil : carte « صيام الأيام البيض ». Les jours blancs restent surlignés dans le calendrier, rappelés la veille par notification

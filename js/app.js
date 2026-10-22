@@ -632,11 +632,21 @@ function renderAndroidHint() {
   const box = $('#andBanner'); if (!box) return;
   let until = 0; try { const [pub, u] = String(localStorage.getItem(AND_KEY) || '').split(':'); if (pub === String(PLAY_PUBLIC)) until = Number(u) || 0; } catch {}
   const ios = isIos() && !isStandalone();
-  box.hidden = !((/Android/i.test(navigator.userAgent) && !isTwa()) || ios) || Date.now() <= until;
+  box.hidden = !((/Android/i.test(navigator.userAgent) && !isTwa() && !state.playInstalled) || ios) || Date.now() <= until;
   if (box.hidden) return;
   $('#andTxt').textContent = t(ios ? 'iosTxt' : PLAY_PUBLIC ? 'andTxtPlay' : 'andTxtSoon');
   $('#andBtn').hidden = ios || !PLAY_PUBLIC;
   $('#iosBtn').hidden = !ios;
+}
+// Appli Android déjà installée sur ce téléphone (testeurs, version web ouverte à côté) : pas de bandeau « bientôt sur Android ».
+// Chrome Android : getInstalledRelatedApps lit « related_applications » du manifeste (l'appli déclare le site dans ses asset statements).
+async function checkPlayInstalled() {
+  try {
+    if (!navigator.getInstalledRelatedApps) return;
+    const apps = await navigator.getInstalledRelatedApps();
+    state.playInstalled = apps.some(a => a.id === 'io.github.webnour2026.salat');
+    if (state.playInstalled) renderAndroidHint();
+  } catch { /* non pris en charge */ }
 }
 function openPlay() {
   // fiche Google Play dans l'appli Play Store (sinon dans le navigateur)
@@ -3116,7 +3126,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.34.12';
+export const APP_VERSION = '2.34.13';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
@@ -3132,6 +3142,7 @@ function lockHorizontal() {
 function init() {
   lockHorizontal();
   detectTwa();
+  checkPlayInstalled();
   // L'appli Android rouvre la page déjà ouverte (« focus-existing ») : l'adresse de lancement — donc la version du module
   // après une mise à jour — arrive par launchQueue, pas par location.
   if ('launchQueue' in window) {
