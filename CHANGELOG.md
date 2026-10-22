@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.34.10] – 2026-10-22
+### Corrigé
+- Carte « الأيام البيض » (accueil, cartes à partager) : les trois jours sont toujours affichés ; quatre jours avant, le 15 manquait.
+
 ## [2.34.9] – 2026-10-18
 ### Corrigé
 - Calendrier : la ligne sur l'annonce officielle n'est plus coupée (retour à la ligne).

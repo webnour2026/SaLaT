@@ -107,10 +107,10 @@ export function reminderFor(tomorrowNoon, offsetDays = 0, prefs = { eid: true, m
 /** Prochains jours blancs à partir d'aujourd'hui (jusqu'à `horizon` jours). */
 export function upcomingWhiteDays(todayNoon, offsetDays = 0, horizon = 20) {
   const out = [];
-  for (let i = 0; i <= horizon; i++) {
+  for (let i = 0; i <= horizon + 3; i++) {        // horizon : la série doit COMMENCER avant ; elle est ensuite donnée en entier (13, 14, 15)
     const t = todayNoon + i * DAY, h = hijriOf(t, offsetDays);
-    if (isWhiteDay(h)) out.push({ noon: t, h });
-    else if (out.length) break; // on s'arrête à la fin de la série
+    if (isWhiteDay(h) && (out.length || i <= horizon)) out.push({ noon: t, h });
+    else if (out.length || i > horizon) break; // on s'arrête à la fin de la série
   }
   return out;
 }

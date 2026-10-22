@@ -216,6 +216,11 @@ useHabous(true);
 const size = JSON.stringify(plan('2026-09-30')).length;
 eq('charge utile raisonnable (< 6 000 caractères)', String(size < 6000), 'true');
 
+{ // jours blancs : la série est donnée en entier (13, 14 et 15) même si l'horizon s'arrête au milieu
+  const { upcomingWhiteDays } = await load('calendar.js');
+  const l = upcomingWhiteDays(Date.parse('2026-10-22T12:00:00Z'), 0, 4).map(x => x.h.d).join(',');
+  eq('jours blancs : série complète malgré un horizon court', l, '13,14,15');
+}
 fs.rmSync(tmp, { recursive: true, force: true });
 if (ko) { console.error(ko, 'échec(s)'); process.exit(1); }
 console.log('Tous les tests réussis');
