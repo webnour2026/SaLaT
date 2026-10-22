@@ -429,7 +429,6 @@ body.fit .cal-pred .cp-n { white-space: normal; font-size: .74rem; line-height: 
   body.fit .plist-foot { flex: none; padding: 7px 14px; }
   body.fit .status { flex: none; margin: 2px 0 0; font-size: .75rem; min-height: 0; }
   body.fit .status:empty { display: none; }
-  body.fit #view-home > .btn[data-goto="qibla"] { display: none; }   /* l'onglet Qibla suffit */
 
   /* --- Qibla --- */
   body.fit .qibla-view { padding-top: 0; justify-content: center; justify-content: safe center; gap: 2px; padding-bottom: 8px; }   /* « safe » : si ça déborde, on part du haut et on peut défiler */
