@@ -81,6 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.34.12] – 2026-10-22
+### Retiré
+- Accueil : carte « صيام الأيام البيض ». Les jours blancs restent surlignés dans le calendrier, rappelés la veille par notification
+  et proposés dans les cartes à partager.
+
 ## [2.34.11] – 2026-10-22
 ### Retiré
 - Accueil : bouton « اتجاه القبلة » sous les horaires (il n'apparaissait que quand la page défile) ; la Qibla reste dans son onglet.

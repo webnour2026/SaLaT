@@ -351,7 +351,7 @@ function skyFor(t) {
   return 'maghrib';
 }
 
-function renderAll() { renderHeader(); renderHome(); renderWhite(); renderOccChip(); renderSilent(); renderMosque(); renderCta(); requestAnimationFrame(setFit); }
+function renderAll() { renderHeader(); renderHome(); renderOccChip(); renderSilent(); renderMosque(); renderCta(); requestAnimationFrame(setFit); }
 
 // ================= Consulter d'autres jours =================
 // state.viewKey : date consultée ('YYYY-MM-DD'), null = aujourd'hui (avec compte à rebours)
@@ -835,18 +835,7 @@ function saveScreenCfg() {
 
 // ================= Jours blancs =================
 function hijriLabel(h) { return `${h.d} ${t('hijriMonths')[h.m - 1]}`; }
-function renderWhite() {
-  const card = $('#whiteCard'); if (!card) return;
-  if (!S().whiteDays) { card.hidden = true; return; }
-  const today = civilNoon(now(), tz());
-  const h = hijriOf(today, S().hijriOffset);
-  const list = upcomingWhiteDays(today, S().hijriOffset, 4);
-  if (!list.length) { card.hidden = true; return; }
-  card.hidden = false;
-  if (list[0].noon === today) { $('#whiteText').textContent = t('whiteToday', { d: h.d, m: t('hijriMonths')[h.m - 1] }); return; }
-  const fmt = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
-  $('#whiteText').textContent = t('whiteSoon', { list: list.map(x => `${fmt.format(x.noon)} (${hijriLabel(x.h)})`).join(' · ') });
-}
+// (carte « jours blancs » de l'accueil retirée en 2.34.12 : ils sont surlignés dans le calendrier et rappelés par notification)
 
 // ================= Calendrier hégirien =================
 function renderCalendar() {
@@ -2936,7 +2925,7 @@ function bindSettings() {
   on('#hilalPushOn', 'click', async () => { if (await ensureNotifPermission()) schedulePush(true); else renderPushRow(); });
   on('#hilalPushTest', 'click', async () => { toast(t(await testPush(getLang()) ? 'hilalPushSent' : 'hilalPushFail'), 5000); });
   on('#sMonthReminder', 'change', async e => { S().monthReminder = e.target.checked; save(); if (e.target.checked) await ensureNotifPermission(); });
-  on('#sWhiteDays', 'change', async e => { S().whiteDays = e.target.checked; save(); renderWhite(); if (e.target.checked) await ensureNotifPermission(); });
+  on('#sWhiteDays', 'change', async e => { S().whiteDays = e.target.checked; save(); if (e.target.checked) await ensureNotifPermission(); });
   on('#sVibrate', 'change', e => { S().adhan.vibrate = e.target.checked; save(); if (e.target.checked) vibrate(80); });
   on('#sAdhanSilent', 'change', e => { S().adhan.always = e.target.checked; save(); });
   on('#sAdhanShort', 'change', e => { S().adhan.short = e.target.checked; save(); });
@@ -3127,7 +3116,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.34.11';
+export const APP_VERSION = '2.34.12';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
