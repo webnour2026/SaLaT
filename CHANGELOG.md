@@ -81,6 +81,12 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.35.0] – 2026-10-23
+### Ajouté
+- Titres arabes (nom de la prière, mois hégirien, titres des pages, écran de mosquée) en خط مغربي : police AALMAGHRIBI
+  (Tayi Idriss, Fondation Mohammed VI pour l'édition du Saint Coran), réduite aux lettres arabes (fonts/maghribi.woff2,
+  100 Ko, mise en cache hors ligne). Chiffres et lettres latines inchangés (Reem Kufi).
+
 ## [2.34.13] – 2026-10-22
 ### Corrigé
 - Chrome ne propose plus « Traduire cette page ? » (translate="no", meta notranslate) : l'appli gère ses langues.
