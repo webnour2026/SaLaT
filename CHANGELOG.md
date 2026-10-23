@@ -81,6 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.35.1] – 2026-10-23
+### Retiré
+- Titres en خط مغربي (2.35.0) annulés : la police était destinée aux versets ; elle utilise le codage propre au texte du
+  Mushaf Mohammadi, incompatible avec le texte Warsh actuel des cartes (signes erronés, glyphes manquants).
+
 ## [2.35.0] – 2026-10-23
 ### Ajouté
 - Titres arabes (nom de la prière, mois hégirien, titres des pages, écran de mosquée) en خط مغربي : police AALMAGHRIBI
