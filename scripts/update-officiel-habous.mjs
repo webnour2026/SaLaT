@@ -61,7 +61,7 @@ async function fromMonthlyJson() {
     if (r.status !== 200) { say(`- ${BASE}/data/horaires-${ym}.json : ${r.why || 'HTTP ' + r.status}`); continue; }
     let json; try { json = JSON.parse(r.body); } catch { say(`- horaires-${ym}.json : JSON illisible`); continue; }
     const map = parseHabousJson(json);
-    if (!map.size) { say(`- horaires-${ym}.json : aucune localité lisible (le format a peut-être changé) : ${r.body.slice(Math.max(0, r.body.indexOf('"horaires"')), r.body.indexOf('"horaires"') + 420).replace(/\s+/g, ' ')}`); continue; }
+    if (!map.size) { say(`- horaires-${ym}.json : aucune localité lisible (le format a peut-être changé) : ${r.body.slice(0, 300).replace(/\s+/g, ' ')}`); continue; }
     for (const [c, rows] of map) byCode.set(c, [...(byCode.get(c) || []), ...rows]);
     read.push(`${ym} (${map.size} localités)`);
   }

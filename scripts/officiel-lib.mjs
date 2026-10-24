@@ -140,6 +140,7 @@ export function parseHabousMonthly(html, now = Date.now()) {
 // ── Fichier mensuel du site du ministère (version « en maintenance », octobre 2026) : data/horaires-AAAA-MM.json ──
 // { annee, mois, fuseau: 'GMT', cols: [Fajr, Chorouq, Dhuhr, Asr, Maghrib, Ishae], villes: [{ c: <numéro>, n: <nom>, h: [[6 × 'HH:MM'], … un par jour du mois grégorien] }] }
 // Renvoie Map(numéro → lignes { date, t: [minutes] }) au format attendu par analyse().
+const COLS_JSON = ['Fajr', 'Chorouq', 'Dhuhr', 'Asr', 'Maghrib', 'Ishae'];
 export function parseHabousJson(raw) {
   const out = new Map();
   // clés tolérantes : le fichier publié contient au moins une clé avec espace (« villes» précédé d'une espace)
@@ -149,14 +150,18 @@ export function parseHabousJson(raw) {
   const mins = s => { const x = /^(\d{1,2}):(\d{2})$/.exec(String(s).trim()); return x ? Number(x[1]) * 60 + Number(x[2]) : NaN; };
   for (let v of json.villes) {
     if (v && typeof v === 'object') v = Object.fromEntries(Object.entries(v).map(([k, x]) => [k.trim(), x]));
-    const code = Number(v?.c); if (!code || !Array.isArray(v.h)) continue;
+    // deux formes vues : { c, h: [[6 × 'HH:MM'], …] } (fichier .js) et { code_ville, horaires: [{ date, Fajr, Chorouq, Dhuhr, Asr, Maghrib, Ishae }] } (.json)
+    const code = Number(v?.c ?? v?.code_ville), list = v?.h ?? v?.horaires;
+    if (!code || !Array.isArray(list)) continue;
     const rows = [];
-    v.h.forEach((r, i) => {
-      if (!Array.isArray(r) || r.length < 6) return;
-      const t = r.slice(0, 6).map(mins);
+    list.forEach((r, i) => {
+      let t, date;
+      if (Array.isArray(r)) { if (r.length < 6) return; t = r.slice(0, 6).map(mins); }
+      else if (r && typeof r === 'object') { t = COLS_JSON.map(k => mins(r[k])); if (r.date) date = String(r.date); }
+      else return;
       if (t.some(x => !Number.isFinite(x))) return;
-      const d = new Date(Date.UTC(y, m - 1, i + 1));
-      if (d.getUTCMonth() !== m - 1) return;
+      const d = date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? new Date(date + 'T00:00:00Z') : new Date(Date.UTC(y, m - 1, i + 1));
+      if (d.getUTCFullYear() !== y || d.getUTCMonth() !== m - 1) return;
       rows.push({ date: d.toISOString().slice(0, 10), t });
     });
     if (rows.length) out.set(code, rows);

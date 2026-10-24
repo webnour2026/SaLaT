@@ -148,6 +148,9 @@ eq('téléchargement : même fichier une seconde fois → pas de changement', aw
   const a = analyse(1, map.get(1));
   eq('Habous JSON : jours acceptés et identiques à l\'archive', a.ok && Object.keys(a.days).every(k => a.days[k] === j[k]), true);
   eq('Habous JSON : clé avec espace (« villes») acceptée', parseHabousJson({ annee: 2026, mois: 10, ' villes': json.villes }).size, 1);
+  const obj = { annee: 2026, mois: 10, villes: [{ code_ville: 1, nom: 'الرباط', horaires: h.map((r, i) => ({ date: `2026-10-${String(i + 1).padStart(2, '0')}`, jour: 'x', Fajr: r[0], Chorouq: r[1], Dhuhr: r[2], Asr: r[3], Maghrib: r[4], Ishae: r[5] })) }] };
+  const a2 = analyse(1, parseHabousJson(obj).get(1));
+  eq('Habous JSON (forme code_ville/horaires) : identique à l\'archive', a2.ok && Object.keys(a2.days).length === h.length && Object.keys(a2.days).every(k => a2.days[k] === j[k]), true);
   eq('Habous JSON : format inconnu → rien', parseHabousJson({ annee: 2026, mois: 13, villes: [] }).size, 0);
 }
 
