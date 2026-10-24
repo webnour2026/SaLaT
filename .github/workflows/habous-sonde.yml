@@ -1,0 +1,21 @@
+# Sonde ponctuelle : structure du site des Habous en maintenance (oct. 2026), pour adapter le relevé des horaires.
+name: Sonde Habous
+on: workflow_dispatch
+jobs:
+  sonde:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          UA='SaLaTi-verification/1.0 (appli de prière ; github.com/webnour2026/SaLaT)'
+          curl -sSL -A "$UA" -o home.html -w '%{http_code} %{url_effective}\n' https://www.habous.gov.ma/ > code.txt || true
+          echo "::notice title=Accueil::$(cat code.txt) taille $(wc -c < home.html)"
+          echo "::notice title=Liens::$(grep -oiE '(href|src|action)="[^"]+"' home.html | grep -viE '\.(png|jpg|svg|woff2?|css)' | sort -u | tr '\n' ' ' | head -c 3000)"
+          echo "::notice title=Select::$(grep -oiE '<select[^>]*>|<option[^>]*>[^<]{0,30}' home.html | head -12 | tr '\n' ' ' | head -c 1500)"
+          echo "::notice title=Scripts::$(grep -oiE '(fetch|axios|XMLHttpRequest|\.json|api/)[^;]{0,120}' home.html | head -15 | tr '\n' ' ' | head -c 2500)"
+          for js in $(grep -oiE 'src="[^"]+\.js[^"]*"' home.html | sed 's/src="//;s/"$//' | head -5); do
+            u=$js; case $u in http*) ;; /*) u="https://www.habous.gov.ma$u" ;; *) u="https://www.habous.gov.ma/$u" ;; esac
+            curl -sSL -A "$UA" "$u" -o s.js || continue
+            echo "::notice title=JS $js::$(grep -oiE '(fetch|axios\.[a-z]+|\.json|api/|ville|city|horaire|prieres?)[^;]{0,100}' s.js | head -12 | tr '\n' ' ' | head -c 2500)"
+          done
+          curl -sSL -A "$UA" -o r.txt -w '%{http_code}' https://www.habous.gov.ma/robots.txt > rc.txt || true
+          echo "::notice title=robots::$(cat rc.txt) $(head -c 400 r.txt | tr '\n' ' ')"
