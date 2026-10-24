@@ -1,6 +1,6 @@
 // Tests de la lecture des horaires officiels : analyse d'une page, contrôle contre le calcul, fusion, garde-fous de l'appli.
 import fs from 'node:fs';
-import { parsePage, analyse, mergeFile, robotsAllows, parseHabousMonthly, habousSelected } from './officiel-lib.mjs';
+import { parsePage, analyse, mergeFile, robotsAllows, parseHabousMonthly, habousSelected, parseHabousJson } from './officiel-lib.mjs';
 import { computeDay } from '../js/prayer-calc.js';
 import { localityByCode } from '../js/localites.js';
 
@@ -137,6 +137,17 @@ eq('téléchargement : même fichier une seconde fois → pas de changement', aw
   eq('Habous officiel : lignes cohérentes avec le calcul (≤ 1 min)', [h.ok, h.stats.max <= 1, h.stats.pct >= 95], [true, true, true]);
   const dec = fx.replace('>أكتوبر / نونبر<', '>دجنبر / يناير<');
   eq('Habous officiel : en janvier, l\'en-tête « دجنبر / يناير » est rattaché au décembre précédent', parseHabousMonthly(dec, Date.UTC(2027, 0, 5))[0]?.date, '2026-12-13');
+}
+
+{ // fichier mensuel du nouveau site (octobre 2026) : Rabat-Salé, reconstruit depuis nos jours officiels d'octobre (heure GMT)
+  const j = JSON.parse(fs.readFileSync('data/officiel/1.json', 'utf8')).j;
+  const h = []; for (let d = 1; d <= 31; d++) { const k = `2026-10-${String(d).padStart(2, '0')}`; if (!j[k]) break; h.push(j[k].split(' ').map(x => `${x.slice(0, 2)}:${x.slice(2)}`)); }
+  const json = { annee: 2026, mois: 10, fuseau: 'GMT', cols: ['Fajr', 'Chorouq', 'Dhuhr', 'Asr', 'Maghrib', 'Ishae'], villes: [{ c: 1, n: 'الرباط', h }, { c: 2, n: 'x', h: [['bad']] }] };
+  const map = parseHabousJson(json);
+  eq('Habous JSON : une localité lisible (ligne invalide ignorée)', [...map.keys()], [1]);
+  const a = analyse(1, map.get(1));
+  eq('Habous JSON : jours acceptés et identiques à l\'archive', a.ok && Object.keys(a.days).every(k => a.days[k] === j[k]), true);
+  eq('Habous JSON : format inconnu → rien', parseHabousJson({ annee: 2026, mois: 13, villes: [] }).size, 0);
 }
 
 console.log(fails ? `\n${fails} échec(s)` : '\nTous les tests réussis');

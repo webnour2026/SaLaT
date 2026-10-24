@@ -8,7 +8,7 @@
 // rien n'est écrit si trop de localités échouent. Si le site disparaît ou change, le travail échoue sans rien abîmer.
 // Variables : HABOUS_BASE (adresse du site), DRY_RUN=1, FORCE=1, ONLY="305 319", DELAY_MS (2500 par défaut).
 import fs from 'node:fs';
-import { robotsAllows, parseHabousMonthly, habousSelected, analyse, mergeFile } from './officiel-lib.mjs';
+import { robotsAllows, parseHabousMonthly, habousSelected, analyse, mergeFile, parseHabousJson } from './officiel-lib.mjs';
 import { allLocalities } from '../js/localites.js';
 
 const env = (k, d = '') => process.env[k] ?? d;
@@ -49,6 +49,48 @@ async function fetchLocality(code) {
   const a = analyse(code, rows);
   return a.ok ? { ok: true, ...a } : { ok: false, why: `lignes incohérentes avec le calcul : ${a.rejects.slice(0, 3).join(' ; ')}` };
 }
+
+// Nouvelle version du site (octobre 2026) : un fichier par mois pour toutes les localités (data/horaires-AAAA-MM.json).
+// Lu en premier : mois en cours et mois suivant (s'il est déjà publié). Si le fichier n'existe pas, on passe aux anciennes pages.
+async function fromMonthlyJson() {
+  BASE = 'https://www.habous.gov.ma';
+  const now = new Date(), months = [0, 1].map(k => new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + k, 1)).toISOString().slice(0, 7));
+  const byCode = new Map(); let read = [];
+  for (const ym of months) {
+    const r = await get(`/data/horaires-${ym}.json`).catch(e => ({ status: 0, why: e.message }));
+    if (r.status !== 200) { say(`- ${BASE}/data/horaires-${ym}.json : ${r.why || 'HTTP ' + r.status}`); continue; }
+    let json; try { json = JSON.parse(r.body); } catch { say(`- horaires-${ym}.json : JSON illisible`); continue; }
+    const map = parseHabousJson(json);
+    if (!map.size) { say(`- horaires-${ym}.json : aucune localité lisible (le format a peut-être changé)`); continue; }
+    for (const [c, rows] of map) byCode.set(c, [...(byCode.get(c) || []), ...rows]);
+    read.push(`${ym} (${map.size} localités)`);
+  }
+  if (!byCode.size) return false;
+  let todo = allLocalities().map(l => ({ code: l.code, name: l.fr }));
+  if (ONLY.length) todo = todo.filter(l => ONLY.includes(l.code));
+  const results = [], failed = [];
+  for (const l of todo) {
+    const rows = byCode.get(l.code);
+    if (!rows) { failed.push({ ...l, why: 'absente du fichier' }); continue; }
+    const a = analyse(l.code, rows);
+    (a.ok ? results : failed).push(a.ok ? { ...l, ...a } : { ...l, why: `lignes incohérentes avec le calcul : ${a.rejects.slice(0, 3).join(' ; ')}` });
+  }
+  say(`## Horaires officiels (${BASE}, fichiers mensuels : ${read.join(', ')}) — ${new Date().toISOString().slice(0, 16)} UTC${DRY ? ' (essai : rien n\'est écrit)' : ''}`);
+  say(`Localités lues : ${results.length}/${todo.length}${failed.length ? ` · échecs : ${failed.length}` : ''}`);
+  if (failed.length) { say('**Échecs :**'); for (const f of failed.slice(0, 20)) say(`- ${f.name} (${f.code}) : ${f.why}`); }
+  if (failed.length > Math.max(3, Math.round(todo.length * 0.15))) { say('**Trop d\'échecs : aucune donnée écrite.**'); return true; }
+  const pct = results.length ? Math.round(10 * results.reduce((s, r) => s + r.stats.pct, 0) / results.length) / 10 : 0;
+  say(`Identiques au calcul (moyenne) : ${pct} % · écart max : ${Math.max(0, ...results.map(r => r.stats.max))} min`);
+  fs.mkdirSync('data/officiel', { recursive: true });
+  let changed = 0;
+  if (!DRY) for (const r of results) {
+    const m = mergeFile(readJson(file(r.code)), r.code, r.days, Date.now(), 'habous');
+    if (m.changed) { fs.writeFileSync(file(r.code), JSON.stringify(m.file) + '\n'); changed++; }
+  }
+  say(DRY ? 'Essai terminé : aucun fichier modifié.' : `Fichiers mis à jour : ${changed}`);
+  return true;
+}
+if (await fromMonthlyJson().catch(e => { say(`- fichiers mensuels : ${e.message}`); return false; })) { summary(); process.exit(0); }
 
 // premier site joignable (robots.txt vérifié sauf pour la page officielle mise à disposition) qui affiche un tableau mensuel
 let chosen = null, probe1 = null;
