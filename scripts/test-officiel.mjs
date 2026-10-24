@@ -147,6 +147,7 @@ eq('téléchargement : même fichier une seconde fois → pas de changement', aw
   eq('Habous JSON : une localité lisible (ligne invalide ignorée)', [...map.keys()], [1]);
   const a = analyse(1, map.get(1));
   eq('Habous JSON : jours acceptés et identiques à l\'archive', a.ok && Object.keys(a.days).every(k => a.days[k] === j[k]), true);
+  eq('Habous JSON : clé avec espace (« villes») acceptée', parseHabousJson({ annee: 2026, mois: 10, ' villes': json.villes }).size, 1);
   eq('Habous JSON : format inconnu → rien', parseHabousJson({ annee: 2026, mois: 13, villes: [] }).size, 0);
 }
 

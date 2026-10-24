@@ -140,12 +140,15 @@ export function parseHabousMonthly(html, now = Date.now()) {
 // ── Fichier mensuel du site du ministère (version « en maintenance », octobre 2026) : data/horaires-AAAA-MM.json ──
 // { annee, mois, fuseau: 'GMT', cols: [Fajr, Chorouq, Dhuhr, Asr, Maghrib, Ishae], villes: [{ c: <numéro>, n: <nom>, h: [[6 × 'HH:MM'], … un par jour du mois grégorien] }] }
 // Renvoie Map(numéro → lignes { date, t: [minutes] }) au format attendu par analyse().
-export function parseHabousJson(json) {
+export function parseHabousJson(raw) {
   const out = new Map();
+  // clés tolérantes : le fichier publié contient au moins une clé avec espace (« villes» précédé d'une espace)
+  const json = raw && typeof raw === 'object' ? Object.fromEntries(Object.entries(raw).map(([k, v]) => [k.trim(), v])) : raw;
   const y = Number(json?.annee), m = Number(json?.mois);
   if (!(y > 2000 && m >= 1 && m <= 12) || !Array.isArray(json?.villes)) return out;
   const mins = s => { const x = /^(\d{1,2}):(\d{2})$/.exec(String(s).trim()); return x ? Number(x[1]) * 60 + Number(x[2]) : NaN; };
-  for (const v of json.villes) {
+  for (let v of json.villes) {
+    if (v && typeof v === 'object') v = Object.fromEntries(Object.entries(v).map(([k, x]) => [k.trim(), x]));
     const code = Number(v?.c); if (!code || !Array.isArray(v.h)) continue;
     const rows = [];
     v.h.forEach((r, i) => {
