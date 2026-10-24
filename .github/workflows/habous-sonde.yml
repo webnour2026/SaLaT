@@ -7,7 +7,11 @@ jobs:
     steps:
       - run: |
           UA='SaLaTi-verification/1.0 (appli de prière ; github.com/webnour2026/SaLaT)'
-          curl -sSL -A "$UA" -o home.html -w '%{http_code} %{url_effective}\n' https://www.habous.gov.ma/ > code.txt || true
+          for u in https://www.habous.gov.ma/ https://habous.gov.ma/ http://www.habous.gov.ma/; do
+            e=$(curl -sSL --max-time 40 -A "$UA" -o /dev/null -w '%{http_code} %{url_effective}' "$u" 2>&1 | tail -c 300); echo "::notice title=Essai $u::$e"
+          done
+          curl -sSL --max-time 40 -A "Mozilla/5.0 (Linux; Android 14) Chrome/130 Mobile" -o home.html -w '%{http_code} %{url_effective}\n' https://www.habous.gov.ma/ > code.txt 2>err.txt || true
+          echo "::notice title=Erreur::$(tail -c 300 err.txt)"
           echo "::notice title=Accueil::$(cat code.txt) taille $(wc -c < home.html)"
           echo "::notice title=Liens::$(grep -oiE '(href|src|action)="[^"]+"' home.html | grep -viE '\.(png|jpg|svg|woff2?|css)' | sort -u | tr '\n' ' ' | head -c 3000)"
           echo "::notice title=Select::$(grep -oiE '<select[^>]*>|<option[^>]*>[^<]{0,30}' home.html | head -12 | tr '\n' ' ' | head -c 1500)"
