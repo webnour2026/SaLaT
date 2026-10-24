@@ -8,15 +8,15 @@
  "prieres": {
   "Fajr": {
    "actuel_s": -45,
-   "identiques": 98.6,
+   "identiques": 98.7,
    "proposition_s": -45,
-   "identiques_proposition": 98.6
+   "identiques_proposition": 98.7
   },
   "Sunrise": {
    "actuel_s": -94,
-   "identiques": 98.4,
+   "identiques": 98.5,
    "proposition_s": -94,
-   "identiques_proposition": 98.4
+   "identiques_proposition": 98.5
   },
   "Dhuhr": {
    "actuel_s": 300,
@@ -26,9 +26,9 @@
   },
   "Asr": {
    "actuel_s": 0,
-   "identiques": 94.1,
+   "identiques": 96.2,
    "proposition_s": 0,
-   "identiques_proposition": 94.1
+   "identiques_proposition": 96.2
   },
   "Maghrib": {
    "actuel_s": 75,
