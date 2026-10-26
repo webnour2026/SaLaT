@@ -81,6 +81,11 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.35.2] – 2026-10-26
+### Corrigé
+- Page déclarée en arabe dès le chargement (lang="ar", langue par défaut) au lieu du français : Chrome ne propose plus de
+  « traduire du français » une page affichée en arabe (en plus de translate="no" / notranslate de la 2.34.13).
+
 ## [2.35.1] – 2026-10-23
 ### Retiré
 - Titres en خط مغربي (2.35.0) annulés : la police était destinée aux versets ; elle utilise le codage propre au texte du
