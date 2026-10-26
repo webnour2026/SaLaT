@@ -66,9 +66,10 @@ const hmm = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60
 
 const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'";
 const head = ({ title, desc, url, ld }) => `<!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" translate="no">
 <head>
-<meta charset="utf-8">${GSC && url === PAGES ? `
+<meta charset="utf-8">
+<meta name="google" content="notranslate">${GSC && url === PAGES ? `
 <meta name="google-site-verification" content="${GSC}">` : ''}
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="${CSP}">
