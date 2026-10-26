@@ -64,6 +64,19 @@ Liste des améliorations retenues, à regrouper dans un même AAB avec d'autres 
    publient chaque jour seulement les résultats dans le dépôt public (jeton à droits limités en secret). Restent publics :
    l'appli, GitHub Pages, la surveillance du croissant, la construction Android (minutes illimitées en public).
 
+## Ce qui manque face aux autres applis (comparaison du 26/10/2026 : Al Mosaly, Mawaqit, Muslim Pro — fonctionnalités, pas le code)
+
+SaLaTi a déjà ce que les autres n'ont pas ou peu : tableaux officiels du ministère, annonce du croissant instantanée
+(appli fermée), prévision de visibilité, Mode Mosquée, écran de mosquée TV avec Iqama, tuile rapide, cartes à partager,
+sans publicité ni compte. Manques, par ordre de priorité :
+
+1. **Petit et utile** : heure de la **Duha** et du **dernier tiers de la nuit** (قيام الليل) sous les horaires (calcul simple).
+2. **Adhkar** : lecteur des أذكار الصباح والمساء et des أذكار بعد الصلاة avec **compteur** (سبحة) ; rappel des adhkar du
+   matin/soir. Les textes existent déjà dans les cartes.
+3. **Mushaf Mohammadi** (lecture, puis audio) : en attente de l'autorisation de la Fondation Mohammed VI (courrier du 23/10).
+4. Plus tard / non prioritaire : wird et khatma, suivi des prières, annuaire des mosquées (Mawaqit), horaires en avion,
+   montre connectée. Écarté : publicité, abonnement.
+
 ## Plus tard
 
 - Publication sur **AppGallery** (Huawei sans Google Play).
