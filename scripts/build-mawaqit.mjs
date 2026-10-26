@@ -1,4 +1,4 @@
-// Pages « مواقيت الصلاة في <ville> » : une page statique par localité officielle (191) + une page d'accueil des villes,
+// Pages « مواقيت الصلاة في <ville> » : une page statique par localité officielle (190 : une localité a deux numéros) + une page d'accueil des villes,
 // générées depuis data/officiel/<code>.json (tableaux du ministère des Habous). Destinées aux moteurs de recherche :
 // le tableau du mois est dans le HTML (lisible sans JavaScript) ; page.js ajoute l'horaire du jour et le compte à rebours.
 // Publiées par Cloudflare (Worker « miqatsalati », fichiers statiques du dossier pages/, voir pages-worker/ et le travail
@@ -35,9 +35,34 @@ const cities = allLocalities().map(l => {
   let j; try { j = JSON.parse(fs.readFileSync(`data/officiel/${l.code}.json`, 'utf8')); } catch { return null; }
   const days = Object.entries(j.j).filter(([d]) => d >= today).sort(([a], [b]) => (a < b ? -1 : 1)).slice(0, 31);
   if (!days.length) return null;
-  let slug = slugOf(l.fr) || `ville-${l.code}`; if (used.has(slug)) slug += `-${l.code}`; used.add(slug);
+  const slug = slugOf(l.fr) || `ville-${l.code}`;
+  if (used.has(slug)) return null;          // même localité sous deux numéros (ex. Tahla 94 et 303) : une seule page (sinon « page en double » pour Google)
+  used.add(slug);
   return { ...l, slug, days };
 }).filter(Boolean);
+
+// Données propres à chaque ville (Google écarte comme « doublons » des pages qui ne diffèrent que par les chiffres du tableau)
+const KAABA = { lat: 21.422487, lng: 39.826206 };
+const bearing = (a, b) => { const r = Math.PI / 180, y = Math.sin((b.lng - a.lng) * r) * Math.cos(b.lat * r),
+  x = Math.cos(a.lat * r) * Math.sin(b.lat * r) - Math.sin(a.lat * r) * Math.cos(b.lat * r) * Math.cos((b.lng - a.lng) * r);
+  return (Math.atan2(y, x) / r + 360) % 360; };
+const DIR_AR = ['الشمال', 'الشمال الشرقي', 'الشرق', 'الجنوب الشرقي', 'الجنوب', 'الجنوب الغربي', 'الغرب', 'الشمال الغربي'];
+const DIR_FR = ['le nord', 'le nord-est', 'l’est', 'le sud-est', 'le sud', 'le sud-ouest', 'l’ouest', 'le nord-ouest'];
+const dir8 = deg => Math.round(deg / 45) % 8;
+const mins = s => Number(s.slice(0, 2)) * 60 + Number(s.slice(2));
+const dur = m => `${Math.floor(m / 60)} س ${m % 60} د`, durFr = m => `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')}`;
+const dms = (v, pos, neg) => `${Math.abs(v).toFixed(2)}° ${v >= 0 ? pos : neg}`;
+const minsAr = n => (n === 1 ? 'دقيقة واحدة' : n === 2 ? 'دقيقتين' : n <= 10 ? `${n} دقائق` : `${n} دقيقة`);
+function facts(c, ref) {
+  const q = bearing(c, KAABA), dist = Math.round(km(c, KAABA) / 10) * 10;
+  const t0 = c.days[0][1].split(' ').map(mins);
+  const fajrs = c.days.map(([, l]) => mins(l.split(' ')[0])), maghs = c.days.map(([, l]) => mins(l.split(' ')[4]));
+  const r0 = ref && ref.days.find(([d]) => d === c.days[0][0]);
+  const dRef = r0 && ref !== c ? t0[2] - mins(r0[1].split(' ')[2]) : null;            // Dhuhr par rapport à Rabat (longitude)
+  return { q: Math.round(q), qDir: dir8(q), dist, alt: c.alt, day: t0[4] - t0[1], fajrMin: Math.min(...fajrs), fajrMax: Math.max(...fajrs),
+    maghMin: Math.min(...maghs), maghMax: Math.max(...maghs), dRef };
+}
+const hmm = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 
 const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'";
 const head = ({ title, desc, url, ld }) => `<!doctype html>
@@ -82,6 +107,17 @@ for (const c of cities) {
   const t0 = c.days[0][1].split(' ');
   const title = `مواقيت الصلاة في ${c.ar} اليوم | Horaires de prière ${c.fr} – SaLaTi`;
   const desc = `أوقات الصلاة في ${c.ar} حسب وزارة الأوقاف: الفجر ${hm(t0[0])}، الظهر ${hm(t0[2])}، العصر ${hm(t0[3])}، المغرب ${hm(t0[4])}، العشاء ${hm(t0[5])}. Horaires de prière à ${c.fr} conformes au ministère des Habous.`;
+  const f = facts(c, cities.find(o => o.code === 1));
+  const refAr = f.dRef === null ? '' : f.dRef === 0 ? ' ويؤذَّن للظهر فيها في الوقت نفسه تقريباً مع الرباط.'
+    : ` ويؤذَّن للظهر فيها ${f.dRef > 0 ? 'بعد' : 'قبل'} الرباط بـ${minsAr(Math.abs(f.dRef))}، لأنها تقع ${f.dRef > 0 ? 'غربها' : 'شرقها'}.`;
+  const refFr = f.dRef === null ? '' : f.dRef === 0 ? ' Le Dhuhr y est à la même heure qu’à Rabat.'
+    : ` Le Dhuhr y est ${Math.abs(f.dRef)} min ${f.dRef > 0 ? 'après' : 'avant'} Rabat (${esc(c.fr)} est plus à l’${f.dRef > 0 ? 'ouest' : 'est'}).`;
+  const about = `<section class="about">
+<h2>${esc(c.ar)}: القبلة والمواقيت</h2>
+<p>تقع ${esc(c.ar)} على ارتفاع ${f.alt} م تقريباً (${dms(c.lat, 'شمالاً', 'جنوباً')}، ${dms(c.lng, 'شرقاً', 'غرباً')}). اتجاه القبلة منها ${f.q}° من الشمال، أي نحو ${DIR_AR[f.qDir]}، والمسافة إلى الكعبة المشرفة نحو ${f.dist.toLocaleString('fr-FR')} كم.${refAr}</p>
+<p>طول النهار اليوم ${dur(f.day)} (من الشروق إلى المغرب). خلال الأيام الـ${c.days.length} القادمة يتراوح أذان الفجر بين ${hmm(f.fajrMin)} و${hmm(f.fajrMax)}، والمغرب بين ${hmm(f.maghMin)} و${hmm(f.maghMax)}.</p>
+</section>`;
+  const aboutFr = `<p>${esc(c.fr)} se trouve à environ ${f.alt} m d’altitude. Direction de la Qibla : ${f.q}° depuis le nord (vers ${DIR_FR[f.qDir]}), à environ ${f.dist.toLocaleString('fr-FR')} km de la Kaaba.${refFr} Durée du jour aujourd’hui : ${durFr(f.day)} ; sur les ${c.days.length} prochains jours, le Fajr varie de ${hmm(f.fajrMin)} à ${hmm(f.fajrMax)} et le Maghrib de ${hmm(f.maghMin)} à ${hmm(f.maghMax)}.</p>`;
   const near = cities.filter(o => o !== c).map(o => [km(c, o), o]).sort((a, b) => a[0] - b[0]).slice(0, 8).map(([, o]) => o);
   const rows = c.days.map(([d, line]) => `<tr data-d="${d}"><th scope="row">${esc(rowAr(new Date(d + 'T12:00:00Z')))}</th>${line.split(' ').map(x => `<td>${hm(x)}</td>`).join('')}</tr>`).join('\n');
   const ld = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
@@ -108,12 +144,14 @@ ${cta('../')}
 ${rows}
 </tbody></table></div>
 <p class="note">بالتوقيت القانوني للمملكة (GMT). آخر تحديث: ${esc(dayAr.format(new Date(today + 'T12:00:00Z')))}.</p>
+${about}
 <section lang="fr" dir="ltr" class="fr">
 <h2>Horaires de prière à ${esc(c.fr)}</h2>
 <p>Aujourd’hui (${esc(dayFr.format(new Date(c.days[0][0] + 'T12:00:00Z')))}) à ${esc(c.fr)} : Fajr ${hm(t0[0])}, lever du soleil ${hm(t0[1])}, Dhuhr ${hm(t0[2])}, Asr ${hm(t0[3])}, Maghrib ${hm(t0[4])}, Icha ${hm(t0[5])}. Horaires officiels du ministère des Habous, à l’heure légale du Maroc (GMT).</p>
+${aboutFr}
 </section>
 <h2>مدن قريبة</h2>
-<ul class="near">${near.map(o => `<li><a href="../${o.slug}/">${esc(o.ar)}</a></li>`).join('')}</ul>
+<ul class="near">${near.map(o => `<li><a href="../${o.slug}/">${esc(o.ar)}</a> <small>${Math.round(km(c, o))} كم</small></li>`).join('')}</ul>
 </main>
 ${footer('../')}
 <script src="../page.js"></script>
@@ -126,14 +164,14 @@ ${footer('../')}
 
 // page d'accueil des villes
 const byAr = [...cities].sort((a, b) => a.ar.localeCompare(b.ar, 'ar'));
-const indexHtml = `${head({ title: 'مواقيت الصلاة في المغرب حسب وزارة الأوقاف – 191 مدينة | Horaires de prière Maroc – SaLaTi',
-  desc: 'مواقيت الصلاة اليوم في جميع مدن المغرب (191 مدينة ومركزاً) مطابقة لجداول وزارة الأوقاف والشؤون الإسلامية. Horaires de prière au Maroc, conformes au ministère des Habous.',
+const indexHtml = `${head({ title: 'مواقيت الصلاة في المغرب حسب وزارة الأوقاف – ${cities.length} مدينة | Horaires de prière Maroc – SaLaTi',
+  desc: 'مواقيت الصلاة اليوم في جميع مدن المغرب (${cities.length} مدينة ومركزاً) مطابقة لجداول وزارة الأوقاف والشؤون الإسلامية. Horaires de prière au Maroc, conformes au ministère des Habous.',
   url: PAGES })}
 <body>
 <header><a class="brand" href="./"><img src="icons/icon-192.png" alt="" width="36" height="36">صلاتي SaLaTi</a></header>
 <main>
 <h1>مواقيت الصلاة في المغرب</h1>
-<p class="sub" lang="fr" dir="ltr">Horaires de prière au Maroc – 191 villes et centres, ministère des Habous</p>
+<p class="sub" lang="fr" dir="ltr">Horaires de prière au Maroc – ${cities.length} villes et centres, ministère des Habous</p>
 ${cta('')}
 <input type="search" id="q" class="q" placeholder="ابحث عن مدينتك · Chercher une ville" aria-label="ابحث عن مدينتك">
 <ul class="cities" id="cities">${byAr.map(c => `<li><a href="${c.slug}/">${esc(c.ar)} <small lang="fr">${esc(c.fr)}</small></a></li>`).join('')}</ul>
