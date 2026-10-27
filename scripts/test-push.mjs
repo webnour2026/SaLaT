@@ -25,5 +25,26 @@ eq('Dhou al-Hijja : date de l’Aïd al-Adha (10e jour)', adha.body.endsWith('L�
 eq('Ramadan : vœux', announcementText({ y: 1448, m: 9, start: '2027-02-08', seen: false }, 'ar', 2).body.endsWith('رمضان مبارك.'), true);
 eq('toutes les valeurs sont des chaînes (exigé par FCM)', LANGS.every(l => Object.values(announcementText(seen, l, 1)).every(v => typeof v === 'string')), true);
 eq('notification d’essai dans les 3 langues', LANGS.every(l => testText(l)?.title), true);
+// ── page privée d'annonce manuelle (worker/src/annonce.js) ──
+{
+  const { annonce } = await import('../worker/src/annonce.js');
+  const kv = new Map(), KV = { get: async k => kv.get(k) ?? null, put: async (k, v) => kv.set(k, v) };
+  let calls = [];
+  globalThis.fetch = async (url, o) => { calls.push({ url, body: JSON.parse(o.body) }); return new Response(null, { status: 204 }); };
+  const env = { ANNONCE_KEY: 'code-tres-secret-123', GH_DISPATCH_TOKEN: 'x', KV };
+  const post = (key, start, ip = '1.1.1.1') => { const f = new FormData(); f.set('key', key); f.set('start', start);
+    return annonce(new Request('https://w/annonce', { method: 'POST', body: f, headers: { 'CF-Connecting-IP': ip } }), env); };
+  const tom = new Date(Date.now() + 864e5).toISOString().slice(0, 10), far = new Date(Date.now() + 5 * 864e5).toISOString().slice(0, 10);
+  eq('annonce : page non activée sans secrets', (await annonce(new Request('https://w/annonce'), { KV })).status, 503);
+  eq('annonce : formulaire', (await annonce(new Request('https://w/annonce'), env)).status, 200);
+  eq('annonce : mauvais code refusé', (await post('faux', tom)).status, 403);
+  eq('annonce : date trop lointaine refusée', (await post(env.ANNONCE_KEY, far)).status, 400);
+  eq('annonce : rien lancé avant un bon code et une bonne date', calls.length, 0);
+  eq('annonce : bon code + demain → travail Habous lancé', (await post(env.ANNONCE_KEY, tom)).status, 200);
+  eq('annonce : date transmise au travail', calls[0]?.body?.inputs?.start, tom);
+  for (let i = 0; i < 5; i++) await post('faux', tom, '9.9.9.9');
+  eq('annonce : bloqué après 5 mauvais codes (même avec le bon)', (await post(env.ANNONCE_KEY, tom, '9.9.9.9')).status, 429);
+}
+
 console.log(fails ? `\n${fails} échec(s)` : '\ntout passe');
 process.exit(fails ? 1 : 0);

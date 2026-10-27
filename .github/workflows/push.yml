@@ -3,6 +3,7 @@
 # ou à la main : onglet Actions → « Notifications (serveur) » → Run workflow.
 # À créer une fois dans GitHub → Settings → Secrets and variables → Actions :
 #   Secrets   : CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, FCM_SERVICE_ACCOUNT (fichier JSON du compte de service Firebase)
+#               facultatifs : ANNONCE_KEY (code de la page /annonce), GH_DISPATCH_TOKEN (jeton GitHub, droit Actions sur SaLaT)
 #   Variables : FIREBASE_WEB_CONFIG (objet firebaseConfig de l'appli Web), FIREBASE_VAPID_KEY (certificat Web Push, clé publique)
 name: Notifications (serveur)
 on:
@@ -23,6 +24,8 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       FCM_SA: ${{ secrets.FCM_SERVICE_ACCOUNT }}
+      ANNONCE_KEY: ${{ secrets.ANNONCE_KEY }}               # facultatif : code de la page privée /annonce
+      GH_DISPATCH_TOKEN: ${{ secrets.GH_DISPATCH_TOKEN }}   # facultatif : jeton GitHub (Actions : lecture/écriture, dépôt SaLaT seul)
       FB_WEB: ${{ vars.FIREBASE_WEB_CONFIG }}
       FB_VAPID: ${{ vars.FIREBASE_VAPID_KEY }}
       WRANGLER: wrangler@4.140.0
@@ -86,6 +89,13 @@ jobs:
           npx --yes $WRANGLER deploy > deploy.log 2>&1 || { cat deploy.log; err "wrangler deploy" deploy.log; }
           cat deploy.log
           printf '%s' "$FCM_SA" | npx --yes $WRANGLER secret put FCM_SERVICE_ACCOUNT > secret.log 2>&1 || { cat secret.log; err "wrangler secret" secret.log; }
+          # page privée d'annonce manuelle : activée seulement si les deux secrets existent (sinon elle répond « non activée »)
+          if [ -n "$ANNONCE_KEY" ] && [ -n "$GH_DISPATCH_TOKEN" ]; then
+            [ ${#ANNONCE_KEY} -ge 10 ] || { echo "::error title=ANNONCE_KEY::code trop court (10 caractères au moins)"; exit 1; }
+            printf '%s' "$ANNONCE_KEY" | npx --yes $WRANGLER secret put ANNONCE_KEY > s2.log 2>&1 || err "wrangler secret ANNONCE_KEY" s2.log
+            printf '%s' "$GH_DISPATCH_TOKEN" | npx --yes $WRANGLER secret put GH_DISPATCH_TOKEN > s3.log 2>&1 || err "wrangler secret GH_DISPATCH_TOKEN" s3.log
+            echo "::notice title=Annonce manuelle::page activée"
+          else echo "::notice title=Annonce manuelle::non activée (secrets ANNONCE_KEY et GH_DISPATCH_TOKEN absents)"; fi
       - name: Configuration publique de l'appli (data/push-config.json)
         if: steps.cfg.outputs.ok == 'true'
         env:

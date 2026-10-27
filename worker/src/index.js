@@ -2,10 +2,12 @@
 //  • POST /subscribe   {token, lang, prev}  inscrit un appareil (jeton Firebase, aucune donnée personnelle) au sujet hilal-<lang>
 //  • POST /unsubscribe {token, lang}        le désinscrit
 //  • POST /test        {token, lang}        envoie une notification d'essai à CE jeton seulement
+//  • GET/POST /annonce                    page privée : annonce manuelle du croissant (code secret)
 //  • POST /check                            relit data/habous.json et envoie l'annonce si elle est nouvelle (aussi par cron)
 // Une annonce n'est envoyée qu'une fois (clé KV sent:<année>-<mois>) et seulement si le 1er du mois est dans 0–2 jours :
 // /check peut donc être appelé par n'importe qui sans risque.
 // Secret du Worker : FCM_SERVICE_ACCOUNT (clé JSON du compte de service Firebase), posé par le travail GitHub.
+import { annonce } from './annonce.js';
 import { LANGS, lastAnnouncement, announcementText, relDay, testText } from './messages.js';
 
 const TOKEN_RE = /^[\w:-]{60,400}$/;
@@ -17,6 +19,7 @@ export default {
     const cors = { 'Access-Control-Allow-Origin': allowed.includes(origin) ? origin : allowed[0] || '*', 'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Max-Age': '86400', Vary: 'Origin' };
     const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { ...cors, 'Content-Type': 'application/json; charset=utf-8' } });
+    if (url.pathname === '/annonce') return annonce(req, env);        // page privée d'annonce manuelle (voir annonce.js)
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
     if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'salati-push' });
     if (req.method === 'GET' && url.pathname === '/status') {          // contrôle après déploiement : la clé Firebase est-elle valable ?
