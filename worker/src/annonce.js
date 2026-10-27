@@ -56,3 +56,17 @@ export async function annonce(req, env) {
   if (r.status !== 204) return html(page(`تعذّر تشغيل الإرسال (GitHub ${r.status}). · Échec du lancement (GitHub ${r.status}).`), 502);
   return html(page(`✅ تم. فاتح الشهر: ${start}. يصل الإشعار إلى المستعملين خلال دقيقتين تقريبًا. · C'est parti : la notification arrive d'ici ~2 minutes.`, true));
 }
+
+/** GET /annonce/etat : la page est-elle activée, le jeton GitHub est-il valable, combien de jours avant son expiration ?
+ *  Ne révèle aucun secret. Appelé chaque semaine par le travail GitHub « Annonce manuelle (contrôle) ». */
+export async function annonceEtat(env) {
+  const out = { activee: !!(env.ANNONCE_KEY && env.GH_DISPATCH_TOKEN) };
+  if (out.activee) {
+    const r = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW}`, {
+      headers: { Authorization: `Bearer ${env.GH_DISPATCH_TOKEN}`, Accept: 'application/vnd.github+json', 'User-Agent': 'salati-push' } });
+    out.jeton = r.status === 200 ? 'valable' : `refusé (GitHub ${r.status})`;
+    const exp = r.headers.get('github-authentication-token-expiration');          // ex. « 2027-10-27 20:05:00 +0000 »
+    if (exp) { const t = Date.parse(exp.replace(' ', 'T').replace(' ', '')); if (Number.isFinite(t)) { out.expiration = new Date(t).toISOString().slice(0, 10); out.joursRestants = Math.floor((t - Date.now()) / 864e5); } }
+  }
+  return new Response(JSON.stringify(out), { headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
+}

@@ -1,0 +1,40 @@
+# Contrôle hebdomadaire de la page privée d'annonce manuelle (https://salati-push.webnour.workers.dev/annonce).
+# Un jeton GitHub (fine-grained) ne se renouvelle pas automatiquement : ce travail vérifie chaque lundi qu'il est valable et,
+# 30 jours avant son expiration (ou s'il ne marche plus), ouvre un ticket « Renouveler le jeton » : GitHub l'envoie par e-mail.
+# Renouveler : créer un nouveau jeton (SaLaT seul, Actions : lecture/écriture, 1 an), remplacer le secret GH_DISPATCH_TOKEN,
+# relancer « Notifications (serveur) », puis fermer le ticket.
+name: Annonce manuelle (contrôle)
+on:
+  schedule:
+    - cron: '17 8 * * 1'
+  workflow_dispatch:
+permissions:
+  issues: write
+jobs:
+  controle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: État du jeton
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          e=$(curl -sS --max-time 30 https://salati-push.webnour.workers.dev/annonce/etat || echo '{}')
+          echo "::notice title=État::$e"
+          jours=$(echo "$e" | jq -r '.joursRestants // empty'); jeton=$(echo "$e" | jq -r '.jeton // "inconnu"'); act=$(echo "$e" | jq -r '.activee // false')
+          probleme=""
+          [ "$act" = "true" ] || probleme="la page n'est pas activée (secrets ANNONCE_KEY / GH_DISPATCH_TOKEN absents)"
+          [ -z "$probleme" ] && [ "$jeton" != "valable" ] && probleme="le jeton GitHub ne marche plus ($jeton)"
+          [ -z "$probleme" ] && [ -n "$jours" ] && [ "$jours" -le 30 ] && probleme="le jeton GitHub expire dans $jours jour(s) ($(echo "$e" | jq -r .expiration))"
+          if [ -z "$probleme" ]; then echo "::notice title=OK::jeton valable, ${jours:-?} jours restants"; exit 0; fi
+          titre="Renouveler le jeton de l'annonce manuelle du croissant"
+          if gh issue list -R "$GITHUB_REPOSITORY" --state open --search "$titre in:title" --json number --jq '.[0].number' | grep -q .; then
+            echo "::warning title=Annonce manuelle::$probleme (ticket déjà ouvert)"; exit 0; fi
+          gh issue create -R "$GITHUB_REPOSITORY" --title "$titre" --body "Problème : $probleme.
+
+          À faire (5 minutes) :
+          1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token :
+             dépôt **SaLaT** seul, permission **Actions : Read and write**, expiration **1 an**.
+          2. Dépôt SaLaT → Settings → Secrets and variables → Actions → **GH_DISPATCH_TOKEN** → Update → coller le nouveau jeton.
+          3. Actions → **Notifications (serveur)** → Run workflow.
+          4. Fermer ce ticket (le contrôle du lundi suivant confirmera)."
+          echo "::warning title=Annonce manuelle::$probleme → ticket ouvert"
