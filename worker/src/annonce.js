@@ -67,6 +67,13 @@ export async function annonceEtat(env) {
     out.jeton = r.status === 200 ? 'valable' : `refusé (GitHub ${r.status})`;
     const exp = r.headers.get('github-authentication-token-expiration');          // ex. « 2027-10-27 20:05:00 +0000 »
     if (exp) { const t = Date.parse(exp.replace(' ', 'T').replace(' ', '')); if (Number.isFinite(t)) { out.expiration = new Date(t).toISOString().slice(0, 10); out.joursRestants = Math.floor((t - Date.now()) / 864e5); } }
+    if (out.joursRestants === undefined && env.KV) {       // GitHub n'indique pas toujours l'expiration : estimée à 1 an après la 1re vue de CE jeton
+      const h = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(env.GH_DISPATCH_TOKEN)))].slice(0, 6).map(b => b.toString(16).padStart(2, '0')).join('');
+      let seen = await env.KV.get(`jeton-vu:${h}`);
+      if (!seen) { seen = new Date().toISOString().slice(0, 10); await env.KV.put(`jeton-vu:${h}`, seen); }
+      const t = Date.parse(seen + 'T00:00:00Z') + 365 * 864e5;
+      Object.assign(out, { expiration: new Date(t).toISOString().slice(0, 10), joursRestants: Math.floor((t - Date.now()) / 864e5), estimee: true, depuis: seen });
+    }
   }
   return new Response(JSON.stringify(out), { headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
 }
