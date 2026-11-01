@@ -2,46 +2,46 @@
  "jusquau": "2026-11",
  "source": "toutes",
  "global": {
-  "n": 68760,
+  "n": 90420,
   "identiques": 97.4,
   "a1min": 2.6,
   "plus": 0
  },
  "parPriere": {
   "Fajr": {
-   "n": 11460,
-   "identiques": 98.7,
-   "a1min": 1.3,
+   "n": 15070,
+   "identiques": 98.4,
+   "a1min": 1.6,
    "plus": 0
   },
   "Sunrise": {
-   "n": 11460,
-   "identiques": 98.5,
-   "a1min": 1.5,
+   "n": 15070,
+   "identiques": 98,
+   "a1min": 2,
    "plus": 0
   },
   "Dhuhr": {
-   "n": 11460,
-   "identiques": 99.3,
-   "a1min": 0.7,
+   "n": 15070,
+   "identiques": 99.4,
+   "a1min": 0.6,
    "plus": 0
   },
   "Asr": {
-   "n": 11460,
-   "identiques": 96.2,
-   "a1min": 3.8,
+   "n": 15070,
+   "identiques": 96,
+   "a1min": 4,
    "plus": 0
   },
   "Maghrib": {
-   "n": 11460,
-   "identiques": 94.9,
-   "a1min": 5.1,
+   "n": 15070,
+   "identiques": 95,
+   "a1min": 5,
    "plus": 0
   },
   "Isha": {
-   "n": 11460,
-   "identiques": 96.7,
-   "a1min": 3.3,
+   "n": 15070,
+   "identiques": 97.4,
+   "a1min": 2.6,
    "plus": 0
   }
  },
@@ -59,15 +59,15 @@
    "plus": 0
   },
   "2026-11": {
-   "n": 12606,
-   "identiques": 98,
-   "a1min": 2,
+   "n": 34266,
+   "identiques": 97.6,
+   "a1min": 2.4,
    "plus": 0
   }
  },
  "parSource": {
   "habous": {
-   "n": 68760,
+   "n": 90420,
    "identiques": 97.4,
    "a1min": 2.6,
    "plus": 0
@@ -75,41 +75,33 @@
  },
  "moinsConformes": [
   {
-   "code": 27,
-   "nom": "Oued laou",
-   "n": 360,
-   "identiques": 94.2,
-   "a1min": 5.8,
-   "plus": 0
-  },
-  {
    "code": 157,
    "nom": "Smara",
-   "n": 360,
-   "identiques": 94.2,
-   "a1min": 5.8,
+   "n": 474,
+   "identiques": 94.3,
+   "a1min": 5.7,
    "plus": 0
   },
   {
    "code": 13,
    "nom": "Moulay Bousselham",
-   "n": 360,
-   "identiques": 94.4,
-   "a1min": 5.6,
+   "n": 474,
+   "identiques": 94.7,
+   "a1min": 5.3,
+   "plus": 0
+  },
+  {
+   "code": 27,
+   "nom": "Oued laou",
+   "n": 474,
+   "identiques": 94.7,
+   "a1min": 5.3,
    "plus": 0
   },
   {
    "code": 145,
    "nom": "Assoul",
-   "n": 360,
-   "identiques": 94.4,
-   "a1min": 5.6,
-   "plus": 0
-  },
-  {
-   "code": 72,
-   "nom": "Zaouia Ahensal",
-   "n": 360,
+   "n": 474,
    "identiques": 94.7,
    "a1min": 5.3,
    "plus": 0
@@ -117,41 +109,49 @@
   {
    "code": 84,
    "nom": "Boulemane",
-   "n": 360,
-   "identiques": 94.7,
-   "a1min": 5.3,
+   "n": 474,
+   "identiques": 94.9,
+   "a1min": 5.1,
+   "plus": 0
+  },
+  {
+   "code": 120,
+   "nom": "Irherm",
+   "n": 474,
+   "identiques": 94.9,
+   "a1min": 5.1,
    "plus": 0
   },
   {
    "code": 317,
    "nom": "Iguisse",
-   "n": 360,
-   "identiques": 94.7,
-   "a1min": 5.3,
+   "n": 474,
+   "identiques": 94.9,
+   "a1min": 5.1,
    "plus": 0
   },
   {
    "code": 10,
    "nom": "Sidi Slimane",
-   "n": 360,
-   "identiques": 95,
-   "a1min": 5,
+   "n": 474,
+   "identiques": 95.1,
+   "a1min": 4.9,
+   "plus": 0
+  },
+  {
+   "code": 308,
+   "nom": "Ait Aque",
+   "n": 474,
+   "identiques": 95.1,
+   "a1min": 4.9,
    "plus": 0
   },
   {
    "code": 20,
    "nom": "M’Diq",
-   "n": 360,
-   "identiques": 95.6,
-   "a1min": 4.4,
-   "plus": 0
-  },
-  {
-   "code": 111,
-   "nom": "Safi",
-   "n": 360,
-   "identiques": 95.6,
-   "a1min": 4.4,
+   "n": 474,
+   "identiques": 95.4,
+   "a1min": 4.6,
    "plus": 0
   }
  ]

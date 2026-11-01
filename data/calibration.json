@@ -1,5 +1,5 @@
 {
- "jours": 11460,
+ "jours": 15070,
  "mois": [
   "2026-09",
   "2026-10",
@@ -8,39 +8,39 @@
  "prieres": {
   "Fajr": {
    "actuel_s": -45,
-   "identiques": 98.7,
+   "identiques": 98.4,
    "proposition_s": -45,
-   "identiques_proposition": 98.7
+   "identiques_proposition": 98.4
   },
   "Sunrise": {
    "actuel_s": -94,
-   "identiques": 98.5,
+   "identiques": 98,
    "proposition_s": -94,
-   "identiques_proposition": 98.5
+   "identiques_proposition": 98
   },
   "Dhuhr": {
    "actuel_s": 300,
-   "identiques": 99.3,
+   "identiques": 99.4,
    "proposition_s": 300,
-   "identiques_proposition": 99.3
+   "identiques_proposition": 99.4
   },
   "Asr": {
    "actuel_s": 0,
-   "identiques": 96.2,
+   "identiques": 96,
    "proposition_s": 0,
-   "identiques_proposition": 96.2
+   "identiques_proposition": 96
   },
   "Maghrib": {
    "actuel_s": 75,
-   "identiques": 94.9,
+   "identiques": 95,
    "proposition_s": 75,
-   "identiques_proposition": 94.9
+   "identiques_proposition": 95
   },
   "Isha": {
    "actuel_s": -15,
-   "identiques": 96.7,
+   "identiques": 97.4,
    "proposition_s": -15,
-   "identiques_proposition": 96.7
+   "identiques_proposition": 97.4
   }
  }
 }
