@@ -1,47 +1,47 @@
 {
- "jusquau": "2026-11",
+ "jusquau": "2026-12",
  "source": "toutes",
  "global": {
-  "n": 90420,
-  "identiques": 97.4,
-  "a1min": 2.6,
+  "n": 100200,
+  "identiques": 96.9,
+  "a1min": 3.1,
   "plus": 0
  },
  "parPriere": {
   "Fajr": {
-   "n": 15070,
+   "n": 16700,
    "identiques": 98.4,
    "a1min": 1.6,
    "plus": 0
   },
   "Sunrise": {
-   "n": 15070,
-   "identiques": 98,
-   "a1min": 2,
+   "n": 16700,
+   "identiques": 97.7,
+   "a1min": 2.3,
    "plus": 0
   },
   "Dhuhr": {
-   "n": 15070,
-   "identiques": 99.4,
-   "a1min": 0.6,
+   "n": 16700,
+   "identiques": 99.3,
+   "a1min": 0.7,
    "plus": 0
   },
   "Asr": {
-   "n": 15070,
-   "identiques": 96,
-   "a1min": 4,
+   "n": 16700,
+   "identiques": 93.7,
+   "a1min": 6.3,
    "plus": 0
   },
   "Maghrib": {
-   "n": 15070,
-   "identiques": 95,
-   "a1min": 5,
+   "n": 16700,
+   "identiques": 94.9,
+   "a1min": 5.1,
    "plus": 0
   },
   "Isha": {
-   "n": 15070,
-   "identiques": 97.4,
-   "a1min": 2.6,
+   "n": 16700,
+   "identiques": 97.6,
+   "a1min": 2.4,
    "plus": 0
   }
  },
@@ -63,95 +63,101 @@
    "identiques": 97.6,
    "a1min": 2.4,
    "plus": 0
+  },
+  "2026-12": {
+   "n": 9780,
+   "identiques": 92.8,
+   "a1min": 7.2,
+   "plus": 0
   }
  },
  "parSource": {
   "habous": {
-   "n": 90420,
-   "identiques": 97.4,
-   "a1min": 2.6,
+   "n": 100200,
+   "identiques": 96.9,
+   "a1min": 3.1,
    "plus": 0
   }
  },
  "moinsConformes": [
   {
-   "code": 157,
-   "nom": "Smara",
-   "n": 474,
-   "identiques": 94.3,
-   "a1min": 5.7,
-   "plus": 0
-  },
-  {
-   "code": 13,
-   "nom": "Moulay Bousselham",
-   "n": 474,
-   "identiques": 94.7,
-   "a1min": 5.3,
-   "plus": 0
-  },
-  {
-   "code": 27,
-   "nom": "Oued laou",
-   "n": 474,
-   "identiques": 94.7,
-   "a1min": 5.3,
+   "code": 72,
+   "nom": "Zaouia Ahensal",
+   "n": 534,
+   "identiques": 93.8,
+   "a1min": 6.2,
    "plus": 0
   },
   {
    "code": 145,
    "nom": "Assoul",
-   "n": 474,
-   "identiques": 94.7,
-   "a1min": 5.3,
+   "n": 534,
+   "identiques": 93.8,
+   "a1min": 6.2,
+   "plus": 0
+  },
+  {
+   "code": 27,
+   "nom": "Oued laou",
+   "n": 534,
+   "identiques": 94,
+   "a1min": 6,
    "plus": 0
   },
   {
    "code": 84,
    "nom": "Boulemane",
-   "n": 474,
-   "identiques": 94.9,
-   "a1min": 5.1,
+   "n": 534,
+   "identiques": 94,
+   "a1min": 6,
    "plus": 0
   },
   {
-   "code": 120,
-   "nom": "Irherm",
-   "n": 474,
-   "identiques": 94.9,
-   "a1min": 5.1,
-   "plus": 0
-  },
-  {
-   "code": 317,
-   "nom": "Iguisse",
-   "n": 474,
-   "identiques": 94.9,
-   "a1min": 5.1,
-   "plus": 0
-  },
-  {
-   "code": 10,
-   "nom": "Sidi Slimane",
-   "n": 474,
-   "identiques": 95.1,
-   "a1min": 4.9,
-   "plus": 0
-  },
-  {
-   "code": 308,
-   "nom": "Ait Aque",
-   "n": 474,
-   "identiques": 95.1,
-   "a1min": 4.9,
+   "code": 13,
+   "nom": "Moulay Bousselham",
+   "n": 534,
+   "identiques": 94.4,
+   "a1min": 5.6,
    "plus": 0
   },
   {
    "code": 20,
    "nom": "M’Diq",
-   "n": 474,
-   "identiques": 95.4,
-   "a1min": 4.6,
+   "n": 534,
+   "identiques": 94.4,
+   "a1min": 5.6,
+   "plus": 0
+  },
+  {
+   "code": 120,
+   "nom": "Irherm",
+   "n": 534,
+   "identiques": 94.4,
+   "a1min": 5.6,
+   "plus": 0
+  },
+  {
+   "code": 157,
+   "nom": "Smara",
+   "n": 534,
+   "identiques": 94.4,
+   "a1min": 5.6,
+   "plus": 0
+  },
+  {
+   "code": 59,
+   "nom": "Mohammedia",
+   "n": 534,
+   "identiques": 94.9,
+   "a1min": 5.1,
+   "plus": 0
+  },
+  {
+   "code": 146,
+   "nom": "Msemrir",
+   "n": 534,
+   "identiques": 94.9,
+   "a1min": 5.1,
    "plus": 0
   }
  ]
