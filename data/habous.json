@@ -1,5 +1,5 @@
 {
-"updated": "2026-10-11",
+"updated": "2026-11-10",
 "source": "Ministère des Habous et des Affaires islamiques (Maroc) — communiqués d'observation du croissant",
 "months": [
  {"y":1447,"m":8,"start":"2026-01-21"},
@@ -11,6 +11,7 @@
  {"y":1448,"m":2,"start":"2026-07-16"},
  {"y":1448,"m":3,"start":"2026-08-14"},
  {"y":1448,"m":4,"start":"2026-09-13"},
- {"y":1448,"m":5,"start":"2026-10-13"}
+ {"y":1448,"m":5,"start":"2026-10-13"},
+ {"y":1448,"m":6,"start":"2026-11-11"}
 ]
 }
