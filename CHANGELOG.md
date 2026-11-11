@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.35.3] – 2026-11-10
+### Ajouté
+- Accueil : après le Fajr, le compte à rebours vise le lever du soleil (« نهاية وقت صلاة الصبح » / « Fin du temps du Fajr »)
+  au lieu du Dhuhr ; barre de progression Fajr → Chourouq. Affichage seulement (Adhan et rappels inchangés).
 ## Serveur – 2026-11-11
 ### Corrigé
 - Annonce du croissant détectée avec 2 h de retard le 10/11 (GitHub a lancé la surveillance trop tôt puis trop tard).

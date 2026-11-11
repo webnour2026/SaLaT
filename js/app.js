@@ -338,6 +338,10 @@ const GRACE_MIN = 30;
 function computeNext() {
   const t = now();
   state.next = findNext(state.today, state.tomorrow, t);
+  // Entre le Fajr et le lever du soleil : le compte à rebours vise le Chourouq (fin du temps du Fajr), pas le Dhuhr.
+  // Affichage seulement : l'Adhan et les rappels ne dépendent pas de state.next.
+  const sr = state.today?.times?.Sunrise;
+  if (sr && state.next.name === 'Dhuhr' && state.next.day === 'today' && t < sr) state.next = { name: 'Sunrise', ts: sr, day: 'today', current: 'Fajr' };
   state.elapsed = findElapsed(state.today, t, GRACE_MIN * 60000);
   countdown.setTarget(state.elapsed ? state.elapsed.end : state.next.ts);
 }
@@ -505,7 +509,7 @@ function renderHome() {
   if (current === 'Fajr' && tNow >= state.today.times.Sunrise) current = null; // le temps du Fajr s'arrête au lever
 
   const el = state.elapsed;   // heure de la prière tout juste arrivée : on reste dessus un moment
-  $('#nextLabel').textContent = el ? t('prayerNow') : t('nextPrayer');
+  $('#nextLabel').textContent = el ? t('prayerNow') : next.name === 'Sunrise' ? t('fajrEnds') : t('nextPrayer');
   const nextDate = el || next.day === 'today' ? state.today.date : addDays(state.today.date, 1);
   $('#nextName').textContent = prayerLabel(el ? el.name : next.name, nextDate);
   $('#nextTime').textContent = el ? fmtTime(el.ts) : fmtTime(next.ts) + (next.day === 'tomorrow' ? ` · ${t('tomorrow')}` : '');
@@ -3126,7 +3130,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.35.2';
+export const APP_VERSION = '2.35.3';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).
