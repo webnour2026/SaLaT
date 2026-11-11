@@ -19,7 +19,8 @@ export default {
     const cors = { 'Access-Control-Allow-Origin': allowed.includes(origin) ? origin : allowed[0] || '*', 'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Max-Age': '86400', Vary: 'Origin' };
     const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { ...cors, 'Content-Type': 'application/json; charset=utf-8' } });
-    if (url.pathname === '/annonce/etat') return annonceEtat(env);     // contrôle hebdomadaire du jeton (sans secret)
+    if (url.pathname === '/annonce/etat') return annonceEtat(env);
+    if (req.method === 'GET' && url.pathname === '/veille') return json(await watch(env).catch(e => ({ veille: String(e.message || e) })));   // état de la veille du soir d'annonce
     if (url.pathname === '/annonce') return annonce(req, env);        // page privée d'annonce manuelle (voir annonce.js)
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
     if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'salati-push' });
@@ -43,7 +44,7 @@ export default {
       return json({ error: 'adresse' }, 404);
     } catch (e) { return json({ error: String(e && e.message || e) }, 500); }
   },
-  async scheduled(_ev, env, ctx) { ctx.waitUntil(check(env)); },
+  async scheduled(_ev, env, ctx) { ctx.waitUntil(Promise.all([check(env), watch(env).catch(e => console.warn('veille', e))])); },
 };
 
 async function check(env) {
@@ -61,6 +62,38 @@ async function check(env) {
   if (LANGS.every(l => out[l].error)) await env.KV.delete(key);                       // tout a échoué : on retentera au prochain relevé
   return { status: 'envoyé', mois: `${a.y}-${a.m}`, vu: a.seen, rel, out };
 }
+
+// ---------- Veille du soir d'annonce (10/11/2026 : GitHub a lancé la surveillance à 15 h 11 au lieu de 16 h 50,
+// elle s'est arrêtée à 19 h 42 avant le communiqué, et le départ de 20 h 20 n'a eu lieu qu'à 21 h 58) ----------
+// Le cron du Worker (toutes les 2 min, 16 h–23 h UTC) est fiable : les soirs du 29e et du 30e jour, tant que le mois
+// suivant n'est pas dans data/habous.json, on s'assure qu'un travail « Habous » tourne, sinon on le lance (jeton GH_DISPATCH_TOKEN).
+const REPO = 'webnour2026/SaLaT', HABOUS_WF = 'habous.yml';
+async function watch(env, now = new Date()) {
+  if (!env.GH_DISPATCH_TOKEN) return { veille: 'jeton absent' };
+  const h = now.getUTCHours() + now.getUTCMinutes() / 60;
+  if (h < 16.5 || h > 23.5) return { veille: 'hors fenêtre' };                     // du coucher du soleil (≈ 17 h–19 h 30 locales) à 23 h 30
+  const res = await fetch(`${env.HABOUS_URL}?t=${Date.now()}`, { cf: { cacheTtl: 0 } });
+  if (!res.ok) return { veille: 'calendrier illisible' };
+  const months = [...((await res.json()).months || [])].filter(x => x?.start).sort((a, b) => a.y - b.y || a.m - b.m);
+  const last = months.at(-1); if (!last) return { veille: 'calendrier vide' };
+  const d = Math.round((Date.parse(now.toISOString().slice(0, 10)) - Date.parse(last.start)) / 864e5);
+  if (d !== 28 && d !== 29) return { veille: 'pas un soir d\'annonce', jour: d + 1 };      // 28 → soir du 29e jour, 29 → soir du 30e
+  const key = `veille:${now.toISOString().slice(0, 10)}`;
+  const lastTry = Number(await env.KV.get(key)) || 0;
+  if (Date.now() - lastTry < 8 * 60000) return { veille: 'lancée récemment' };
+  const gh = path => fetch(`https://api.github.com/repos/${REPO}/actions/${path}`, { headers: {
+    Authorization: `Bearer ${env.GH_DISPATCH_TOKEN}`, Accept: 'application/vnd.github+json', 'User-Agent': 'salati-push' } });
+  for (const st of ['in_progress', 'queued']) {
+    const r = await gh(`workflows/${HABOUS_WF}/runs?status=${st}&per_page=1`);
+    if (r.ok && (await r.json()).total_count > 0) return { veille: `travail Habous déjà ${st === 'queued' ? 'en attente' : 'en cours'}` };
+  }
+  const r = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/${HABOUS_WF}/dispatches`, { method: 'POST',
+    headers: { Authorization: `Bearer ${env.GH_DISPATCH_TOKEN}`, Accept: 'application/vnd.github+json', 'User-Agent': 'salati-push', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ref: 'main', inputs: { start: '' } }) });
+  await env.KV.put(key, String(Date.now()), { expirationTtl: 2 * 864e5 });
+  return { veille: r.status === 204 ? 'surveillance lancée' : `échec du lancement (GitHub ${r.status})` };
+}
+export { watch };
 
 // ---------- Firebase Cloud Messaging (API HTTP v1) ----------
 async function send(env, { topic, token, data }) {

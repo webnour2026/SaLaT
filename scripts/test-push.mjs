@@ -46,5 +46,28 @@ eq('notification d’essai dans les 3 langues', LANGS.every(l => testText(l)?.ti
   eq('annonce : bloqué après 5 mauvais codes (même avec le bon)', (await post(env.ANNONCE_KEY, tom, '9.9.9.9')).status, 429);
 }
 
+// ── veille du soir d'annonce (worker/src/index.js : watch) ──
+{
+  const { watch } = await import('../worker/src/index.js');
+  const kv = new Map(), KV = { get: async k => kv.get(k) ?? null, put: async (k, v) => kv.set(k, v) };
+  let dispatched = 0, running = 0;
+  globalThis.fetch = async (url, o = {}) => {
+    url = String(url);
+    if (url.includes('habous.json')) return new Response(JSON.stringify({ months: [{ y: 1448, m: 5, start: '2026-10-13' }] }));
+    if (url.includes('/runs?status=')) return new Response(JSON.stringify({ total_count: running }));
+    if (url.endsWith('/dispatches')) { dispatched++; return new Response(null, { status: 204 }); }
+    return new Response('{}');
+  };
+  const env = { GH_DISPATCH_TOKEN: 'x', HABOUS_URL: 'https://w/data/habous.json', KV };
+  eq('veille : soir du 29e jour, rien en cours → lancée', (await watch(env, new Date('2026-11-10T19:50:00Z'))).veille, 'surveillance lancée');
+  eq('veille : relancée seulement après 8 min', (await watch(env, new Date('2026-11-10T19:52:00Z'))).veille, 'lancée récemment');
+  kv.clear(); running = 1;
+  eq('veille : travail déjà en cours → rien', (await watch(env, new Date('2026-11-10T20:30:00Z'))).veille, 'travail Habous déjà en cours');
+  running = 0;
+  eq('veille : hors soir d\'annonce → rien', (await watch(env, new Date('2026-11-05T19:50:00Z'))).veille, 'pas un soir d\'annonce');
+  eq('veille : matin → rien', (await watch(env, new Date('2026-11-10T09:00:00Z'))).veille, 'hors fenêtre');
+  eq('veille : une seule relance effective', dispatched, 1);
+}
+
 console.log(fails ? `\n${fails} échec(s)` : '\ntout passe');
 process.exit(fails ? 1 : 0);

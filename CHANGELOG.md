@@ -81,6 +81,12 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## Serveur – 2026-11-11
+### Corrigé
+- Annonce du croissant détectée avec 2 h de retard le 10/11 (GitHub a lancé la surveillance trop tôt puis trop tard).
+  Le serveur des notifications (cron Cloudflare toutes les 2 min) relance désormais la surveillance « Habous » les soirs
+  du 29e et du 30e jour, de 16 h 30 à 23 h 30 UTC, dès qu'aucune n'est en cours. État : /veille.
+
 ## [2.35.2] – 2026-10-26
 ### Corrigé
 - Page déclarée en arabe dès le chargement (lang="ar", langue par défaut) au lieu du français : Chrome ne propose plus de
