@@ -6,7 +6,7 @@ Captures : `store/captures/` — 7 images 1080×1920 par langue (`ar-…`, `fr-�
 
 **Titre (30 max)** : صلاتي: مواقيت الصلاة والهلال
 
-**Description courte (80 max)** :
+**Titre (30 max)** : SaLaTi صلاتي: مواقيت الصلاة
 مواقيت مطابقة لجداول الأوقاف، الأذان والهاتف مغلق، القبلة وإعلان الهلال فورًا
 
 **Description complète** :
