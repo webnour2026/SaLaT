@@ -1011,7 +1011,7 @@ function predictionMap() {
 // Lien affiché dans les messages partagés. Mettez ici votre lien court (TinyURL, ou votre domaine).
 // Fiche Google Play encore en test fermé : « Bientôt sur Google Play » sur les cartes, « Essayez » et le lien de la version web
 // dans les messages. Passer à true le jour de la publication en production (badge officiel, « Téléchargez », lien Play).
-const PLAY_PUBLIC = false;
+const PLAY_PUBLIC = true;
 const SHARE_URL = PLAY_PUBLIC ? 'https://tinyurl.com/salati-app' : 'https://tinyurl.com/SaLaTi-web';
 const PLAY_URL = SHARE_URL;
 
@@ -3130,7 +3130,7 @@ function sanitizeAdhans() {
   if (changed) save();
 }
 
-export const APP_VERSION = '2.35.3';
+export const APP_VERSION = '2.35.4';
 
 // Garde-fou largeur : aucune vue ne doit rester décalée sur le côté (Chrome peut faire défiler
 // horizontalement un conteneur même quand le débordement est masqué).

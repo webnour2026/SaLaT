@@ -81,6 +81,10 @@ les versions antérieures portent seulement le mois. ⚠ = nécessite de reconst
 ### Corrigé
 - Le message ne renvoie plus à une barre d'adresse inexistante dans l'appli installée.
 
+## [2.35.4] – 2026-11-27
+### Modifié
+- SaLaTi est publiée sur Google Play : bouton « Installer » (badge officiel) à la place de « Bientôt sur Google Play » dans l'appli web, les cartes à partager et les pages des villes ; liens de partage vers la fiche Play.
+
 ## [2.35.3] – 2026-11-10
 ### Ajouté
 - Accueil : après le Fajr, le compte à rebours vise le lever du soleil (« نهاية وقت صلاة الصبح » / « Fin du temps du Fajr »)
